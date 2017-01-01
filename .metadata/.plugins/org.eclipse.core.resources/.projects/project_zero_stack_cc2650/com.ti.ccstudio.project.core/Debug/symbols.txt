@@ -1,0 +1,85 @@
+#define __unsigned_chars__ 1	/* Predefined */
+#define __DATE__ "Jan  1 2017"	/* Predefined */
+#define __TIME__ "22:51:09"	/* Predefined */
+#define __STDC__ 1	/* Predefined */
+#define __STDC_VERSION__ 199901L	/* Predefined */
+#define __STDC_HOSTED__ 1	/* Predefined */
+#define __TI_C99_COMPLEX_ENABLED__ 1	/* Predefined */
+#define __edg_front_end__ 1	/* Predefined */
+#define __EDG_VERSION__ 404	/* Predefined */
+#define __EDG_SIZE_TYPE__ unsigned int	/* Predefined */
+#define __EDG_PTRDIFF_TYPE__ int	/* Predefined */
+#define __GNUC_STDC_INLINE__ 1	/* Predefined */
+#define __GNUC_MINOR__ 3	/* Predefined */
+#define __GNUC_PATCHLEVEL__ 0	/* Predefined */
+#define __VERSION__ "EDG gcc 4.3 mode"	/* Predefined */
+#define __TI_COMPILER_VERSION__ 15012003	/* Predefined */
+#define __COMPILER_VERSION__ 15012003	/* Predefined */
+#define __TMS470__ 1	/* Predefined */
+#define __TI_ARM__ 1	/* Predefined */
+#define __16bis__ 1	/* Predefined */
+#define __eabi__ 1	/* Predefined */
+#define __TI_EABI_SUPPORT__ 1	/* Predefined */
+#define __TI_EABI__ 1	/* Predefined */
+#define __TI_VFPLIB_SUPPORT__ 1	/* Predefined */
+#define __TI_TMS470_V7__ 1	/* Predefined */
+#define __TI_ARM_V7__ 1	/* Predefined */
+#define __TI_TMS470_V7M3__ 1	/* Predefined */
+#define __TI_ARM_V7M3__ 1	/* Predefined */
+#define __SIZE_T_TYPE__ unsigned	/* Predefined */
+#define __PTRDIFF_T_TYPE__ int	/* Predefined */
+#define __WCHAR_T_TYPE__ unsigned short	/* Predefined */
+#define __little_endian__ 1	/* Predefined */
+#define __TI_STRICT_ANSI_MODE__ 0	/* Predefined */
+#define __TI_WCHAR_T_BITS__ 16	/* Predefined */
+#define __TI_GNU_ATTRIBUTE_SUPPORT__ 1	/* Predefined */
+#define __TI_STRICT_FP_MODE__ 1	/* Predefined */
+#define BROADCASTER_CFG 0x01
+#define OBSERVER_CFG 0x02
+#define PERIPHERAL_CFG 0x04
+#define CENTRAL_CFG 0x08
+#define ADV_NCONN_CFG 0x01
+#define ADV_CONN_CFG 0x02
+#define SCAN_CFG 0x04
+#define INIT_CFG 0x08
+#define ADV_CFG ADV_NCONN_CFG+ADV_CONN_CFG
+#define LINK_CFG ADV_CONN_CFG+INIT_CFG
+#define FULL_CFG INIT_CFG+SCAN_CFG+ADV_NCONN_CFG+ADV_CONN_CFG
+#define L2CAP_COC_CFG 0x80
+#define HOST_V41_MASK 0x80
+#define PING_CFG 0x01
+#define SLV_FEAT_EXCHG_CFG 0x02
+#define CONN_PARAM_REQ_CFG 0x04
+#define LOW_DUTY_CYCLE_DIRECTED_CFG 0x08
+#define DTM_625US_TX_CFG 0x10
+#define FRAG_CFG 0x20
+#define MST_SLV_CFG 0x40
+#define V41_CTRL_CFG 0x47
+#define CTRL_V41_MASK 0x7F
+#define PRIVACY_1_2_CFG 0x01
+#define SECURE_CONNS_CFG 0x02
+#define EXT_DATA_LEN_CFG 0x04
+#define HOST_CONFIG PERIPHERAL_CFG
+#define GAP_BOND_MGR 1
+#define HCI_TL_NONE 1
+#define _OPTIMIZE_FOR_SPACE 1
+#define USE_ICALL 1
+#define OSAL_SNV 1
+#define FLASH_ROM_BUILD 1
+#define POWER_SAVING 1
+#define GATT_NO_CLIENT 1
+#define INCLUDE_AES_DECRYPT 1
+#define xPM_DISABLE_PWRDOWN 1
+#define xTESTMODES 1
+#define xTEST_BLEBOARD 1
+#define OSAL_CBTIMER_NUM_TASKS 1
+#define xDEBUG 1
+#define EXT_HAL_ASSERT 1
+#define xDEBUG_GPIO 1
+#define xDEBUG_ENC 1
+#define xDEBUG_SW_TRACE 1
+#define NEAR_FUNC 
+#define DATA 
+#define CC26XXWARE 1
+#define CC26XX 1
+#define _INLINE 1

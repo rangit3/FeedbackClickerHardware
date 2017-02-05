@@ -67,6 +67,8 @@
 #include <inc/hw_memmap.h>
 #include <driverlib/vims.h>
 
+#include <xdc/runtime/System.h>
+
 #ifndef USE_DEFAULT_USER_CFG
 
 #include "ble_user_config.h"
@@ -123,6 +125,9 @@ extern Display_Handle dispHandle;
  */
 int main()
 {
+    System_printf("main first\n");
+    System_flush();
+
   /* Register Application callback to trap asserts raised in the Stack */
   RegisterAssertCback(AssertHandler);
 
@@ -148,6 +153,9 @@ int main()
 
   /* Kick off profile - Priority 3 */
   GAPRole_createTask();
+
+  System_printf("main call\n");
+  System_flush();
 
   ProjectZero_createTask();
 

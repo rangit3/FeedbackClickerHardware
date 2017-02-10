@@ -220,3 +220,7 @@ project_zero_stack_cc2650/TOOLS/ccs_linker_defines.cmd
 *.cmd
 *.aem3
 project_zero_stack_cc2650/TOOLS/ccs_compiler_defines.bcfg
+project_zero_app_cc2650launchxl/TOOLS/src/.exclude
+*.bcfg
+project_zero_app_cc2650launchxl/TOOLS/src/sysbios/makefile
+project_zero_stack_cc2650/TOOLS/ccs_compiler_defines.bcfg

@@ -2101,6 +2101,7 @@ void FindGateway() {
 	//search devices
 	//change my name to init+device id
 	//get my appID
+	//set foundgateway
 }
 
 void DiscoverDevicesInBackgournd() {

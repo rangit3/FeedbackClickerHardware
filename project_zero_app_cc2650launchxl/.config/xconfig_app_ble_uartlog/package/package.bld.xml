@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="windows-1255"?>
+<!--  This file conforms to the DTD xdc/bld/build.dtd -->
+<package name="xconfig_app_ble_uartlog" version="" producerId="undefined">
+    <units>
+    </units>
+    <sources>
+        <srcFile name="package/cfg/app_ble_uartlog_pem3.c"/>
+    </sources>
+    <configscripts>
+        <srcFile name="C:/workspace_v6_2/FeedbackClickerHardware/project_zero_app_cc2650launchxl/TOOLS/app_ble_uartlog.cfg"/>
+    </configscripts>
+    <makefiles>
+        <srcFile name="package.mak" src="package.bld"/>
+        <srcFile name="package/package.xdc.dep" src="package.xdc"/>
+        <srcFile name="package/cfg/app_ble_uartlog_pem3.mak" src="package.bld"/>
+        <srcFile name="package/cfg/app_ble_uartlog_pem3.oem3.dep" src="package/cfg/app_ble_uartlog_pem3.c"/>
+        <srcFile name="package/cfg/app_ble_uartlog_pem3.dep" src="package/cfg/app_ble_uartlog_pem3.cfg"/>
+        <srcFile name="package/cfg/app_ble_uartlog.xem3.mak" src="package.bld"/>
+        <srcFile name="package/rel/xconfig_app_ble_uartlog.tar.dep" src="package/rel/xconfig_app_ble_uartlog.xdc.inc"/>
+    </makefiles>
+    <targets>
+        <target name="ti.targets.arm.elf.M3"
+            version="ti.targets.arm.elf.M3{1,0,15.12,3"
+            rawVersion="15.12.3"
+            platform="ti.platforms.simCM3"
+            isa="v7M"
+            suffix="em3"
+            rootDir="C:/ti/ccsv6/tools/compiler/arm_15.12.3.LTS"
+            os="undefined"
+            rts="ti.targets.arm.rtsarm">
+            <model endian="little"
+                codeModel="thumb2"
+                dataModel="undefined"/>
+        </target>
+    </targets>
+    <libraries>
+    </libraries>
+    <configurations>
+    <configuration name="app_ble_uartlog"
+        pname="app_ble_uartlog.pem3"
+        target="ti.targets.arm.elf.M3"
+        platform="ti.platforms.simplelink:CC2650F128"
+        profile="release"
+        isPartial="false"
+        xCfgScript="package/cfg/app_ble_uartlog_pem3.cfg"
+        xCfgPrefix="package/cfg/app_ble_uartlog_pem3"
+        cfgScript="C:/workspace_v6_2/FeedbackClickerHardware/project_zero_app_cc2650launchxl/TOOLS/app_ble_uartlog.cfg"
+        cfgArgs="null"
+        />
+    </configurations>
+    <executables>
+    <executable name="app_ble_uartlog"
+        pname="app_ble_uartlog.xem3"
+        target="ti.targets.arm.elf.M3"
+        platform="ti.platforms.simplelink:CC2650F128"
+        profile="release"
+        xCfgScript="package/cfg/app_ble_uartlog_pem3.cfg"
+        xCfgPrefix="package/cfg/app_ble_uartlog_pem3"
+        cfgScript="C:/workspace_v6_2/FeedbackClickerHardware/project_zero_app_cc2650launchxl/TOOLS/app_ble_uartlog.cfg"
+        cfgArgs="null"
+        />
+    </executables>
+    <tests>
+    <test exeName="app_ble_uartlog.xem3"
+        args=""
+        groupName="app_ble_uartlog.xem3"
+        refOutput="undefined"
+        refExitCode="0"
+        execArgs=""
+        />
+    </tests>
+    <releases relDir="package/rel/">
+    <release name="xconfig_app_ble_uartlog"
+        pname="xconfig_app_ble_uartlog.tar"
+        label="default"
+    >
+        <file name="package/package.bld.xml"/>
+        <file name="package/build.cfg"/>
+        <file name="package/package.xdc.inc"/>
+    </release>
+    </releases>
+    <repositories>
+    </repositories>
+</package>

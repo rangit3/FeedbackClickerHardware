@@ -1,0 +1,24 @@
+/* THIS IS A GENERATED FILE -- DO NOT EDIT */
+
+var target;    /* the target used for this build */
+
+/* configuro was passed the target's name explicitly */
+try {
+    target = xdc.module('ti.targets.arm.elf.M3');
+}
+catch (e) {
+    throw new Error("Can't find the target named '" + 'ti.targets.arm.elf.M3'
+                    + "' along the path '" + environment["xdc.path"]
+                    + "': please check the spelling of the target's name and that it exists along this path.");
+}
+if (!(target instanceof xdc.module("xdc.bld.ITarget").Module)) {
+    throw new Error("The module named 'ti.targets.arm.elf.M3' exists but it's not a target: please check the spelling of the target's name");
+}
+
+/* configuro was passed compiler options explicitly */
+target.ccOpts.prefix = unescape("-mv7M3%20--code_state%3D16%20-me%20-O4%20--opt_for_speed%3D0%20--include_path%3D%22C%3A/workspace_v6_2/FeedbackClickerHardware/project_zero_app_cc2650launchxl/Profiles%22%20--include_path%3D%22C%3A/workspace_v6_2/FeedbackClickerHardware/project_zero_app_cc2650launchxl/Application%22%20--include_path%3D%22C%3A/workspace_v6_2/FeedbackClickerHardware/project_zero_app_cc2650launchxl/ICallBLE%22%20--include_path%3D%22C%3A/workspace_v6_2/FeedbackClickerHardware/project_zero_app_cc2650launchxl/Startup%22%20--include_path%3D%22C%3A/workspace_v6_2/FeedbackClickerHardware/project_zero_app_cc2650launchxl/Board%22%20--include_path%3D%22c%3A/ti/simplelink_academy_01_10_00_0000/modules/projects/support_files/Components/uart_log%22%20--include_path%3D%22c%3A/ti/simplelink/ble_sdk_2_02_00_31/src/examples/simple_peripheral/cc26xx/app%22%20--include_path%3D%22c%3A/ti/simplelink/ble_sdk_2_02_00_31/src/inc%22%20--include_path%3D%22c%3A/ti/simplelink/ble_sdk_2_02_00_31/src/icall/inc%22%20--include_path%3D%22c%3A/ti/simplelink/ble_sdk_2_02_00_31/src/profiles/roles/cc26xx%22%20--include_path%3D%22c%3A/ti/simplelink/ble_sdk_2_02_00_31/src/profiles/roles%22%20--include_path%3D%22c%3A/ti/simplelink/ble_sdk_2_02_00_31/src/profiles/dev_info%22%20--include_path%3D%22c%3A/ti/simplelink/ble_sdk_2_02_00_31/src/profiles/simple_profile/cc26xx%22%20--include_path%3D%22c%3A/ti/simplelink/ble_sdk_2_02_00_31/src/profiles/simple_profile%22%20--include_path%3D%22c%3A/ti/simplelink/ble_sdk_2_02_00_31/src/common/cc26xx%22%20--include_path%3D%22c%3A/ti/simplelink/ble_sdk_2_02_00_31/src/components/heapmgr%22%20--include_path%3D%22c%3A/ti/simplelink/ble_sdk_2_02_00_31/src/controller/cc26xx/inc%22%20--include_path%3D%22c%3A/ti/simplelink/ble_sdk_2_02_00_31/src/components/hal/src/target/_common%22%20--include_path%3D%22c%3A/ti/simplelink/ble_sdk_2_02_00_31/src/components/hal/src/target%22%20--include_path%3D%22c%3A/ti/simplelink/ble_sdk_2_02_00_31/src/components/hal/src/target/_common/cc26xx%22%20--include_path%3D%22c%3A/ti/simplelink/ble_sdk_2_02_00_31/src/components/hal/src/inc%22%20--include_path%3D%22c%3A/ti/simplelink/ble_sdk_2_02_00_31/src/components/osal/src/inc%22%20--include_path%3D%22c%3A/ti/simplelink/ble_sdk_2_02_00_31/src/components/services/src/sdata%22%20--include_path%3D%22c%3A/ti/simplelink/ble_sdk_2_02_00_31/src/components/services/src/saddr%22%20--include_path%3D%22c%3A/ti/simplelink/ble_sdk_2_02_00_31/src/components/icall/src/inc%22%20--include_path%3D%22c%3A/ti/tirtos_cc13xx_cc26xx_2_18_00_03/products/cc26xxware_2_23_03_17162%22%20--include_path%3D%22C%3A/ti/ccsv6/tools/compiler/arm_15.12.3.LTS/include%22%20-g%20--c99%20--gcc%20--define%3DUSE_ICALL%20--define%3DPOWER_SAVING%20--define%3DSBP_TASK_STACK_SIZE%3D700%20--define%3DGAPROLE_TASK_STACK_SIZE%3D520%20--define%3DHEAPMGR_SIZE%3D0%20--define%3DDisplay_DISABLE_ALL%20--define%3DBOARD_DISPLAY_EXCLUDE_UART%20--define%3DxBOARD_DISPLAY_EXCLUDE_LCD%20--define%3DICALL_MAX_NUM_TASKS%3D3%20--define%3DICALL_MAX_NUM_ENTITIES%3D6%20--define%3Dxdc_runtime_Assert_DISABLE_ALL%20--define%3DXxdc_runtime_Log_DISABLE_ALL%20--define%3DMAX_NUM_BLE_CONNS%3D1%20--define%3DCC26XX%20--define%3Dxdc_FILE%3D%22%5C%22%5C%22%22%20--define%3DUARTLOG_NUM_EVT_BUF%3D32%20--diag_wrap%3Doff%20--diag_warning%3D225%20--diag_warning%3D255%20--display_error_number%20--gen_func_subsections%3Don%20--abi%3Deabi%20%20%20") + target.ccOpts.prefix;
+
+/* configuro was passed the target's rootDir explicitly */
+target.rootDir = 'C:/ti/ccsv6/tools/compiler/arm_15.12.3.LTS';
+
+Build.targets = [target];

@@ -214,3 +214,9 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+*.cmd
+*.libs
+project_zero_stack_cc2650/TOOLS/ccs_linker_defines.cmd
+*.cmd
+*.aem3
+project_zero_stack_cc2650/TOOLS/ccs_compiler_defines.bcfg

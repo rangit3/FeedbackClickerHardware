@@ -110,7 +110,13 @@ typedef enum {
 	APP_MSG_GAP_STATE_CHANGE, /* The GAP / connection state has changed      */
 	APP_MSG_BUTTON_DEBOUNCED, /* A button has been debounced with new value  */
 	APP_MSG_SEND_PASSCODE, /* A pass-code/PIN is requested during pairing */
-	BLEChangeAdvertiseName, BLESearchDevices, BLEShowDevices,
+	BLEChangeAdvertiseName,
+	BLESearchDevices,
+	BLEShowDevices,
+	BLENewGateWayName,
+	BLEFindGateWay,
+	BLEDiscoverDevices,
+	BLEError
 } app_msg_types_t;
 
 // Struct for messages sent to the application task
@@ -167,6 +173,7 @@ static uint8_t scanRspData[] = {
 		};
 
 //======================MY BLE DEFS========================
+#define MAX_GATEWAY_NAME					  25
 // Maximum number of scan responses
 #define DEFAULT_MAX_SCAN_RES                  8
 // Maximum number of scan responses
@@ -268,7 +275,7 @@ static uint8_t scanRes;
 static uint8_t scanIdx;
 
 typedef struct {
-	char localName[20];	 		 //!< Device's Name
+	char localName[MAX_GATEWAY_NAME];	 		 //!< Device's Name
 	uint8_t addrType;            //!< Address Type: @ref ADDRTYPE_DEFINES
 	uint8_t addr[B_ADDR_LEN];    //!< Device's Address
 	uint8_t nameLength; 	 	 //!< Device name length
@@ -294,21 +301,29 @@ static uint8_t advertData[] = {
 		DEFAULT_DISCOVERABLE_MODE | GAP_ADTYPE_FLAGS_BREDR_NOT_SUPPORTED,
 
 		// complete name
-		25,
+		MAX_GATEWAY_NAME,
 		GAP_ADTYPE_LOCAL_NAME_COMPLETE, 'P', 'r', 'o', 'j', 'e', 'c', 't', ' ',
-		'Z', 'e', 'r', 'o','P', 'r', 'o', 'j', 'e', 'c', 't', ' ',
-		'Z', 'e', 'r', 'o',
+		'Z', 'e', 'r', 'o', 'P', 'r', 'o', 'j', 'e', 'c', 't', ' ', 'Z', 'e',
+		'r', 'o',
 
 };
 
-static uint8_t deciveAdvertName[] ={ 'P', 'r', 'o', 'j', 'e', 'c', 't', ' ',
-		'Z', 'e', 'r', 'o','P', 'r', 'o', 'j', 'e', 'c', 't', ' ',
-		'Z', 'e', 'r', 'o',};
+static uint8_t deciveAdvertName[] = { 'P', 'r', 'o', 'j', 'e', 'c', 't', ' ',
+		'Z', 'e', 'r', 'o', 'P', 'r', 'o', 'j', 'e', 'c', 't', ' ', 'Z', 'e',
+		'r', 'o', };
 
-static uint8_t deviceByteName[] ={ 'P', 'r', 'o', 'j', 'e', 'c', 't', ' ',
-		'Z', 'e', 'r', 'o','P', 'r', 'o', 'j', 'e', 'c', 't', ' ',
-		'Z', 'e', 'r', 'o',};
-
+/**
+ * bytes represent:
+ * 2:time
+ * 1:operation-init,answer,error
+ * x/1:deviceid/appid
+ * 1:question number
+ * 1:answer
+ *
+ */
+static uint8_t deviceByteName[] = { 'P', 'r', 'o', 'j', 'e', 'c', 't', ' ', 'Z',
+		'e', 'r', 'o', 'P', 'r', 'o', 'j', 'e', 'c', 't', ' ', 'Z', 'e', 'r',
+		'o', };
 
 // GAP GATT Attributes
 static uint8_t attDeviceName[GAP_DEVICE_NAME_LEN] = "Project Zero";
@@ -354,6 +369,19 @@ static uint8_t button1State = 0;
 
 // Global display handle
 Display_Handle dispHandle;
+
+//============MY Vars==================
+static UInt32 lastTimestamp = 0;
+
+bool firstUsage = FALSE; //TODO true
+
+static bool foundGateway = TRUE; //TODO false
+
+static unsigned char appID;
+
+static char* deviceID;
+
+static char* lastGateWayName;
 
 /*********************************************************************
  * LOCAL FUNCTIONS
@@ -416,19 +444,34 @@ static void MyBLE_addDeviceInfo(uint8_t *pAddr, uint8_t addrType);
 static bool MyBLE_findLocalName(uint8_t *pEvtData, uint8_t dataLen);
 static void MyBLE_addDeviceName(uint8_t i, uint8_t *pEvtData, uint8_t dataLen);
 static void MyBLE_showDevices();
+static uint8_t MyBLE_eventCB(gapCentralRoleEvent_t *pEvent);
+
 
 //===============END MY BLE FUNCS====================
 
 static void ClickerHandleButton0SwiFxn(uintptr_t arg0);  // SOLUTION
 static void ClickerHandleButton1SwiFxn(uintptr_t arg0);  // SOLUTION
 static void ChangeBLEName();
+static UInt32 GetTime();
+static char* GetDeviceID();
+static bool isGateWay(uint8_t deviceNum);
+static void FindGateway();
+static void DiscoverDevicesInBackgournd();
+static char* GetDeviceNameFromDevList(uint8_t deviceNum);
+static void HandleNameReadFromDiscovery(uint8_t deviceNum);
+static void HandleNewGateWayName();
 
 /*********************************************************************
  * PROFILE CALLBACKS
  */
 
 // GAP Role Callbacks
-static gapRolesCBs_t user_gapRoleCBs = { user_gapStateChangeCB // Profile State Change Callbacks
+static gapCentralRoleCB_t MyBLE_roleDiscoveryCB = { MyBLE_eventCB    // for discovery
+		};
+
+
+// GAP Role Callbacks
+static gapRolesCBs_t user_gapRoleAdvertiseCBs = { user_gapStateChangeCB // Profile State Change Callbacks
 		};
 
 // GAP Bond Manager Callbacks
@@ -550,7 +593,6 @@ static void ProjectZero_init(void) {
 	Clock_construct(&button1DebounceClock, ClickerHandleButton1SwiFxn,
 			50 * (1000 / Clock_tickPeriod), &clockParams);
 
-
 	// ******************************************************************
 	// BLE Stack initialization
 	// ******************************************************************
@@ -647,7 +689,7 @@ static void ProjectZero_init(void) {
 	DataService_SetParameter(DS_STREAM_ID, DS_STREAM_LEN, initVal);
 
 	// Start the stack in Peripheral mode.
-	VOID GAPRole_StartDevice(&user_gapRoleCBs);
+	VOID GAPRole_StartDevice(&user_gapRoleAdvertiseCBs);
 
 	// Start Bond Manager
 	VOID GAPBondMgr_Register(&user_bondMgrCBs);
@@ -812,19 +854,41 @@ static void user_processApplicationMessage(app_msg_t *pMsg) {
 	}
 		break;
 
-	case BLESearchDevices:
-		/* Message from swi about clock expires */ // SOLUTION
+	case BLESearchDevices: //TODO remove
 	{
 		MyPrint("BLESearchDevices");
 		MyBLE_discoverDevices();
 	}
 		break;
 
-	case BLEShowDevices:
-		/* Message from swi about clock expires */ // SOLUTION
-	{
+	case BLEShowDevices: {
 		MyPrint("BLEShowDevices");
 		MyBLE_showDevices();
+	}
+		break;
+
+	case BLENewGateWayName: {
+		MyPrint("BLENewGateWayName");
+		HandleNewGateWayName();
+
+	}
+		break;
+
+	case BLEFindGateWay: {
+		MyPrint("BLEFindGateWay");
+		FindGateway();
+	}
+		break;
+
+	case BLEDiscoverDevices: {
+		MyPrint("BLEDiscoverDevices");
+		DiscoverDevicesInBackgournd();
+	}
+		break;
+
+	case BLEError: {
+		MyPrint("BLEError");
+		//turn red led
 	}
 		break;
 
@@ -1154,6 +1218,7 @@ void user_DataService_CfgChangeHandler(char_data_t *pCharData) {
  * @return  TRUE if safe to deallocate incoming message, FALSE otherwise.
  */
 static uint8_t ProjectZero_processStackMsg(ICall_Hdr *pMsg) {
+	MyPrint("ProjectZero_processStackMsg");
 	uint8_t safeToDealloc = TRUE;
 
 	switch (pMsg->event) {
@@ -1682,6 +1747,8 @@ static void MyPrint(const char* str) {
 //=========================MYBLE===========================
 
 static void MyBLE_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
+	MyPrint("MyBLE_processRoleEvent");
+
 	switch (pEvent->gap.opcode) {
 	case GAP_DEVICE_INIT_DONE_EVENT: {
 		maxPduSize = pEvent->initDone.dataPktLen;
@@ -1690,15 +1757,20 @@ static void MyBLE_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 		break;
 
 	case GAP_DEVICE_INFO_EVENT: {
-		//Find peer device address by UUID
-//		if ( (DEFAULT_DEV_DISC_BY_SVC_UUID == FALSE) ||
-//			MyBLE_findSvcUuid(SIMPLEPROFILE_SERV_UUID,
-//                                         pEvent->deviceInfo.pEvtData,
-//                                         pEvent->deviceInfo.dataLen))
-//		{
-//			MyBLE_addDeviceInfo(pEvent->deviceInfo.addr,
-//                                           pEvent->deviceInfo.addrType);
-//		}
+		if (MyBLE_findLocalName(pEvent->deviceInfo.pEvtData,
+				pEvent->deviceInfo.dataLen)) {
+			MyBLE_addDeviceInfo(pEvent->deviceInfo.addr,
+					pEvent->deviceInfo.addrType);
+
+			MyBLE_addDeviceName(scanRes - 1, pEvent->deviceInfo.pEvtData,
+					pEvent->deviceInfo.dataLen);
+
+			if (isGateWay(scanRes - 1)) {
+				HandleNameReadFromDiscovery(scanRes - 1);
+			} else {
+				scanRes = scanRes - 1;
+			}
+		}
 
 		// Check if the discovered device is already in scan results
 		uint8_t i;
@@ -1795,6 +1867,22 @@ static void MyBLE_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 	}
 }
 
+static uint8_t MyBLE_eventCB(gapCentralRoleEvent_t *pEvent) {
+//	app_msg_t *pMsg = ICall_malloc(sizeof(sbcEvt_t));
+//
+//	// Create dynamic pointer to message.
+//	if (pMsg) {
+//		pMsg->hdr.event = event;
+//		pMsg->hdr.state = status;
+//		pMsg->pData = pData;
+//	}
+//
+//	ProjectZero_processStackMsg((ICall_Hdr *) pMsg->pData);
+//
+//	// Free the stack message
+//	ICall_freeMsg(pMsg->pData);
+}
+
 void MyBLE_discoverDevices() {
 	MyPrint("MyBLE_discoverDevices");
 	if (!scanningStarted) {
@@ -1803,14 +1891,16 @@ void MyBLE_discoverDevices() {
 		//Clear old scan results
 		scanRes = 0;
 		memset(devList, NULL, sizeof(devList[0]) * DEFAULT_MAX_SCAN_RES);
-
 		Display_clearLines(dispHandle2, ROW_ONE, ROW_SEVEN);Display_print0(dispHandle2, ROW_ONE, 0, "Discovering...");
+//		GAPCentralRole_StartDevice();
 		GAPCentralRole_StartDiscovery(DEFAULT_DISCOVERY_MODE,
 		DEFAULT_DISCOVERY_ACTIVE_SCAN,
 		DEFAULT_DISCOVERY_WHITE_LIST);
 	} else {
 		GAPCentralRole_CancelDiscovery();
 	}
+	MyPrint("End MyBLE_discoverDevices");
+
 }
 
 void MyBLE_showDevices() {
@@ -1941,12 +2031,29 @@ void ClickerHandleButton0SwiFxn(uintptr_t arg0) {
 	MyPrint("ClickerHandleButton0SwiFxn");
 	// Can't call blocking TI-RTOS calls or BLE APIs from here, as it is Swi context
 	// .. Send a message to the Task that something is afoot.
-	user_enqueueRawAppMsg(BLEChangeAdvertiseName, NULL, 0); // Not sending any data here, just a signal
-	user_enqueueRawAppMsg(BLESearchDevices, NULL, 0); // Not sending any data here, just a signal
+	if (firstUsage) {
+		firstUsage = FALSE;
+		user_enqueueRawAppMsg(BLEFindGateWay, NULL, 0);
+		user_enqueueRawAppMsg(BLEDiscoverDevices, NULL, 0);
+		return;
+	}
+	if (foundGateway) {
+		user_enqueueRawAppMsg(BLEChangeAdvertiseName, NULL, 0);
+		user_enqueueRawAppMsg(BLESearchDevices, NULL, 0);
+		return;
+	}
+	user_enqueueRawAppMsg(BLEError, NULL, 0);
 }
 
 void ClickerHandleButton1SwiFxn(uintptr_t arg0) {
+	if (firstUsage) {
+		firstUsage = FALSE;
+		user_enqueueRawAppMsg(BLEFindGateWay, NULL, 0);
+		user_enqueueRawAppMsg(BLEDiscoverDevices, NULL, 0);
+		return;
+	}
 	MyPrint("ClickerHandleButton1SwiFxn");
+	GAPCentralRole_CancelDiscovery();
 	user_enqueueRawAppMsg(BLEShowDevices, NULL, 0); // Not sending any data here, just a signal
 }
 
@@ -1955,6 +2062,51 @@ void ChangeBLEName() {
 	// Initialize Advertisement data
 	GAPRole_SetParameter(GAPROLE_ADVERT_DATA, sizeof(advertData), advertData);
 }
+
+UInt32 GetTime() {
+	lastTimestamp = Timestamp_get32();
+	return lastTimestamp;
+}
+char* GetDeviceID() {
+	return 0;
+}
+
+char* GetDeviceNameFromDevList(uint8_t deviceNum) {
+	return devList[deviceNum].localName;
+}
+
+bool isGateWay(uint8_t deviceNum) {
+	return TRUE;
+	char* name = GetDeviceNameFromDevList(deviceNum);
+	if (name[0] == 'g') //TODO UNIQUE GATEWAY NAME
+		return TRUE;
+	else
+		return FALSE;
+}
+
+void HandleNameReadFromDiscovery(uint8_t deviceNum) {
+//	char* name=GetDeviceNameFromDevList(deviceNum);
+//	if (memcmp(lastGateWayName,name,MAX_GATEWAY_NAME)==0)
+//		return;
+//	lastGateWayName=name;
+	user_enqueueRawAppMsg(BLENewGateWayName, NULL, 0); // Not sending any data here, just a signal
+}
+
+void HandleNewGateWayName() {
+	//handle new question,new feedback
+}
+
+void FindGateway() {
+	foundGateway = TRUE;
+	//search devices
+	//change my name to init+device id
+	//get my appID
+}
+
+void DiscoverDevicesInBackgournd() {
+	MyBLE_discoverDevices();//TODO CLOCK OR WHEN ENDS IN THE ROLE START IT AGAIN
+}
+
 /*********************************************************************
  *********************************************************************/
 

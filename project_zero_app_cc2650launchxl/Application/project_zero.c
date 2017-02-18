@@ -187,6 +187,24 @@ static uint8_t scanRspData[] = {
 // Default service discovery timer delay in ms
 #define DEFAULT_SVC_DISCOVERY_DELAY           4000
 
+// Default passcode
+#define DEFAULT_PASSCODE                      19655
+
+// Default GAP pairing mode
+#define DEFAULT_PAIRING_MODE                  GAPBOND_PAIRING_MODE_WAIT_FOR_REQ
+
+// Default MITM mode (TRUE to require passcode or OOB when pairing)
+#define DEFAULT_MITM_MODE                     FALSE
+
+// Default bonding mode, TRUE to bond
+#define DEFAULT_BONDING_MODE                  TRUE
+
+// Default GAP bonding I/O capabilities
+#define DEFAULT_IO_CAPABILITIES               GAPBOND_IO_CAP_DISPLAY_ONLY
+
+// Default service discovery timer delay in ms
+#define DEFAULT_SVC_DISCOVERY_DELAY           4000
+
 // Discovery mode (limited, general, all)
 #define DEFAULT_DISCOVERY_MODE                DEVDISC_MODE_ALL
 
@@ -282,6 +300,17 @@ static Clock_Struct connectingClock;
 // Number of scan results and scan result index
 static uint8_t scanRes;
 static uint8_t scanIdx;
+
+// RSSI read data structure
+typedef struct
+{
+  Clock_Struct *pClock; // pointer to clock struct
+  uint16_t period;      // how often to read RSSI
+  uint16_t connHandle;  // connection handle
+} readRssi_t;
+
+// Array of RSSI read structures
+static readRssi_t readRssi[MAX_NUM_BLE_CONNS];
 
 typedef struct {
 	char localName[MAX_GATEWAY_NAME];	 		 //!< Device's Name
@@ -603,6 +632,127 @@ void StartCentralMode() {
 	VOID GAPCentralRole_StartDevice(&MyBLE_roleDiscoveryCB);
 }
 
+static void ProjectZero_init(void) {
+	uint8_t i;
+
+	  // ******************************************************************
+	  // N0 STACK API CALLS CAN OCCUR BEFORE THIS CALL TO ICall_registerApp
+	  // ******************************************************************
+	  // Register the current thread as an ICall dispatcher application
+	  // so that the application can send and receive messages.
+	  ICall_registerApp(&selfEntity, &sem);
+
+	  // Create an RTOS queue for message from profile to be sent to app.
+	Queue_construct(&applicationMsgQ, NULL);
+	hApplicationMsgQ = Queue_handle(&applicationMsgQ);
+
+	// Open LED pins
+		ledPinHandle = PIN_open(&ledPinState, ledPinTable);
+		if (!ledPinHandle) {
+			Log_error0("Error initializing board LED pins");
+			Task_exit();
+		}
+
+		buttonPinHandle = PIN_open(&buttonPinState, buttonPinTable);
+		if (!buttonPinHandle) {
+			Log_error0("Error initializing button pins");
+			Task_exit();
+		}
+
+		// Setup callback for button pins
+		if (PIN_registerIntCb(buttonPinHandle, &buttonCallbackFxn) != 0) {
+			Log_error0("Error registering button callback function");
+			Task_exit();
+		}
+
+	  // Setup discovery delay as a one-shot timer
+	  Util_constructClock(&startDiscClock, MyBLE_startDiscHandler,
+	                      DEFAULT_SVC_DISCOVERY_DELAY, 0, false, 0);
+
+	  // Construct clock for connecting timeout
+	  	Util_constructClock(&connectingClock, MyBLE_timeoutConnecting,
+	  	DEFAULT_SCAN_DURATION, 0, false, 0);
+
+	  Clock_Params clockParams;
+	  	Clock_Params_init(&clockParams);
+	  //
+	  //    // Both clock objects use the same callback, so differentiate on argument
+	  //    // given to the callback in Swi context
+	  	clockParams.arg = Board_BUTTON0;
+	  //
+	  //    // Initialize to 50 ms timeout when Clock_start is called.
+	  //    // Timeout argument is in ticks, so convert from ms to ticks via tickPeriod.
+	  	Clock_construct(&button0DebounceClock, ClickerHandleButton0SwiFxn,
+	  			50 * (1000 / Clock_tickPeriod), &clockParams);
+
+	  	// Second button
+	  	clockParams.arg = Board_BUTTON1;
+	  	Clock_construct(&button1DebounceClock, ClickerHandleButton1SwiFxn,
+	  			50 * (1000 / Clock_tickPeriod), &clockParams);
+
+	  dispHandle = Display_open(Display_Type_LCD, NULL);
+
+	  // Initialize internal data
+	  for (i = 0; i < MAX_NUM_BLE_CONNS; i++)
+	  {
+	    readRssi[i].connHandle = GAP_CONNHANDLE_ALL;
+	    readRssi[i].pClock = NULL;
+	  }
+
+	  // Setup Central Profile
+	  {
+	    uint8_t scanRes = DEFAULT_MAX_SCAN_RES;
+
+	    GAPCentralRole_SetParameter(GAPCENTRALROLE_MAX_SCAN_RES, sizeof(uint8_t),
+	                                &scanRes);
+	  }
+
+	  // Setup GAP
+	  GAP_SetParamValue(TGAP_GEN_DISC_SCAN, DEFAULT_SCAN_DURATION);
+	  GAP_SetParamValue(TGAP_LIM_DISC_SCAN, DEFAULT_SCAN_DURATION);
+	  GGS_SetParameter(GGS_DEVICE_NAME_ATT, GAP_DEVICE_NAME_LEN,
+	                   (void *)attDeviceName);
+
+	  // Setup the GAP Bond Manager
+	  {
+	    uint32_t passkey = DEFAULT_PASSCODE;
+	    uint8_t pairMode = DEFAULT_PAIRING_MODE;
+	    uint8_t mitm = DEFAULT_MITM_MODE;
+	    uint8_t ioCap = DEFAULT_IO_CAPABILITIES;
+	    uint8_t bonding = DEFAULT_BONDING_MODE;
+
+	    GAPBondMgr_SetParameter(GAPBOND_DEFAULT_PASSCODE, sizeof(uint32_t),
+	                            &passkey);
+	    GAPBondMgr_SetParameter(GAPBOND_PAIRING_MODE, sizeof(uint8_t), &pairMode);
+	    GAPBondMgr_SetParameter(GAPBOND_MITM_PROTECTION, sizeof(uint8_t), &mitm);
+	    GAPBondMgr_SetParameter(GAPBOND_IO_CAPABILITIES, sizeof(uint8_t), &ioCap);
+	    GAPBondMgr_SetParameter(GAPBOND_BONDING_ENABLED, sizeof(uint8_t), &bonding);
+	  }
+
+	  // Initialize GATT Client
+	  VOID GATT_InitClient();
+
+	  // Register to receive incoming ATT Indications/Notifications
+	  GATT_RegisterForInd(selfEntity);
+
+	  // Initialize GATT attributes
+	  GGS_AddService(GATT_ALL_SERVICES);         // GAP
+	  GATTServApp_AddService(GATT_ALL_SERVICES); // GATT attributes
+
+	  // Start the Device
+	  VOID GAPCentralRole_StartDevice(&MyBLE_roleDiscoveryCB);
+
+	  // Register with bond manager after starting device
+//	  GAPBondMgr_Register(&SimpleBLECentral_bondCB);
+
+	  // Register with GAP for HCI/Host messages (for RSSI)
+	  GAP_RegisterForMsgs(selfEntity);
+
+	  // Register for GATT local events and ATT Responses pending for transmission
+	  GATT_RegisterForMsgs(selfEntity);
+
+	  Display_print0(dispHandle, 0, 0, "BLE Central");
+}
 /*
  * @brief   Called before the task loop and contains application-specific
  *          initialization of the BLE stack, hardware setup, power-state
@@ -612,7 +762,8 @@ void StartCentralMode() {
  *
  * @return  None.
  */
-static void ProjectZero_init(void) {
+
+static void ProjectZero_init2(void) {
 	// ******************************************************************
 	// NO STACK API CALLS CAN OCCUR BEFORE THIS CALL TO ICall_registerApp
 	// ******************************************************************
@@ -2151,7 +2302,7 @@ void FindGateway() {
 }
 
 void DiscoverDevicesInBackgournd() {
-	StartCentralMode();
+//	StartCentralMode();
 	MyBLE_discoverDevices();//TODO CLOCK OR WHEN ENDS IN THE ROLE START IT AGAIN
 }
 

@@ -108,15 +108,17 @@ typedef enum {
 	APP_MSG_SERVICE_CFG, /* A characteristic configuration has changed  */
 	APP_MSG_UPDATE_CHARVAL, /* Request from ourselves to update a value    */
 	APP_MSG_GAP_STATE_CHANGE, /* The GAP / connection state has changed      */
+	APP_MSG_DISCOVERY_STATE_CHANGE,/* The central state has changed      */
 	APP_MSG_BUTTON_DEBOUNCED, /* A button has been debounced with new value  */
 	APP_MSG_SEND_PASSCODE, /* A pass-code/PIN is requested during pairing */
 	BLEChangeAdvertiseName,
-	BLESearchDevices,
 	BLEShowDevices,
 	BLENewGateWayName,
 	BLEFindGateWay,
 	BLEDiscoverDevices,
-	BLEError
+	BLEStartAdvertise,
+	BLEError,
+	UnHandeled
 } app_msg_types_t;
 
 // Struct for messages sent to the application task
@@ -182,6 +184,9 @@ static uint8_t scanRspData[] = {
 // Scan duration in ms
 #define DEFAULT_SCAN_DURATION                 4000
 
+// Default service discovery timer delay in ms
+#define DEFAULT_SVC_DISCOVERY_DELAY           4000
+
 // Discovery mode (limited, general, all)
 #define DEFAULT_DISCOVERY_MODE                DEVDISC_MODE_ALL
 
@@ -198,7 +203,8 @@ typedef enum {
 	BLE_STATE_CONNECTING,
 	BLE_STATE_CONNECTED,
 	BLE_STATE_DISCOVERED,
-	BLE_STATE_DISCONNECTING
+	BLE_STATE_DISCONNECTING,
+	BLE_STATE_ADVERTISING
 } bleState_t;
 
 // Discovery states
@@ -260,6 +266,9 @@ static bleState_t state = BLE_STATE_IDLE;
 
 // Discovery state
 static bleDiscState_t discState = BLE_DISC_STATE_IDLE;
+
+// Application state - initial state is advertising
+static uint8 masterSlave_State = BLE_STATE_ADVERTISING;
 
 // Connection paramters
 static uint8_t currentConnectionParameter = INITIAL_PARAMETERS;
@@ -438,6 +447,9 @@ static char *Util_getLocalNameStr(const uint8_t *data);
 static void MyPrint(const char* str);
 
 //===============MY BLE FUNCS====================
+static void StartAdvertiseMode();
+static void StartCentralMode();
+
 static void MyBLE_processRoleEvent(gapCentralRoleEvent_t *pEvent);
 static void MyBLE_discoverDevices();
 static void MyBLE_addDeviceInfo(uint8_t *pAddr, uint8_t addrType);
@@ -445,7 +457,8 @@ static bool MyBLE_findLocalName(uint8_t *pEvtData, uint8_t dataLen);
 static void MyBLE_addDeviceName(uint8_t i, uint8_t *pEvtData, uint8_t dataLen);
 static void MyBLE_showDevices();
 static uint8_t MyBLE_eventCB(gapCentralRoleEvent_t *pEvent);
-
+static void MyBLE_startDiscHandler(UArg a0);
+static void MyBLE_timeoutConnecting(UArg arg0);
 
 //===============END MY BLE FUNCS====================
 
@@ -466,9 +479,8 @@ static void HandleNewGateWayName();
  */
 
 // GAP Role Callbacks
-static gapCentralRoleCB_t MyBLE_roleDiscoveryCB = { MyBLE_eventCB    // for discovery
+static gapCentralRoleCB_t MyBLE_roleDiscoveryCB = { MyBLE_eventCB // for discovery
 		};
-
 
 // GAP Role Callbacks
 static gapRolesCBs_t user_gapRoleAdvertiseCBs = { user_gapStateChangeCB // Profile State Change Callbacks
@@ -525,6 +537,72 @@ void ProjectZero_createTask(void) {
 	Task_construct(&przTask, ProjectZero_taskFxn, &taskParams, NULL);
 }
 
+void StartAdvertiseMode() {
+	MyPrint("Start Advertise Mode");
+
+	// ******************************************************************
+	// BLE Stack initialization
+	// ******************************************************************
+	// Setup the GAP Peripheral Role Profile
+	uint8_t initialAdvertEnable = TRUE;
+	// Advertise on power-up// By setting this to zero, the device will go into the waiting state after
+	// being discoverable. Otherwise wait this long [ms] before advertising again.
+	uint16_t advertOffTime = 0;
+	// miliseconds// Set advertisement enabled.
+	GAPRole_SetParameter(GAPROLE_ADVERT_ENABLED, sizeof(uint8_t),
+			&initialAdvertEnable);
+	// Configure the wait-time before restarting advertisement automatically
+	GAPRole_SetParameter(GAPROLE_ADVERT_OFF_TIME, sizeof(uint16_t),
+			&advertOffTime);
+	// Initialize Scan Response data
+	GAPRole_SetParameter(GAPROLE_SCAN_RSP_DATA, sizeof(scanRspData),
+			scanRspData);
+	// Initialize Advertisement data
+	GAPRole_SetParameter(GAPROLE_ADVERT_DATA, sizeof(advertData), advertData);
+	Log_info1("Name in advertData array: \x1b[33m%s\x1b[0m",
+			(IArg)Util_getLocalNameStr(advertData));
+	// Set advertising interval
+	uint16_t advInt = DEFAULT_ADVERTISING_INTERVAL;
+	GAP_SetParamValue(TGAP_LIM_DISC_ADV_INT_MIN, advInt);
+	GAP_SetParamValue(TGAP_LIM_DISC_ADV_INT_MAX, advInt);
+	GAP_SetParamValue(TGAP_GEN_DISC_ADV_INT_MIN, advInt);
+	GAP_SetParamValue(TGAP_GEN_DISC_ADV_INT_MAX, advInt);
+	// Set duration of advertisement before stopping in Limited adv mode.
+	GAP_SetParamValue(TGAP_LIM_ADV_TIMEOUT, 30); // Seconds
+
+	// Start the stack in Peripheral mode.
+	VOID GAPRole_StartDevice(&user_gapRoleAdvertiseCBs);
+}
+
+void StartCentralMode() {
+	MyPrint("Start Central Mode");
+
+	bool new_adv_enabled_status = FALSE;
+
+	//change the GAP advertisement status to opposite of current status
+	GAPRole_SetParameter( GAPROLE_ADVERT_ENABLED, sizeof(uint8),
+			&new_adv_enabled_status);
+
+	// Setup Central Profile
+
+	uint8_t scanRes = DEFAULT_MAX_SCAN_RES;
+
+	GAPCentralRole_SetParameter(GAPCENTRALROLE_MAX_SCAN_RES, sizeof(uint8_t),
+			&scanRes);
+
+	GAP_SetParamValue(TGAP_GEN_DISC_SCAN, DEFAULT_SCAN_DURATION);
+	GAP_SetParamValue(TGAP_LIM_DISC_SCAN, DEFAULT_SCAN_DURATION);
+//	GGS_SetParameter(GGS_DEVICE_NAME_ATT, GAP_DEVICE_NAME_LEN,(void *) attDeviceName);
+
+	// Initialize GATT Client
+//	VOID GATT_InitClient();
+
+	// Register to receive incoming ATT Indications/Notifications
+//	GATT_RegisterForInd(selfEntity);
+
+	VOID GAPCentralRole_StartDevice(&MyBLE_roleDiscoveryCB);
+}
+
 /*
  * @brief   Called before the task loop and contains application-specific
  *          initialization of the BLE stack, hardware setup, power-state
@@ -575,6 +653,14 @@ static void ProjectZero_init(void) {
 		Task_exit();
 	}
 
+	// Setup discovery delay as a one-shot timer
+	Util_constructClock(&startDiscClock, MyBLE_startDiscHandler,
+			DEFAULT_SVC_DISCOVERY_DELAY, 0, false, 0);
+
+	// Construct clock for connecting timeout
+	Util_constructClock(&connectingClock, MyBLE_timeoutConnecting,
+	DEFAULT_SCAN_DURATION, 0, false, 0);
+
 //    // Create the debounce clock objects for Button 0 and Button 1
 	Clock_Params clockParams;
 	Clock_Params_init(&clockParams);
@@ -598,41 +684,8 @@ static void ProjectZero_init(void) {
 	// ******************************************************************
 
 	// Setup the GAP Peripheral Role Profile
-	uint8_t initialAdvertEnable = TRUE;  // Advertise on power-up
-
-	// By setting this to zero, the device will go into the waiting state after
-	// being discoverable. Otherwise wait this long [ms] before advertising again.
-	uint16_t advertOffTime = 0; // miliseconds
-
-	// Set advertisement enabled.
-	GAPRole_SetParameter(GAPROLE_ADVERT_ENABLED, sizeof(uint8_t),
-			&initialAdvertEnable);
-
-	// Configure the wait-time before restarting advertisement automatically
-	GAPRole_SetParameter(GAPROLE_ADVERT_OFF_TIME, sizeof(uint16_t),
-			&advertOffTime);
-
-	// Initialize Scan Response data
-	GAPRole_SetParameter(GAPROLE_SCAN_RSP_DATA, sizeof(scanRspData),
-			scanRspData);
-
-	// Initialize Advertisement data
-	GAPRole_SetParameter(GAPROLE_ADVERT_DATA, sizeof(advertData), advertData);
-
-	Log_info1("Name in advertData array: \x1b[33m%s\x1b[0m",
-			(IArg)Util_getLocalNameStr(advertData));
-
-	// Set advertising interval
-	uint16_t advInt = DEFAULT_ADVERTISING_INTERVAL;
-
-	GAP_SetParamValue(TGAP_LIM_DISC_ADV_INT_MIN, advInt);
-	GAP_SetParamValue(TGAP_LIM_DISC_ADV_INT_MAX, advInt);
-	GAP_SetParamValue(TGAP_GEN_DISC_ADV_INT_MIN, advInt);
-	GAP_SetParamValue(TGAP_GEN_DISC_ADV_INT_MAX, advInt);
-
-	// Set duration of advertisement before stopping in Limited adv mode.
-	GAP_SetParamValue(TGAP_LIM_ADV_TIMEOUT, 30); // Seconds
-
+	StartAdvertiseMode();
+//	StartCentralMode();
 	// ******************************************************************
 	// BLE Bond Manager initialization
 	// ******************************************************************
@@ -687,9 +740,6 @@ static void ProjectZero_init(void) {
 	// Initalization of characteristics in Data_Service that can provide data.
 	DataService_SetParameter(DS_STRING_ID, sizeof(initString), initString);
 	DataService_SetParameter(DS_STREAM_ID, DS_STREAM_LEN, initVal);
-
-	// Start the stack in Peripheral mode.
-	VOID GAPRole_StartDevice(&user_gapRoleAdvertiseCBs);
 
 	// Start Bond Manager
 	VOID GAPBondMgr_Register(&user_bondMgrCBs);
@@ -827,6 +877,9 @@ static void user_processApplicationMessage(app_msg_t *pMsg) {
 	case APP_MSG_GAP_STATE_CHANGE: /* Message that GAP state changed  */
 		user_processGapStateChangeEvt(*(gaprole_States_t *) pMsg->pdu);
 		break;
+	case APP_MSG_DISCOVERY_STATE_CHANGE:
+		MyBLE_processRoleEvent((gapCentralRoleEvent_t *) pMsg);
+		break;
 
 	case APP_MSG_SEND_PASSCODE: /* Message about pairing PIN request */
 	{
@@ -848,50 +901,50 @@ static void user_processApplicationMessage(app_msg_t *pMsg) {
 
 	case BLEChangeAdvertiseName: /* Message from swi about clock expires */ // SOLUTION
 	{
-		MyPrint("BLESearchAdvertise");
+		MyPrint("Process BLESearchAdvertise");
 
 		ChangeBLEName();
 	}
 		break;
 
-	case BLESearchDevices: //TODO remove
-	{
-		MyPrint("BLESearchDevices");
-		MyBLE_discoverDevices();
-	}
-		break;
-
 	case BLEShowDevices: {
-		MyPrint("BLEShowDevices");
+		MyPrint("Process BLEShowDevices");
 		MyBLE_showDevices();
 	}
 		break;
 
 	case BLENewGateWayName: {
-		MyPrint("BLENewGateWayName");
+		MyPrint("Process BLENewGateWayName");
 		HandleNewGateWayName();
 
 	}
 		break;
 
 	case BLEFindGateWay: {
-		MyPrint("BLEFindGateWay");
+		MyPrint("Process BLEFindGateWay");
 		FindGateway();
 	}
 		break;
 
 	case BLEDiscoverDevices: {
-		MyPrint("BLEDiscoverDevices");
+		MyPrint("Process BLEDiscoverDevices");
 		DiscoverDevicesInBackgournd();
 	}
 		break;
 
+	case BLEStartAdvertise: {
+		MyPrint("Process BLEStartAdvertise");
+		StartAdvertiseMode();
+	}
+		break;
+
 	case BLEError: {
-		MyPrint("BLEError");
+		MyPrint("Process BLEError");
 		//turn red led
 	}
 		break;
 
+		MyPrint("UnProcessed App Event");
 	}
 
 }
@@ -993,11 +1046,6 @@ static void user_processGapStateChangeEvt(gaprole_States_t newState) {
  * @return  None.
  */
 static void user_handleButtonPress(button_state_t *pState) {
-	Log_info2("%s %s",
-			(IArg)(pState->pinId == Board_BUTTON0?"Button 0":"Button 1"),
-			(IArg)(pState->state?"\x1b[32mpressed\x1b[0m":
-					"\x1b[33mreleased\x1b[0m"));
-
 	// Update the service with the new value.
 	// Will automatically send notification/indication if enabled.
 	switch (pState->pinId) {
@@ -1545,11 +1593,8 @@ static void buttonDebounceSwiFxn(UArg buttonId) {
  * @param  pinId     The pin that generated the interrupt
  */
 static void buttonCallbackFxn(PIN_Handle handle, PIN_Id pinId) {
-	Log_info1("Button interrupt: %s",
-			(IArg)((pinId == Board_BUTTON0)?"Button 0":"Button 1"));
-
 	// Disable interrupt on that pin for now. Re-enabled after debounce.
-	PIN_setConfig(handle, PIN_BM_IRQ, pinId | PIN_IRQ_DIS);
+//	PIN_setConfig(handle, PIN_BM_IRQ, pinId | PIN_IRQ_DIS);
 
 	// Start debounce timer
 	switch (pinId) {
@@ -1868,19 +1913,19 @@ static void MyBLE_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 }
 
 static uint8_t MyBLE_eventCB(gapCentralRoleEvent_t *pEvent) {
-//	app_msg_t *pMsg = ICall_malloc(sizeof(sbcEvt_t));
-//
-//	// Create dynamic pointer to message.
-//	if (pMsg) {
-//		pMsg->hdr.event = event;
-//		pMsg->hdr.state = status;
-//		pMsg->pData = pData;
-//	}
-//
-//	ProjectZero_processStackMsg((ICall_Hdr *) pMsg->pData);
-//
-//	// Free the stack message
-//	ICall_freeMsg(pMsg->pData);
+	user_enqueueRawAppMsg(APP_MSG_DISCOVERY_STATE_CHANGE, (uint8_t *) &pEvent,
+			sizeof(pEvent));
+}
+
+static void MyBLE_startDiscHandler(UArg a0) {
+	// Wake up the application thread when it waits for clock event
+	Semaphore_post(sem);
+}
+
+static void MyBLE_timeoutConnecting(UArg arg0) {
+	if (state == BLE_STATE_CONNECTING) {
+		user_enqueueRawAppMsg(UnHandeled, 0, NULL);
+	}
 }
 
 void MyBLE_discoverDevices() {
@@ -2038,8 +2083,10 @@ void ClickerHandleButton0SwiFxn(uintptr_t arg0) {
 		return;
 	}
 	if (foundGateway) {
-		user_enqueueRawAppMsg(BLEChangeAdvertiseName, NULL, 0);
-		user_enqueueRawAppMsg(BLESearchDevices, NULL, 0);
+//		user_enqueueRawAppMsg(BLEChangeAdvertiseName, NULL, 0);
+//		user_enqueueRawAppMsg(BLEStartAdvertise, NULL, 0);
+		user_enqueueRawAppMsg(BLEShowDevices, NULL, 0);
+
 		return;
 	}
 	user_enqueueRawAppMsg(BLEError, NULL, 0);
@@ -2053,8 +2100,7 @@ void ClickerHandleButton1SwiFxn(uintptr_t arg0) {
 		return;
 	}
 	MyPrint("ClickerHandleButton1SwiFxn");
-	GAPCentralRole_CancelDiscovery();
-	user_enqueueRawAppMsg(BLEShowDevices, NULL, 0); // Not sending any data here, just a signal
+	user_enqueueRawAppMsg(BLEDiscoverDevices, NULL, 0);
 }
 
 void ChangeBLEName() {
@@ -2105,6 +2151,7 @@ void FindGateway() {
 }
 
 void DiscoverDevicesInBackgournd() {
+	StartCentralMode();
 	MyBLE_discoverDevices();//TODO CLOCK OR WHEN ENDS IN THE ROLE START IT AGAIN
 }
 

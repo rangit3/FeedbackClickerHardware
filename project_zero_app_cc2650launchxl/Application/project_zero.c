@@ -53,7 +53,9 @@
 #include <gatt.h>
 #include <gapgattserver.h>
 #include <gattservapp.h>
-#include <central.h>
+//#include <central.h>
+#include <peripheral.h>
+#include <observer.h>
 //#include <simple_central.h>
 #include <osal_snv.h>
 #include <gapbondmgr.h>
@@ -180,6 +182,12 @@ static uint8_t scanRspData[] = {
 #define DEFAULT_MAX_SCAN_RES                  8
 // Maximum number of scan responses
 #define DEFAULT_MAX_SCAN_RES                  8
+
+// Scan interval in ms
+#define DEFAULT_SCAN_INTERVAL                 10
+
+// Scan interval in ms
+#define DEFAULT_SCAN_WINDOW                   5
 
 // Scan duration in ms
 #define DEFAULT_SCAN_DURATION                 4000
@@ -450,13 +458,13 @@ static void MyPrint(const char* str);
 static void StartAdvertiseMode();
 static void StartCentralMode();
 
-static void MyBLE_processRoleEvent(gapCentralRoleEvent_t *pEvent);
+static void MyBLE_processRoleEvent(gapObserverRoleEvent_t *pEvent);
 static void MyBLE_discoverDevices();
 static void MyBLE_addDeviceInfo(uint8_t *pAddr, uint8_t addrType);
 static bool MyBLE_findLocalName(uint8_t *pEvtData, uint8_t dataLen);
 static void MyBLE_addDeviceName(uint8_t i, uint8_t *pEvtData, uint8_t dataLen);
 static void MyBLE_showDevices();
-static uint8_t MyBLE_eventCB(gapCentralRoleEvent_t *pEvent);
+static uint8_t MyBLE_eventCB(gapObserverRoleEvent_t *pEvent);
 static void MyBLE_startDiscHandler(UArg a0);
 static void MyBLE_timeoutConnecting(UArg arg0);
 
@@ -479,7 +487,7 @@ static void HandleNewGateWayName();
  */
 
 // GAP Role Callbacks
-static gapCentralRoleCB_t MyBLE_roleDiscoveryCB = { MyBLE_eventCB // for discovery
+static gapObserverRoleCB_t MyBLE_roleDiscoveryCB = { MyBLE_eventCB // for discovery
 		};
 
 // GAP Role Callbacks
@@ -587,11 +595,17 @@ void StartCentralMode() {
 
 	uint8_t scanRes = DEFAULT_MAX_SCAN_RES;
 
-	GAPCentralRole_SetParameter(GAPCENTRALROLE_MAX_SCAN_RES, sizeof(uint8_t),
+	GAPRole_SetParameter(GAPOBSERVERROLE_MAX_SCAN_RES, sizeof(uint8_t),
 			&scanRes);
-
 	GAP_SetParamValue(TGAP_GEN_DISC_SCAN, DEFAULT_SCAN_DURATION);
 	GAP_SetParamValue(TGAP_LIM_DISC_SCAN, DEFAULT_SCAN_DURATION);
+	//Set scan interval
+	GAP_SetParamValue(TGAP_GEN_DISC_SCAN_INT,
+			(DEFAULT_SCAN_INTERVAL) / (0.625)); //period for one scan channel
+
+	//Set scan window
+	GAP_SetParamValue(TGAP_GEN_DISC_SCAN_WIND, (DEFAULT_SCAN_WINDOW) / (0.625)); //active scanning time within scan interval
+
 //	GGS_SetParameter(GGS_DEVICE_NAME_ATT, GAP_DEVICE_NAME_LEN,(void *) attDeviceName);
 
 	// Initialize GATT Client
@@ -600,7 +614,7 @@ void StartCentralMode() {
 	// Register to receive incoming ATT Indications/Notifications
 //	GATT_RegisterForInd(selfEntity);
 
-	VOID GAPCentralRole_StartDevice(&MyBLE_roleDiscoveryCB);
+	VOID GAPObserverRole_StartDevice(&MyBLE_roleDiscoveryCB);
 }
 
 /*
@@ -655,7 +669,7 @@ static void ProjectZero_init(void) {
 
 	// Setup discovery delay as a one-shot timer
 	Util_constructClock(&startDiscClock, MyBLE_startDiscHandler,
-			DEFAULT_SVC_DISCOVERY_DELAY, 0, false, 0);
+	DEFAULT_SVC_DISCOVERY_DELAY, 0, false, 0);
 
 	// Construct clock for connecting timeout
 	Util_constructClock(&connectingClock, MyBLE_timeoutConnecting,
@@ -878,7 +892,7 @@ static void user_processApplicationMessage(app_msg_t *pMsg) {
 		user_processGapStateChangeEvt(*(gaprole_States_t *) pMsg->pdu);
 		break;
 	case APP_MSG_DISCOVERY_STATE_CHANGE:
-		MyBLE_processRoleEvent((gapCentralRoleEvent_t *) pMsg);
+		MyBLE_processRoleEvent((gapObserverRoleEvent_t *) pMsg);
 		break;
 
 	case APP_MSG_SEND_PASSCODE: /* Message about pairing PIN request */
@@ -1271,7 +1285,7 @@ static uint8_t ProjectZero_processStackMsg(ICall_Hdr *pMsg) {
 
 	switch (pMsg->event) {
 	case GAP_MSG_EVENT:
-		MyBLE_processRoleEvent((gapCentralRoleEvent_t *) pMsg);
+		MyBLE_processRoleEvent((gapObserverRoleEvent_t *) pMsg);
 		break;
 
 	case GATT_MSG_EVENT:
@@ -1791,7 +1805,7 @@ static void MyPrint(const char* str) {
 
 //=========================MYBLE===========================
 
-static void MyBLE_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
+static void MyBLE_processRoleEvent(gapObserverRoleEvent_t *pEvent) {
 	MyPrint("MyBLE_processRoleEvent");
 
 	switch (pEvent->gap.opcode) {
@@ -1848,71 +1862,78 @@ static void MyBLE_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 	}
 		break;
 
-	case GAP_LINK_ESTABLISHED_EVENT: {
-		if (pEvent->gap.hdr.status == SUCCESS) {
-			//Connect to selected device
-			state = BLE_STATE_CONNECTED;
-			connHandle = pEvent->linkCmpl.connectionHandle;
-			procedureInProgress = TRUE;
-
-			// If service discovery not performed initiate service discovery
-			if (charHdl == 0) {
-				Util_startClock(&startDiscClock);
-			}
-
-			//Find device name in devList struct
-			uint8_t i;
-			for (i = 0; i < scanRes; i++) {
-				if (memcmp(pEvent->linkCmpl.devAddr, devList[i].addr,
-				B_ADDR_LEN) == NULL) {
-					break;
-				}
-			}Display_clearLines(dispHandle2, ROW_ONE, ROW_SEVEN);Display_print1(dispHandle2, ROW_ONE, 0, "%s", devList[i].localName);Display_print1(dispHandle2, ROW_TWO, 0, "%s", Util_convertBdAddr2Str(pEvent->linkCmpl.devAddr));Display_print0(dispHandle2, ROW_THREE, 0, "Connected");
-			selectedMenuItem = MENU_ITEM_CONN_PARAM_UPDATE;
-			Display_print0(dispHandle2, ROW_SEVEN, 0, ">Param upd req");
-		} else {
-			state = BLE_STATE_IDLE;
-			connHandle = GAP_CONNHANDLE_INIT;
-			discState = BLE_DISC_STATE_IDLE;
-
-			Display_clearLine(dispHandle2, ROW_FOUR);Display_print0(dispHandle2, ROW_TWO, 0, "Connect Failed");Display_print1(dispHandle2, ROW_THREE, 0, "Reason: %d", pEvent->gap.hdr.status);Display_print0(dispHandle2, ROW_SEVEN, 0, ">RIGHT to scan");
-		}
-	}
-		break;
-
-	case GAP_LINK_TERMINATED_EVENT: {
-		state = BLE_STATE_IDLE;
-		connHandle = GAP_CONNHANDLE_INIT;
-		discState = BLE_DISC_STATE_IDLE;
-		charHdl = 0;
-		procedureInProgress = FALSE;
-
-		// Cancel RSSI reads
-//		MyBLE_CancelRssi(pEvent->linkTerminate.connectionHandle);
-
-		//Clear screen and display disconnect reason
-		Display_clearLines(dispHandle2, ROW_ONE, ROW_SEVEN);Display_print0(dispHandle2, ROW_ONE, 0, "Disconnected");Display_print1(dispHandle2, ROW_TWO, 0, "Reason: %d", pEvent->linkTerminate.reason);Display_print0(dispHandle2, ROW_SEVEN, 0, ">RIGHT to scan");
-		selectedMenuItem = MENU_ITEM_CONN_PARAM_UPDATE;
-	}
-		break;
-
-	case GAP_LINK_PARAM_UPDATE_EVENT: {
-		if (state == BLE_STATE_CONNECTED) {
-			if (pEvent->linkUpdate.status == SUCCESS) {
-				Display_print1(dispHandle2, ROW_FOUR, 0, "ParUpd: %d ms", pEvent->linkUpdate.connInterval * 1.25);
-			} else {
-				Display_print1(dispHandle2, ROW_FOUR, 0, "Param error: %d", pEvent->linkUpdate.status);
-			}
-		}
-	}
-		break;
+//	case GAP_LINK_ESTABLISHED_EVENT: {
+//		if (pEvent->gap.hdr.status == SUCCESS) {
+//			//Connect to selected device
+//			state = BLE_STATE_CONNECTED;
+//			procedureInProgress = TRUE;
+//
+//			// If service discovery not performed initiate service discovery
+//			if (charHdl == 0) {
+//				Util_startClock(&startDiscClock);
+//			}
+//
+//			//new code TODO
+//			// Copy results
+//			scanRes = pEvent->discCmpl.numDevs;
+//			memcpy(devList, pEvent->discCmpl.pDevList,
+//					(sizeof(gapDevRec_t) * pEvent->discCmpl.numDevs));
+//
+////			//old code
+////			//Find device name in devList struct
+////			uint8_t i;
+////			for (i = 0; i < scanRes; i++) {
+////
+////				TODO change
+////				if (memcmp(pEvent->discCmpl.devAddr, devList[i].addr,
+////				B_ADDR_LEN) == NULL) {
+////					break;
+////				}
+//			}Display_clearLines(dispHandle2, ROW_ONE, ROW_SEVEN);Display_print1(dispHandle2, ROW_ONE, 0, "%s", devList[i].localName);Display_print1(dispHandle2, ROW_TWO, 0, "%s", Util_convertBdAddr2Str(pEvent->linkCmpl.devAddr));Display_print0(dispHandle2, ROW_THREE, 0, "Connected");
+//			selectedMenuItem = MENU_ITEM_CONN_PARAM_UPDATE;
+//			Display_print0(dispHandle2, ROW_SEVEN, 0, ">Param upd req");
+//		} else {
+//			state = BLE_STATE_IDLE;
+//			discState = BLE_DISC_STATE_IDLE;
+//
+//			Display_clearLine(dispHandle2, ROW_FOUR);Display_print0(dispHandle2, ROW_TWO, 0, "Connect Failed");Display_print1(dispHandle2, ROW_THREE, 0, "Reason: %d", pEvent->gap.hdr.status);Display_print0(dispHandle2, ROW_SEVEN, 0, ">RIGHT to scan");
+//		}
+//	}
+//		break;
+//
+//	case GAP_LINK_TERMINATED_EVENT: {
+//		state = BLE_STATE_IDLE;
+//		connHandle = GAP_CONNHANDLE_INIT;
+//		discState = BLE_DISC_STATE_IDLE;
+//		charHdl = 0;
+//		procedureInProgress = FALSE;
+//
+//		// Cancel RSSI reads
+////		MyBLE_CancelRssi(pEvent->linkTerminate.connectionHandle);
+//
+//		//Clear screen and display disconnect reason
+//		Display_clearLines(dispHandle2, ROW_ONE, ROW_SEVEN);Display_print0(dispHandle2, ROW_ONE, 0, "Disconnected");Display_print1(dispHandle2, ROW_TWO, 0, "Reason: %d", pEvent->linkTerminate.reason);Display_print0(dispHandle2, ROW_SEVEN, 0, ">RIGHT to scan");
+//		selectedMenuItem = MENU_ITEM_CONN_PARAM_UPDATE;
+//	}
+//		break;
+//
+//	case GAP_LINK_PARAM_UPDATE_EVENT: {
+//		if (state == BLE_STATE_CONNECTED) {
+//			if (pEvent->linkUpdate.status == SUCCESS) {
+//				Display_print1(dispHandle2, ROW_FOUR, 0, "ParUpd: %d ms", pEvent->linkUpdate.connInterval * 1.25);
+//			} else {
+//				Display_print1(dispHandle2, ROW_FOUR, 0, "Param error: %d", pEvent->linkUpdate.status);
+//			}
+//		}
+//	}
+//		break;
 
 	default:
 		break;
 	}
 }
 
-static uint8_t MyBLE_eventCB(gapCentralRoleEvent_t *pEvent) {
+static uint8_t MyBLE_eventCB(gapObserverRoleEvent_t *pEvent) {
 	user_enqueueRawAppMsg(APP_MSG_DISCOVERY_STATE_CHANGE, (uint8_t *) &pEvent,
 			sizeof(pEvent));
 }
@@ -1938,11 +1959,11 @@ void MyBLE_discoverDevices() {
 		memset(devList, NULL, sizeof(devList[0]) * DEFAULT_MAX_SCAN_RES);
 		Display_clearLines(dispHandle2, ROW_ONE, ROW_SEVEN);Display_print0(dispHandle2, ROW_ONE, 0, "Discovering...");
 //		GAPCentralRole_StartDevice();
-		GAPCentralRole_StartDiscovery(DEFAULT_DISCOVERY_MODE,
+		GAPObserverRole_StartDiscovery(DEFAULT_DISCOVERY_MODE,
 		DEFAULT_DISCOVERY_ACTIVE_SCAN,
 		DEFAULT_DISCOVERY_WHITE_LIST);
 	} else {
-		GAPCentralRole_CancelDiscovery();
+		GAPObserverRole_CancelDiscovery();
 	}
 	MyPrint("End MyBLE_discoverDevices");
 

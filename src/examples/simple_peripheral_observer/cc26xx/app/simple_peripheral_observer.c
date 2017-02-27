@@ -1044,6 +1044,9 @@ static void SimpleBLEPeripheral_handleKeys(uint8_t shift, uint8_t keys) {
 				Display_print0(dispHandle, 4, 0, "Scanning Off Fail");
 			}
 		}
+		else{// in advertise
+			SimpleBLEPeripheral_enqueueMsg(BLEChangeAdvertiseName, 0, NULL);
+		}
 
 		return;
 	}
@@ -1728,7 +1731,7 @@ void HandleNameReadFromDiscovery(uint8_t deviceNum) {
 //	if (memcmp(lastGateWayName,name,MAX_GATEWAY_NAME)==0)
 //		return;
 //	lastGateWayName=name;
-	SimpleBLEPeripheral_enqueueMsg(BLENewGateWayName, NULL, 0); // Not sending any data here, just a signal
+	SimpleBLEPeripheral_enqueueMsg(BLENewGateWayName, 0, NULL); // Not sending any data here, just a signal
 }
 
 void HandleNewGateWayName() {

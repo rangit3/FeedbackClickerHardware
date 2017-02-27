@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?ccsproject version="1.0"?>
+<projectOptions>
+	<ccsVersion value="6.2.0"/>
+	<deviceVariant value="Cortex M.CC2650F128"/>
+	<deviceFamily value="TMS470"/>
+	<deviceEndianness value="little"/>
+	<codegenToolVersion value="5.2.5"/>
+	<isElfFormat value="true"/>
+	<connection value="common/targetdb/connections/TIXDS110_Connection.xml"/>
+	<linkerCommandFile value="cc26xx_stack.cmd"/>
+	<rts value="libc.a"/>
+	<createSlaveProjects value=""/>
+	<templateProperties value="id=simple_peripheral_observer_cc2650lp_stack.projectspec.simple_peripheral_observer_cc2650lp_stack,target=ti.targets.arm.elf.M3,platform=ti.platforms.simplelink:CC2650F128,buildProfile=release,isHybrid=true,configuroOptions=--compileOptions &quot;${COMPILER_FLAGS} &quot; ,"/>
+	<origin value="C:\workspace_v6_2\FeedbackClickerHardware\simple_peripheral_observer\ccs\stack\simple_peripheral_observer_cc2650lp_stack.projectspec"/>
+	<filesToOpen value=""/>
+</projectOptions>

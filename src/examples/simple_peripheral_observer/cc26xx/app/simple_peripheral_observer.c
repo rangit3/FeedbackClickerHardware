@@ -659,6 +659,9 @@ static void SimpleBLEPeripheral_init(void) {
 #endif // FEATURE_OAD
 }
 
+static void handleDeviceDiscovered(char* deviceName, int length);
+
+static void handleNextHandles();
 /*********************************************************************
  * @fn      SimpleBLEPeripheral_taskFxn
  *
@@ -671,6 +674,10 @@ static void SimpleBLEPeripheral_init(void) {
 static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 	// Initialize application
 	SimpleBLEPeripheral_init();
+
+	char* deviceTestName = "CLKx1234567890";
+	handleDeviceDiscovered(deviceTestName, 14);
+	handleNextHandles();
 
 	// Application main loop
 	for (;;) {
@@ -1680,6 +1687,10 @@ static void MyBLE_addDeviceName(uint8_t i, uint8_t *pEvtData, uint8_t dataLen) {
 					pEvtData++;
 					j++;
 				}
+				Display_print1(dispHandle, 5, 0, "The name w found is %s \n", devList[i].localName);
+//				Display_print1(dispHandle, 5, 0, "Scan Response Data: %s",
+//									Util_convertBytes2Str(devList[i].localName,
+//											devList[i].nameLength));
 			}
 		} else {
 			// Go to next scan response item
@@ -1753,3 +1764,122 @@ void DiscoverDevicesInBackgournd() {
 
 /*********************************************************************
  *********************************************************************/
+// lior's additions
+#define MAX_NUMBER_OF_CLICKERS 200
+static const char messageStart[] = "CLK";
+#define PREFIX_SIZE 4 // CLK (3) + handle (1)
+#define MIN_MESSAGE 7 // PREFIX_SIZE +  counter (1) + question number (1) + answer (1)
+#define HANDLE_INDEX 3
+#define COUNTER_INDEX 4
+#define QUESTION_INDEX 5
+#define ANSWER_INDEX 6
+
+#define MAC_ADDRESS_SIZE 10 // TBD
+#define UNASWERED 'U'
+#define YES_ANS 'Y'
+#define NO_ANS 'N'
+#define MIN_COUNTER '1'
+#define MAX_COUNTER '9'
+#define NO_HANDLE 'x'
+
+static char messagesCounterByClicker[MAX_NUMBER_OF_CLICKERS] = {0}; // valid counter is from '1' to '9'
+static char questionNumberByClicker[MAX_NUMBER_OF_CLICKERS] = {0};  // no obligation on question index
+static char answersByClicker[MAX_NUMBER_OF_CLICKERS] = {UNASWERED};        // answers are 'U' for "Not Answered", 'Y' for Yes, 'N' for No
+static char macAdrresses[MAX_NUMBER_OF_CLICKERS][MAC_ADDRESS_SIZE+1];
+static int lastMacIndex = -1;
+static int lastAssignedHandleIndex = -1;
+
+static char tempMacAddress[MAC_ADDRESS_SIZE+1];
+
+
+// Gateway code
+static void handleDeviceDiscovered(char* deviceName, int length){ // length without null-terminate
+	if(length < MIN_MESSAGE){
+		return; // not relevant name
+	}
+
+	for(int i = 0 ; i < sizeof(messageStart) -1 /*null-terminate*/ ; i++, length--){
+		if(messageStart[i] != deviceName[i]){
+			return; // not relevant
+		}
+	}
+
+	char handle = deviceName[HANDLE_INDEX];
+	length--;
+
+	if(handle == NO_HANDLE){ // new clicker - try add to mac addresses
+		if(length != MAC_ADDRESS_SIZE){
+			// ERROR !!!
+			Display_print1(dispHandle, 5, 0, "ERROR found in device name: '%s' , the length after prefix is not equal to MAC address length !!! \n", deviceName);
+			return;
+		}
+
+		strncpy(tempMacAddress , deviceName+PREFIX_SIZE, MAC_ADDRESS_SIZE);
+		tempMacAddress[MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
+		// search all MACs already allocated
+
+		for(int i = 0 ; i <= lastMacIndex; i++){
+			if(strncmp(tempMacAddress , macAdrresses[i], MAC_ADDRESS_SIZE) == 0){
+				return; // already in the list
+			}
+		}
+
+		if(lastAssignedHandleIndex >= MAX_NUMBER_OF_CLICKERS - 1){
+			// ERROR!!!
+			Display_print0(dispHandle, 5, 0, "Reached max clickers, can't assign anymore");
+			return;
+		}
+
+		// not in list - add it and increment counter
+		lastMacIndex++;
+		strncpy(macAdrresses[lastMacIndex] , tempMacAddress, MAC_ADDRESS_SIZE);
+		macAdrresses[lastMacIndex][MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
+
+		Display_print1(dispHandle, 5, 0, "MAC was added by device name: '%s' \n", deviceName);
+	}
+	// should be valid counter
+	else{
+		if(handle < '0' || handle > ('0' +lastAssignedHandleIndex)){
+			// ERROR
+			Display_print1(dispHandle, 5, 0, "ERROR found in device name: '%s' , the given handle is not between range !!! \n", deviceName);
+			return;
+		}
+		// find counter
+		char counter = deviceName[COUNTER_INDEX];
+		if(counter < '0' || counter > '9') {
+			// ERROR
+			Display_print1(dispHandle, 5, 0, "ERROR found in device name: '%s' , the given counter is not legal (not '0' to '9') !!! \n", deviceName);
+			return;
+		}
+
+		if(messagesCounterByClicker[handle] == counter){ // is same ?
+			return;
+		}
+
+		// new - update
+		messagesCounterByClicker[handle] = counter;
+		questionNumberByClicker[handle] = deviceName[QUESTION_INDEX];
+
+		char answer = deviceName[ANSWER_INDEX];
+		if(answer != YES_ANS && answer != NO_ANS){
+			answersByClicker[handle] = UNASWERED;
+			// ERROR
+			Display_print1(dispHandle, 5, 0, "ERROR found in device name: '%s' , the answer given is not legal (not 'Y' nor 'N') !!! \n", deviceName);
+			return;
+		}
+
+		questionNumberByClicker[handle] = answer;
+		Display_print1(dispHandle, 5, 0, "Answer was added by device name: '%s' \n", deviceName);
+	}
+
+}
+
+static void handleNextHandles() {
+	for(int i = lastAssignedHandleIndex+1 ; i <= lastMacIndex ;i++){
+		Display_print2(dispHandle, 5, 0, "Next handle %d should be assigned to mac %s \n", i, macAdrresses[i]);
+		// do the procedure of handle assignment
+	}
+
+	lastAssignedHandleIndex = lastMacIndex;
+
+}

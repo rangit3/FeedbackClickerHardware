@@ -670,6 +670,10 @@ static void writeResultsForQuestion(char question);
 
 static void clickerHandleDeviceDiscovered(char* deviceName, int length);
 
+static void answerToQuestion(char handle, char counter, char question, char answer);
+
+static void requestForHandle();
+
 
 
 // end of: Lior's functions
@@ -688,6 +692,8 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 	SimpleBLEPeripheral_init();
 
 	// Lior's Test
+	requestForHandle();
+
 	// test device discovery
 	char testNew[15] = {'C','L','K',0xff,'1','2','3','4','5','6','7','8','9','0','\0'};
 	gatewayHandleDeviceDiscovered(testNew, 14);
@@ -704,6 +710,7 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 
 	writeResultsForQuestion('1'); // before answer
 
+	answerToQuestion('0','1','1','Y');
 
 	char ansYes1[8] = {'C','L','K','0' /*handle*/,'1' /*count*/,'1' /*q*/,'Y' /*a*/,'\0'};
 	gatewayHandleDeviceDiscovered(ansYes1, 7);
@@ -1827,7 +1834,8 @@ void DiscoverDevicesInBackgournd() {
 
 // Lior's additions
 #define MAX_NUMBER_OF_CLICKERS 200
-static const char messageStart[] = "CLK";
+#define CLICKER "CLK"
+static const char messageStart[] = CLICKER;
 #define PREFIX_SIZE 4 // CLK (3) + handle (1)
 #define MIN_MESSAGE 7 // PREFIX_SIZE +  counter (1) + question number (1) + answer (1)
 #define HANDLE_INDEX 3
@@ -2051,14 +2059,41 @@ static void clickerHandleDeviceDiscovered(char* deviceName, int length){ // leng
 		// update question and numbers
 		lastQuestion = deviceName[PREFIX_SIZE];
 		strncpy(lastAnswers, deviceName+1+PREFIX_SIZE, NUMBER_OF_CHARS_FOR_ALL_CLICKERS);
+		lastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] = '\0'; // add null-terminate
 		Display_print3(dispHandle, 5, 0, "last question '%c' and answers '%s' by device name '%s'! \n",lastQuestion, lastAnswers, deviceName);
+
 
 
 	}
 	else{
 		return; // not relevant
 	}
-
-
-
 }
+
+static char tempAnswerForQuestion[MIN_MESSAGE+1]= {CLICKER};
+
+static void answerToQuestion(char handle, char counter, char question, char answer){
+	tempAnswerForQuestion[HANDLE_INDEX] = handle;
+	tempAnswerForQuestion[COUNTER_INDEX] = counter;
+	tempAnswerForQuestion[QUESTION_INDEX] = question;
+	tempAnswerForQuestion[ANSWER_INDEX] = answer;
+	tempAnswerForQuestion[MIN_MESSAGE] = '\0'; // add null-terminate
+	Display_print5(dispHandle, 5, 0, "answer to question %c' with answer '%c' by handle '%c' and counter '%c'. device name is '%s'! \n",question, answer, handle,counter, tempAnswerForQuestion);
+
+	// do the procedure of name change
+}
+
+static char tempRequestHandle[PREFIX_SIZE + MAC_ADDRESS_SIZE +1] = {CLICKER};
+
+static void requestForHandle(){
+	tempRequestHandle[HANDLE_INDEX] = NO_HANDLE;
+	strncpy(tempRequestHandle+PREFIX_SIZE, myMac, MAC_ADDRESS_SIZE);
+	tempRequestHandle[PREFIX_SIZE + MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
+	Display_print2(dispHandle, 5, 0, "Request for handle by mac '%s'. device name is '%s'! \n", myMac, tempRequestHandle);
+
+	// do the procedure of name change
+}
+
+
+
+

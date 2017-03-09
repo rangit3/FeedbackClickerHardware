@@ -42,7 +42,7 @@
  * INCLUDES
  */
 #include <string.h>
-
+#include <limits.h>
 #include <ti/sysbios/knl/Task.h>
 #include <ti/sysbios/knl/Clock.h>
 #include <ti/sysbios/knl/Semaphore.h>
@@ -682,26 +682,42 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 
 	// Lior's Test
 	// test device discovery
-	char* deviceTestName = "CLKx1234567890";
-	handleDeviceDiscovered(deviceTestName, 14);
+	char testNew[15] = {'C','L','K',0xff,'1','2','3','4','5','6','7','8','9','0','\0'};
+	handleDeviceDiscovered(testNew, 14);
 	handleNextHandles();
 	// ignore: mac already exist
-	handleDeviceDiscovered(deviceTestName, 14);
+	handleDeviceDiscovered(testNew, 14);
 
 	writeResultsForQuestion('1'); // before answer
 
-	handleDeviceDiscovered("CLK011Y", 7);
+	char ansYes1[8] = {'C','L','K','0' /*handle*/,'1' /*count*/,'1' /*q*/,'Y' /*a*/,'\0'};
+	handleDeviceDiscovered(ansYes1, 7);
 
 	writeResultsForQuestion('1'); // after answer
 
+	char temp[8];
+	temp[7] = '\0';
+
 	// error: handle not given
-	handleDeviceDiscovered("CLK111Y", 7);
+	strncpy(temp, ansYes1, 7);
+	temp[3] = '1';
+	handleDeviceDiscovered(temp, 7);
+
 	// error: wrong counter
-	handleDeviceDiscovered("CLK001Y", 7);
+	strncpy(temp, ansYes1, 7);
+	temp[4] = '0';
+	handleDeviceDiscovered(temp, 7);
+
 	// ignore: same counter, although message is different - it's client fault
-	handleDeviceDiscovered("CLK011N", 7);
+	strncpy(temp, ansYes1, 7);
+	temp[6] = 'N';
+	handleDeviceDiscovered(temp, 7);
+
 	// error: wrong answer
-	handleDeviceDiscovered("CLK021G", 7);
+	strncpy(temp, ansYes1, 7);
+	temp[4] = '2'; // next counter
+	temp[6] = 'G';
+	handleDeviceDiscovered(temp, 7);
 
 	writeResultsForQuestion('2'); // non answered
 
@@ -1810,12 +1826,15 @@ static const char messageStart[] = "CLK";
 #define NO_ANS 'N'
 #define MIN_COUNTER '1'
 #define MAX_COUNTER '9'
-#define NO_HANDLE 'x'
+
+static const char NO_HANDLE = CHAR_MAX;
+static const char MIN_HANDLE_CHAR = '0'; // ==ascii 48 , still have enough for 200 clickers
 
 static char messagesCounterByClicker[MAX_NUMBER_OF_CLICKERS] = {0}; // valid counter is from '1' to '9'
 static char questionNumberByClicker[MAX_NUMBER_OF_CLICKERS] = {0};  // no obligation on question index
 static char answersByClicker[MAX_NUMBER_OF_CLICKERS] = {UNASWERED};        // answers are 'U' for "Not Answered", 'Y' for Yes, 'N' for No
 static char macAdrresses[MAX_NUMBER_OF_CLICKERS][MAC_ADDRESS_SIZE+1];
+
 static int lastMacIndex = -1;
 static int lastAssignedHandleIndex = -1;
 
@@ -1869,9 +1888,10 @@ static void handleDeviceDiscovered(char* deviceName, int length){ // length with
 	}
 	// should be valid counter
 	else{
-		if(handleAsChar < '0' || handleAsChar > ('0' +lastAssignedHandleIndex)){
+		char lastHandleChar = MIN_HANDLE_CHAR+lastAssignedHandleIndex;
+		if(handleAsChar < MIN_HANDLE_CHAR || handleAsChar > lastHandleChar) {
 			// ERROR
-			Display_print4(dispHandle, 5, 0, "ERROR found in device name: '%s' , the given handle ('%c') is not between range ('%c'-'%c') !!! \n", deviceName, handleAsChar, '0',('0' +lastAssignedHandleIndex) );
+			Display_print4(dispHandle, 5, 0, "ERROR found in device name: '%s' , the given handle ('%c') is not between range ('%c'-'%c') !!! \n", deviceName, handleAsChar, MIN_HANDLE_CHAR, lastHandleChar);
 			return;
 		}
 		// find counter
@@ -1882,7 +1902,7 @@ static void handleDeviceDiscovered(char* deviceName, int length){ // length with
 			return;
 		}
 
-		int handle = (int)(handleAsChar-'0'); // make it integer
+		int handle = (int)(handleAsChar-MIN_HANDLE_CHAR); // make it integer
 
 		if(messagesCounterByClicker[handle] == counter){ // is same ?
 			Display_print2(dispHandle, 5, 0, "DEBUG: for device name: '%s' , the given counter ('%c') is already stored \n", deviceName, counter);

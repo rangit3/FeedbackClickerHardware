@@ -660,11 +660,18 @@ static void SimpleBLEPeripheral_init(void) {
 }
 
 // Lior's functions
-static void handleDeviceDiscovered(char* deviceName, int length);
+static void gatewayHandleDeviceDiscovered(char* deviceName, int length);
 
 static void handleNextHandles();
 
+static void advertiseQuestion(char question, char* answers);
+
 static void writeResultsForQuestion(char question);
+
+static void clickerHandleDeviceDiscovered(char* deviceName, int length);
+
+
+
 // end of: Lior's functions
 
 /*********************************************************************
@@ -683,15 +690,23 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 	// Lior's Test
 	// test device discovery
 	char testNew[15] = {'C','L','K',0xff,'1','2','3','4','5','6','7','8','9','0','\0'};
-	handleDeviceDiscovered(testNew, 14);
+	gatewayHandleDeviceDiscovered(testNew, 14);
 	handleNextHandles();
+
+	clickerHandleDeviceDiscovered("GTWO12345678900",15);
+
 	// ignore: mac already exist
-	handleDeviceDiscovered(testNew, 14);
+	gatewayHandleDeviceDiscovered(testNew, 14);
+
+	advertiseQuestion('1',"ASDXFGHJ");
+
+	clickerHandleDeviceDiscovered("GTWQ1ASDXFGHJ",13);
 
 	writeResultsForQuestion('1'); // before answer
 
+
 	char ansYes1[8] = {'C','L','K','0' /*handle*/,'1' /*count*/,'1' /*q*/,'Y' /*a*/,'\0'};
-	handleDeviceDiscovered(ansYes1, 7);
+	gatewayHandleDeviceDiscovered(ansYes1, 7);
 
 	writeResultsForQuestion('1'); // after answer
 
@@ -701,23 +716,23 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 	// error: handle not given
 	strncpy(temp, ansYes1, 7);
 	temp[3] = '1';
-	handleDeviceDiscovered(temp, 7);
+	gatewayHandleDeviceDiscovered(temp, 7);
 
 	// error: wrong counter
 	strncpy(temp, ansYes1, 7);
 	temp[4] = '0';
-	handleDeviceDiscovered(temp, 7);
+	gatewayHandleDeviceDiscovered(temp, 7);
 
 	// ignore: same counter, although message is different - it's client fault
 	strncpy(temp, ansYes1, 7);
 	temp[6] = 'N';
-	handleDeviceDiscovered(temp, 7);
+	gatewayHandleDeviceDiscovered(temp, 7);
 
 	// error: wrong answer
 	strncpy(temp, ansYes1, 7);
 	temp[4] = '2'; // next counter
 	temp[6] = 'G';
-	handleDeviceDiscovered(temp, 7);
+	gatewayHandleDeviceDiscovered(temp, 7);
 
 	writeResultsForQuestion('2'); // non answered
 
@@ -1840,8 +1855,22 @@ static int lastAssignedHandleIndex = -1;
 
 static char tempMacAddress[MAC_ADDRESS_SIZE+1];
 
+// prefix size is the same : 3+command
+#define OFFER_HANDLE 'O'
+#define GATEWAY_COMMAND 3
+#define OFFER_MESSAGE_LENGTH (PREFIX_SIZE + MAC_ADDRESS_SIZE + 1/*handle*/)
+
+// 2^8 > 200
+#define NUMBER_OF_CHARS_FOR_ALL_CLICKERS 8
+#define QUESTION 'Q'
+#define QUESTION_MESSAGE_LENGTH (PREFIX_SIZE + 1 +NUMBER_OF_CHARS_FOR_ALL_CLICKERS)
+
+static char tempDeviceNameForHandleOffering[OFFER_MESSAGE_LENGTH+1] = {'G','T','W','O'};
+static char tempDeviceNameForQuestion[QUESTION_MESSAGE_LENGTH+1] = {'G','T','W','Q'};
+
+
 // Gateway code
-static void handleDeviceDiscovered(char* deviceName, int length){ // length without null-terminate
+static void gatewayHandleDeviceDiscovered(char* deviceName, int length){ // length without null-terminate
 	if(length < MIN_MESSAGE){
 		return; // not relevant name
 	}
@@ -1929,14 +1958,25 @@ static void handleDeviceDiscovered(char* deviceName, int length){ // length with
 }
 
 static void handleNextHandles() {
-	for(int i = lastAssignedHandleIndex+1 ; i <= lastMacIndex ;i++){
-		Display_print2(dispHandle, 5, 0, "Next handle %d should be assigned to mac %s \n", i, macAdrresses[i]);
-		// do the procedure of handle assignment
+
+	for(int i = lastAssignedHandleIndex+1 ; i <= lastMacIndex ;i++,lastAssignedHandleIndex++){
+		strncpy(tempDeviceNameForHandleOffering+PREFIX_SIZE, macAdrresses[i],MAC_ADDRESS_SIZE);
+		tempDeviceNameForHandleOffering[OFFER_MESSAGE_LENGTH-1] = i+MIN_HANDLE_CHAR;
+		tempDeviceNameForHandleOffering[OFFER_MESSAGE_LENGTH] =  '\0';
+		Display_print3(dispHandle, 5, 0, "Next handle %d should be assigned to mac %s , full name should be %s \n", i, macAdrresses[i],tempDeviceNameForHandleOffering);
+		// do the procedure of name change
 	}
 
-	lastAssignedHandleIndex = lastMacIndex;
-
 }
+
+static void advertiseQuestion(char question, char* answers){
+	tempDeviceNameForQuestion[PREFIX_SIZE] = question;
+	strncpy(tempDeviceNameForQuestion+PREFIX_SIZE+1, answers, NUMBER_OF_CHARS_FOR_ALL_CLICKERS);
+	tempDeviceNameForQuestion[QUESTION_MESSAGE_LENGTH] = '\0';
+	Display_print3(dispHandle, 5, 0, "Advertising question ('%c') and answers ('%s') , full name should be %s \n", question, answers, tempDeviceNameForQuestion);
+	// do the procedure of name change
+}
+
 
 static void writeResultsForQuestion(char question) {
 	int numYes=0;
@@ -1956,4 +1996,69 @@ static void writeResultsForQuestion(char question) {
 	int notAnswered = lastAssignedHandleIndex + 1 - numYes - numNo;
 
 	Display_print4(dispHandle, 5, 0, "Results for question '%c': YES = %d , NO = %d , NOT ANSWERERD = %d \n", question, numYes, numNo, notAnswered);
+}
+
+
+static char lastQuestion = '\0';
+static char lastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS+1] = {0};
+static char lastHandle = '\0';
+static const char myMac[MAC_ADDRESS_SIZE+1] = {'1','2','3','4','5','6','7','8','9','0','\0'}; // temp. need to get from flash
+
+// clicker code
+static void clickerHandleDeviceDiscovered(char* deviceName, int length){ // length without null-terminate
+	// start is the same
+	if(length < PREFIX_SIZE){
+		return; // not relevant name
+	}
+
+	char command = deviceName[GATEWAY_COMMAND];
+	if(command == OFFER_HANDLE){
+		if(length != OFFER_MESSAGE_LENGTH){
+			Display_print3(dispHandle, 5, 0, "DEBUG: in name: '%s' , the length for OFFER HANDLE (%d) is not equal to requested (%d) !!! \n", deviceName, length, OFFER_MESSAGE_LENGTH);
+			return;
+		}
+
+		for(int i = 0 ; i < PREFIX_SIZE ; i++){
+			if(tempDeviceNameForHandleOffering[i] != deviceName[i]){
+				Display_print1(dispHandle, 5, 0, "DEBUG: in name: '%s' , prefix for OFFER HANDLE is not as requested ('%s') !!! \n", deviceName);
+				return;
+			}
+		}
+
+		strncpy(tempMacAddress , deviceName+PREFIX_SIZE, MAC_ADDRESS_SIZE);
+		tempMacAddress[MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
+		if(strncmp(tempMacAddress, myMac, MAC_ADDRESS_SIZE)==0){
+			// my mac - get handle
+			lastHandle = deviceName[OFFER_MESSAGE_LENGTH-1];
+			Display_print3(dispHandle, 5, 0, "Handle '%c' is assigned to mac '%s' by device name '%s'! \n",lastHandle, myMac, deviceName);
+		}
+
+
+	}
+	else if(command == QUESTION){
+		if(length != QUESTION_MESSAGE_LENGTH){
+			Display_print3(dispHandle, 5, 0, "DEBUG: in name: '%s' , the length for QUESTION MESSAGE (%d) is not equal to requested (%d) !!! \n", deviceName, length, QUESTION_MESSAGE_LENGTH);
+			return;
+		}
+
+		for(int i = 0 ; i < PREFIX_SIZE ; i++){
+			if(tempDeviceNameForQuestion[i] != deviceName[i]){
+				Display_print1(dispHandle, 5, 0, "DEBUG: in name: '%s' , prefix for QUESTION MESSAGE is not as requested ('%s') !!! \n", deviceName);
+				return;
+			}
+		}
+
+		// update question and numbers
+		lastQuestion = deviceName[PREFIX_SIZE];
+		strncpy(lastAnswers, deviceName+1+PREFIX_SIZE, NUMBER_OF_CHARS_FOR_ALL_CLICKERS);
+		Display_print3(dispHandle, 5, 0, "last question '%c' and answers '%s' by device name '%s'! \n",lastQuestion, lastAnswers, deviceName);
+
+
+	}
+	else{
+		return; // not relevant
+	}
+
+
+
 }

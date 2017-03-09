@@ -675,9 +675,19 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 	// Initialize application
 	SimpleBLEPeripheral_init();
 
+	// test device discovery
 	char* deviceTestName = "CLKx1234567890";
 	handleDeviceDiscovered(deviceTestName, 14);
 	handleNextHandles();
+	handleDeviceDiscovered(deviceTestName, 14);
+	handleDeviceDiscovered("CLK011Y", 7);
+	// error: handle not given
+	handleDeviceDiscovered("CLK111Y", 7);
+	// error: wrong counter
+	handleDeviceDiscovered("CLK001Y", 7);
+	// error: wrong answer
+	handleDeviceDiscovered("CLK021G", 7);
+
 
 	// Application main loop
 	for (;;) {
@@ -1846,9 +1856,9 @@ static void handleDeviceDiscovered(char* deviceName, int length){ // length with
 		}
 		// find counter
 		char counter = deviceName[COUNTER_INDEX];
-		if(counter < '0' || counter > '9') {
+		if(counter < MIN_COUNTER || counter > MAX_COUNTER) {
 			// ERROR
-			Display_print1(dispHandle, 5, 0, "ERROR found in device name: '%s' , the given counter is not legal (not '0' to '9') !!! \n", deviceName);
+			Display_print1(dispHandle, 5, 0, "ERROR found in device name: '%s' , the given counter is not legal (not '1' to '9') !!! \n", deviceName);
 			return;
 		}
 
@@ -1858,7 +1868,8 @@ static void handleDeviceDiscovered(char* deviceName, int length){ // length with
 
 		// new - update
 		messagesCounterByClicker[handle] = counter;
-		questionNumberByClicker[handle] = deviceName[QUESTION_INDEX];
+		char question = deviceName[QUESTION_INDEX];
+		questionNumberByClicker[handle] = question;
 
 		char answer = deviceName[ANSWER_INDEX];
 		if(answer != YES_ANS && answer != NO_ANS){
@@ -1869,7 +1880,7 @@ static void handleDeviceDiscovered(char* deviceName, int length){ // length with
 		}
 
 		questionNumberByClicker[handle] = answer;
-		Display_print1(dispHandle, 5, 0, "Answer was added by device name: '%s' \n", deviceName);
+		Display_print4(dispHandle, 5, 0, "Answer was added by device name: '%s', handle '%c' question %c answer '%c' \n", deviceName, handle, question, answer);
 	}
 
 }

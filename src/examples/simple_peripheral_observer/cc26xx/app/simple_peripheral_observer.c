@@ -2095,5 +2095,133 @@ static void requestForHandle(){
 }
 
 
+/*
+ *  ======== empty.c ========
+ */
+/* XDCtools Header files */
+#include <xdc/std.h>
+#include <xdc/runtime/System.h>
+
+/* BIOS Header files */
+#include <ti/sysbios/BIOS.h>
+//#include <ti/sysbios/knl/Task.h>
+//#include <ti/sysbios/knl/Semaphore.h>
+
+/* TI-RTOS Header files */
+#include <ti/drivers/PIN.h>
+#include <ti/drivers/SPI.h>
+
+/* Board Header files */
+//#include "Board.h"
+
+static PIN_Config BoardFlashPinTable[] = {
+Board_SPI_FLASH_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL
+        | PIN_DRVSTR_MIN, /* Ext. flash chip select */
+
+PIN_TERMINATE };
+
+static PIN_Handle hFlashPin = NULL;
+static SPI_Handle spiHandle = NULL;
+
+#define RDID_REMS_CODE 0x90 /* Manufacturer Device ID */
+
+void taskFucntion(UArg arg0, UArg arg1) {
+    System_printf("task started\n");
+    System_flush();
+
+    uint8_t wbuf[] = { RDID_REMS_CODE, 0x0, 0x0, 0x0 };
+
+    // chip select
+    PIN_setOutputValue(hFlashPin, Board_SPI_FLASH_CS, Board_FLASH_CS_ON);
+
+    SPI_Transaction masterTransaction;
+
+    masterTransaction.count = sizeof(wbuf);
+    masterTransaction.txBuf = (void*) wbuf;
+    masterTransaction.arg = NULL;
+    masterTransaction.rxBuf = NULL;
+
+    Bool success = SPI_transfer(spiHandle, &masterTransaction);
+
+    if (!success) {
+        // chip select off
+        PIN_setOutputValue(hFlashPin, Board_SPI_FLASH_CS, Board_FLASH_CS_OFF);
+        System_abort("failure in spi write\n");
+    }
+
+    UChar infoBuf[2];
+    masterTransaction.count = sizeof(infoBuf);
+    masterTransaction.txBuf = NULL;
+    masterTransaction.arg = NULL;
+    masterTransaction.rxBuf = (void*) infoBuf;
+
+    success = SPI_transfer(spiHandle, &masterTransaction);
+
+    // chip select off anyhow
+    PIN_setOutputValue(hFlashPin, Board_SPI_FLASH_CS, Board_FLASH_CS_OFF);
+
+    if (!success) {
+        System_abort("failure in spi read\n");
+    }
+
+    /*
+     print should be:
+
+     .manfId = MF_MACRONIX = C2,  // Macronics
+     .devId = 0x14,          // MX25R8035F
+     .deviceSize = 0x100000  // 1 MByte (8 Mbit)
+     */
+
+    int i = 0;
+    for (; i < 2; i++) {
+        System_printf("read buffer @ index %d, value is 0x%x\n", i, infoBuf[i]);
+        System_flush();
+    }
+}
+/*
+ *  ======== main ========
+ */
+int main2(void) {
+    //Task_Params taskParams;
+
+    /* Call board init functions */
+    Board_initGeneral()
+    ;
+    Board_initSPI();
+
+    Task_Handle task = Task_create(taskFucntion, NULL, NULL);
+    if (task == NULL) {
+        System_abort("Task create failed\n");
+    }
+
+    PIN_State pinState;
+    hFlashPin = PIN_open(&pinState, BoardFlashPinTable);
+
+    if (hFlashPin == NULL) {
+        System_abort("Pin Open failed\n");
+    }
+
+    SPI_Params spiParams;
+    SPI_Params_init(&spiParams);
+    spiParams.mode = SPI_MASTER;
+    spiParams.transferMode = SPI_MODE_BLOCKING;
+
+    /* Attempt to open SPI. */
+    spiHandle = SPI_open(Board_SPI0, &spiParams);
+    if (spiHandle == NULL) {
+        /* Error opening SPI */
+        System_abort("Error initializing board spi\n");
+    }
+
+    //System_printf("Starting the example\nSystem provider is set to SysMin. "
+    //        "Halt the target to view any SysMin contents in ROV.\n");
+    /* SysMin will only print to the console when you call flush or exit */
+    //System_flush();
+    /* Start BIOS */
+    BIOS_start();
+
+    return (0);
+}
+
 
 

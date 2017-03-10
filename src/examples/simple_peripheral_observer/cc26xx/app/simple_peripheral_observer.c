@@ -674,7 +674,7 @@ static void answerToQuestion(char handle, char counter, char question, char answ
 
 static void requestForHandle();
 
-
+static void readMyMac();
 
 // end of: Lior's functions
 
@@ -692,6 +692,8 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 	SimpleBLEPeripheral_init();
 
 	// Lior's Test
+	readMyMac();
+
 	requestForHandle();
 
 	// test device discovery
@@ -2223,5 +2225,18 @@ int main2(void) {
     return (0);
 }
 
+// internal flash
+//#include "driverlib/flash.h"
 
+#include "inc/hw_fcfg1.h"
+static void readMyMac(){
+	uint32_t bleAddrlsb;
 
+	uint32_t bleAddrmsb;
+
+	bleAddrlsb = HWREG(FCFG1_BASE + FCFG1_O_MAC_BLE_0) ;
+	bleAddrmsb  =HWREG(FCFG1_BASE + FCFG1_O_MAC_BLE_1);
+
+	Display_print2(dispHandle, 5, 0, "my mac is '%x','%x'. \n", bleAddrlsb, bleAddrmsb);
+
+}

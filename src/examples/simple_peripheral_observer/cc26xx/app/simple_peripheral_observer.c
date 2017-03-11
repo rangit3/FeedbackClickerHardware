@@ -47,7 +47,6 @@
 #include <ti/sysbios/knl/Clock.h>
 #include <ti/sysbios/knl/Semaphore.h>
 #include <ti/sysbios/knl/Queue.h>
-#include "inc/hw_fcfg1.h"
 
 #include "hci_tl.h"
 #include "gatt.h"
@@ -129,6 +128,7 @@
 // How often to perform periodic event (in msec)
 #define SBP_PERIODIC_EVT_PERIOD               5000
 
+
 //======================MY BLE DEFS========================
 #ifdef PLUS_OBSERVER
 
@@ -186,22 +186,12 @@
 //my events
 #define BLEChangeAdvertiseName         0x0100
 #define BLEShowDevices         0x0200
-#define BLENewGateWayName         0x0300 //TODO CHANGE
-#define BLEFindGateWay         0x0400 //TODO CHANGE
+#define BLENewGateWayName         0x0300
+#define BLEFindGateWay         0x0400
 #define BLEDiscoverDevices         0x0500
-#define BLEStartObserving         0x0600
+#define BLEStartAdvertise         0x0600
 #define BLEError         0x0700
 #define UnHandeled         0x0800
-
-//my defs
-#define GREENLED 0
-#define REDLED 1
-
-#define FALSEANSWER 0
-#define TRUEANSWER 1
-
-#define CLICKERNOHANDLE 0
-#define CLICKERWITHHANDLE 1
 
 #endif
 
@@ -311,21 +301,10 @@ static uint8_t attDeviceName[GAP_DEVICE_NAME_LEN] = "Peripheral Observer";
 static gattMsgEvent_t *pAttRsp = NULL;
 static uint8_t rspTxRetry = 0;
 
-// Screen row
-enum {
-	ROW_ZERO = 0,
-	ROW_ONE = 1,
-	ROW_TWO = 2,
-	ROW_THREE = 3,
-	ROW_FOUR = 4,
-	ROW_FIVE = 5,
-	ROW_SIX = 6,
-	ROW_SEVEN = 7
-};
-
 #ifdef PLUS_OBSERVER
 // Number of scan results and scan result index
 static uint8_t scanRes;
+static uint8_t scanIdx;
 
 typedef struct {
 	char localName[MAX_GATEWAY_NAME];	 		 //!< Device's Name
@@ -345,15 +324,9 @@ const char *AdvTypeStrings[] = { "Connectable undirected",
 		"Non-connectable undirected", "Scan response" };
 
 //============MY Vars==================
-//static bool release = FALSE;
-static bool release = TRUE;
-
-static bool isClicker = TRUE;
-//static bool isClicker = FALSE;
-
 static UInt32 lastTimestamp = 0;
 
-static bool firstUsage = FALSE; //TODO true
+bool firstUsage = FALSE; //TODO true
 
 static bool foundGateway = TRUE; //TODO false
 
@@ -363,11 +336,6 @@ static char* deviceID;
 
 static char* lastGateWayName;
 
-static char* secondLastGateWayName;
-
-static UInt32 lastanswer = 2;
-
-static bool waitingForAnswerPress = FALSE;
 
 /*********************************************************************
  * LOCAL FUNCTIONS
@@ -400,7 +368,6 @@ static void SimpleBLEPeripheral_enqueueMsg(uint8_t event, uint8_t state,
 //===============MY BLE FUNCS====================
 static void StartAdvertiseMode();
 static void StartCentralMode();
-static void StopCentralMode();
 
 static void MyBLE_addDeviceInfo(uint8_t *pAddr, uint8_t addrType);
 static bool MyBLE_findLocalName(uint8_t *pEvtData, uint8_t dataLen);
@@ -413,19 +380,12 @@ static void ChangeBLEName();
 static UInt32 GetTime();
 static char* GetDeviceID();
 static bool isGateWay(uint8_t deviceNum);
+static void FindGateway();
+static void DiscoverDevicesInBackgournd();
 static char* GetDeviceNameFromDevList(uint8_t deviceNum);
-static bool IsNewGateWayName(uint8_t deviceNum);
-static void GetMyHandle(uint8_t deviceNum);
-static void GetMyHandleFromFlash();
-static void SendAnswer(UInt32 answer);
-static void HandleNewQuestion();
-static void ChangeAdvertDataArr();
-static void GenerateNewName(UInt32 state);
-static void TurnOffLeds();
-static void TurnOnLed(UInt32 led);
-static void HandleError();
-static bool IsNewQuestion();
-static bool MyHandleHasProblem();
+static void HandleNameReadFromDiscovery(uint8_t deviceNum);
+static void HandleNewGateWayName();
+
 
 //==================end my funcs====================
 #ifdef FEATURE_OAD
@@ -552,7 +512,7 @@ static void SimpleBLEPeripheral_init(void) {
 
 	// Setup the GAP
 	GAP_SetParamValue(TGAP_CONN_PAUSE_PERIPHERAL,
-	DEFAULT_CONN_PAUSE_PERIPHERAL);
+			DEFAULT_CONN_PAUSE_PERIPHERAL);
 
 	// Setup the GAP Peripheral Role Profile
 	{
@@ -701,12 +661,19 @@ static void SimpleBLEPeripheral_init(void) {
 
 // Lior's functions
 static void gatewayHandleDeviceDiscovered(char* deviceName, int length);
+
 static void handleNextHandles();
+
 static void advertiseQuestion(char question, char* answers);
+
 static void writeResultsForQuestion(char question);
+
 static void clickerHandleDeviceDiscovered(char* deviceName, int length);
+
 static void answerToQuestion(char handle, char counter, char question, char answer);
+
 static void requestForHandle();
+
 static void readMyMac();
 
 // end of: Lior's functions
@@ -738,6 +705,7 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 
 	// ignore: mac already exist
 	gatewayHandleDeviceDiscovered(testNew, 14);
+
 	advertiseQuestion('1',"ASDXFGHJ");
 
 	clickerHandleDeviceDiscovered("GTWQ1ASDXFGHJ",13);
@@ -909,15 +877,6 @@ static void SimpleBLEPeripheralObserver_processRoleEvent(
 	case GAP_DEVICE_INFO_EVENT: {
 		//Print scan response data otherwise advertising data
 		if (pEvent->deviceInfo.eventType == GAP_ADRPT_SCAN_RSP) {
-			if (MyBLE_findLocalName(pEvent->deviceInfo.pEvtData,
-					pEvent->deviceInfo.dataLen)) {
-				MyBLE_addDeviceInfo(pEvent->deviceInfo.addr,
-						pEvent->deviceInfo.addrType);
-				MyBLE_addDeviceName(scanRes - 1, pEvent->deviceInfo.pEvtData,
-						pEvent->deviceInfo.dataLen);
-			}
-			Display_print1(dispHandle, 5, 0, "name found is %s",
-					devList[scanRes - 1].localName);
 			Display_print1(dispHandle, 4, 0, "Scan Response Addr: %s",
 					Util_convertBdAddr2Str(pEvent->deviceInfo.addr));
 			Display_print1(dispHandle, 5, 0, "Scan Response Data: %s",
@@ -925,6 +884,20 @@ static void SimpleBLEPeripheralObserver_processRoleEvent(
 							pEvent->deviceInfo.dataLen));
 		} else {
 			deviceInfoCnt++;
+			if (MyBLE_findLocalName(pEvent->deviceInfo.pEvtData,
+							pEvent->deviceInfo.dataLen)) {
+						MyBLE_addDeviceInfo(pEvent->deviceInfo.addr,
+								pEvent->deviceInfo.addrType);
+
+						MyBLE_addDeviceName(scanRes - 1, pEvent->deviceInfo.pEvtData,
+								pEvent->deviceInfo.dataLen);
+
+						if (isGateWay(scanRes - 1)) {
+							HandleNameReadFromDiscovery(scanRes - 1);
+						} else {
+							scanRes = scanRes - 1;
+						}
+					}
 
 			Display_print2(dispHandle, 6, 0,
 					"Advertising Addr: %s Advertising Type: %s",
@@ -1133,42 +1106,48 @@ static void SimpleBLEPeripheral_freeAttRsp(uint8_t status) {
  */
 static void SimpleBLEPeripheral_handleKeys(uint8_t shift, uint8_t keys) {
 	(void) shift;  // Intentionally unreferenced parameter
-	if (release) {
-		if (isClicker) {
-			TurnOffLeds();
-			if (waitingForAnswerPress) {
-				if (keys & KEY_RIGHT) {
-					SendAnswer(TRUEANSWER);
-				}
-				if (keys & KEY_LEFT) {
-					SendAnswer(FALSEANSWER);
-				}
-			} else {
-				HandleNewQuestion();
-			}
-		} else {
 
-		}
-	} else { //debug mode
-		if (keys & KEY_RIGHT) {
-//			if (scanningStarted == TRUE) {
-//				StopCentralMode();
-//			}
-//
-//			else {  // in advertise
-			ChangeBLEName();
-//			}
-		}
-		if (keys & KEY_LEFT) {
-			if (scanningStarted == FALSE) {
-				StartCentralMode();
+	if (keys & KEY_RIGHT) {
+		uint8 status;
+
+		if (scanningStarted == TRUE) {
+			status = GAPObserverRole_CancelDiscovery();
+
+			if (status == SUCCESS) {
+				scanningStarted = FALSE;
+				Display_print0(dispHandle, 4, 0, "Scanning Off");
 			} else {
-				MyBLE_showDevices();
+				Display_print0(dispHandle, 4, 0, "Scanning Off Fail");
 			}
-			return;
 		}
+		else{// in advertise
+			SimpleBLEPeripheral_enqueueMsg(BLEChangeAdvertiseName, 0, NULL);
+		}
+
 		return;
 	}
+
+	if (keys & KEY_LEFT) {
+		uint8 status;
+
+		//Start scanning if not already scanning
+		if ((scanningStarted == FALSE)) {
+			status = GAPObserverRole_StartDiscovery(DEFAULT_DISCOVERY_MODE,
+			DEFAULT_DISCOVERY_ACTIVE_SCAN,
+			DEFAULT_DISCOVERY_WHITE_LIST);
+
+			if (status == SUCCESS) {
+				scanningStarted = TRUE;
+				Display_print0(dispHandle, 4, 0, "Scanning On");
+			} else {
+				Display_print1(dispHandle, 4, 0, "Scanning failed: %d", status);
+			}
+
+		}
+
+		return;
+	}
+
 }
 #endif //#ifdef PLUS_OBSERVER
 
@@ -1201,8 +1180,10 @@ static void SimpleBLEPeripheral_processAppMsg(sbpEvt_t *pMsg) {
 
 		break;
 
-	case BLEChangeAdvertiseName: {
+	case BLEChangeAdvertiseName: /* Message from swi about clock expires */ // SOLUTION
+	{
 		MyPrint("Process BLESearchAdvertise");
+
 		ChangeBLEName();
 	}
 		break;
@@ -1213,9 +1194,28 @@ static void SimpleBLEPeripheral_processAppMsg(sbpEvt_t *pMsg) {
 	}
 		break;
 
-	case BLEStartObserving: {
-		MyPrint("Process BLEStartObserving");
-		StartCentralMode();
+	case BLENewGateWayName: {
+		MyPrint("Process BLENewGateWayName");
+		HandleNewGateWayName();
+
+	}
+		break;
+
+	case BLEFindGateWay: {
+		MyPrint("Process BLEFindGateWay");
+		FindGateway();
+	}
+		break;
+
+	case BLEDiscoverDevices: {
+		MyPrint("Process BLEDiscoverDevices");
+		DiscoverDevicesInBackgournd();
+	}
+		break;
+
+	case BLEStartAdvertise: {
+		MyPrint("Process BLEStartAdvertise");
+		StartAdvertiseMode();
 	}
 		break;
 
@@ -1242,7 +1242,7 @@ static void SimpleBLEPeripheral_processAppMsg(sbpEvt_t *pMsg) {
  * @return  none
  */
 void SimpleBLEPeripheral_keyChangeHandler(uint8 keys) {
-	SimpleBLEPeripheral_enqueueMsg(SBP_KEY_CHANGE_EVT, keys, NULL);
+SimpleBLEPeripheral_enqueueMsg(SBP_KEY_CHANGE_EVT, keys, NULL);
 }
 
 /*********************************************************************
@@ -1255,55 +1255,55 @@ void SimpleBLEPeripheral_keyChangeHandler(uint8 keys) {
  * @return  TRUE if safe to deallocate event message, FALSE otherwise.
  */
 static void SimpleBLEPeripheral_ObserverStateChangeCB(
-		gapPeripheralObserverRoleEvent_t *pEvent) {
+	gapPeripheralObserverRoleEvent_t *pEvent) {
 
-	sbpEvt_t *pMsg;
+sbpEvt_t *pMsg;
 
 // Create dynamic pointer to message.
-	if ((pMsg = ICall_malloc(sizeof(sbpEvt_t)))) {
-		pMsg->hdr.event = SBP_OBSERVER_STATE_CHANGE_EVT;
-		pMsg->hdr.state = SUCCESS;
+if ((pMsg = ICall_malloc(sizeof(sbpEvt_t)))) {
+	pMsg->hdr.event = SBP_OBSERVER_STATE_CHANGE_EVT;
+	pMsg->hdr.state = SUCCESS;
 
-		switch (pEvent->gap.opcode) {
-		case GAP_DEVICE_INFO_EVENT: {
-			gapDeviceInfoEvent_t *pDevInfoMsg;
+	switch (pEvent->gap.opcode) {
+	case GAP_DEVICE_INFO_EVENT: {
+		gapDeviceInfoEvent_t *pDevInfoMsg;
 
-			pDevInfoMsg = ICall_malloc(sizeof(gapDeviceInfoEvent_t));
-			memcpy(pDevInfoMsg, pEvent, sizeof(gapDeviceInfoEvent_t));
+		pDevInfoMsg = ICall_malloc(sizeof(gapDeviceInfoEvent_t));
+		memcpy(pDevInfoMsg, pEvent, sizeof(gapDeviceInfoEvent_t));
 
-			pDevInfoMsg->pEvtData = ICall_malloc(pEvent->deviceInfo.dataLen);
-			memcpy(pDevInfoMsg->pEvtData, pEvent->deviceInfo.pEvtData,
-					pEvent->deviceInfo.dataLen);
+		pDevInfoMsg->pEvtData = ICall_malloc(pEvent->deviceInfo.dataLen);
+		memcpy(pDevInfoMsg->pEvtData, pEvent->deviceInfo.pEvtData,
+				pEvent->deviceInfo.dataLen);
 
-			pMsg->pData = (uint8 *) pDevInfoMsg;
-		}
-			break;
+		pMsg->pData = (uint8 *) pDevInfoMsg;
+	}
+		break;
 
-		case GAP_DEVICE_DISCOVERY_EVENT: {
-			gapDevDiscEvent_t *pDevDiscMsg;
+	case GAP_DEVICE_DISCOVERY_EVENT: {
+		gapDevDiscEvent_t *pDevDiscMsg;
 
-			pDevDiscMsg = ICall_malloc(sizeof(gapDevDiscEvent_t));
-			memcpy(pDevDiscMsg, pEvent, sizeof(gapDevDiscEvent_t));
+		pDevDiscMsg = ICall_malloc(sizeof(gapDevDiscEvent_t));
+		memcpy(pDevDiscMsg, pEvent, sizeof(gapDevDiscEvent_t));
 
-			pDevDiscMsg->pDevList = ICall_malloc(
-					(pEvent->discCmpl.numDevs) * sizeof(gapDevRec_t));
-			memcpy(pDevDiscMsg->pDevList, pEvent->discCmpl.pDevList,
-					(pEvent->discCmpl.numDevs) * sizeof(gapDevRec_t));
+		pDevDiscMsg->pDevList = ICall_malloc(
+				(pEvent->discCmpl.numDevs) * sizeof(gapDevRec_t));
+		memcpy(pDevDiscMsg->pDevList, pEvent->discCmpl.pDevList,
+				(pEvent->discCmpl.numDevs) * sizeof(gapDevRec_t));
 
-			pMsg->pData = (uint8 *) pDevDiscMsg;
-		}
-			break;
+		pMsg->pData = (uint8 *) pDevDiscMsg;
+	}
+		break;
 
-		default:
-			break;
-		}
-
-		// Enqueue the message.
-		Util_enqueueMsg(appMsgQueue, sem, (uint8*) pMsg);
+	default:
+		break;
 	}
 
+	// Enqueue the message.
+	Util_enqueueMsg(appMsgQueue, sem, (uint8*) pMsg);
+}
+
 // Free the stack message
-	ICall_freeMsg(pEvent);
+ICall_freeMsg(pEvent);
 }
 
 #endif
@@ -1318,7 +1318,7 @@ static void SimpleBLEPeripheral_ObserverStateChangeCB(
  * @return  None.
  */
 static void SimpleBLEPeripheral_stateChangeCB(gaprole_States_t newState) {
-	SimpleBLEPeripheral_enqueueMsg(SBP_STATE_CHANGE_EVT, newState, NULL);
+SimpleBLEPeripheral_enqueueMsg(SBP_STATE_CHANGE_EVT, newState, NULL);
 }
 
 /*********************************************************************
@@ -1332,156 +1332,152 @@ static void SimpleBLEPeripheral_stateChangeCB(gaprole_States_t newState) {
  */
 static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState) {
 #ifdef PLUS_BROADCASTER
-	static bool firstConnFlag = false;
+static bool firstConnFlag = false;
 #endif // PLUS_BROADCASTER
 
-	switch (newState) {
-	case GAPROLE_STARTED: {
-		uint8_t ownAddress[B_ADDR_LEN];
-		uint8_t systemId[DEVINFO_SYSTEM_ID_LEN];
+switch (newState) {
+case GAPROLE_STARTED: {
+	uint8_t ownAddress[B_ADDR_LEN];
+	uint8_t systemId[DEVINFO_SYSTEM_ID_LEN];
 
-		GAPRole_GetParameter(GAPROLE_BD_ADDR, ownAddress);
+	GAPRole_GetParameter(GAPROLE_BD_ADDR, ownAddress);
 
-		// use 6 bytes of device address for 8 bytes of system ID value
-		systemId[0] = ownAddress[0];
-		systemId[1] = ownAddress[1];
-		systemId[2] = ownAddress[2];
+	// use 6 bytes of device address for 8 bytes of system ID value
+	systemId[0] = ownAddress[0];
+	systemId[1] = ownAddress[1];
+	systemId[2] = ownAddress[2];
 
-		// set middle bytes to zero
-		systemId[4] = 0x00;
-		systemId[3] = 0x00;
+	// set middle bytes to zero
+	systemId[4] = 0x00;
+	systemId[3] = 0x00;
 
-		// shift three bytes up
-		systemId[7] = ownAddress[5];
-		systemId[6] = ownAddress[4];
-		systemId[5] = ownAddress[3];
+	// shift three bytes up
+	systemId[7] = ownAddress[5];
+	systemId[6] = ownAddress[4];
+	systemId[5] = ownAddress[3];
 
-		DevInfo_SetParameter(DEVINFO_SYSTEM_ID, DEVINFO_SYSTEM_ID_LEN,
-				systemId);
+	DevInfo_SetParameter(DEVINFO_SYSTEM_ID, DEVINFO_SYSTEM_ID_LEN, systemId);
 
-		// Display device address
-		Display_print0(dispHandle, 1, 0, Util_convertBdAddr2Str(ownAddress));
-		Display_print0(dispHandle, 2, 0, "Initialized");
-	}
-		break;
+	// Display device address
+	Display_print0(dispHandle, 1, 0, Util_convertBdAddr2Str(ownAddress));
+	Display_print0(dispHandle, 2, 0, "Initialized");
+}
+	break;
 
-	case GAPROLE_ADVERTISING:
-		Display_print0(dispHandle, 2, 0, "Advertising");
-		break;
-
-#ifdef PLUS_BROADCASTER
-		/* After a connection is dropped a device in PLUS_BROADCASTER will continue
-		 * sending non-connectable advertisements and shall sending this change of
-		 * state to the application.  These are then disabled here so that sending
-		 * connectable advertisements can resume.
-		 */
-		case GAPROLE_ADVERTISING_NONCONN:
-		{
-			uint8_t advertEnabled = FALSE;
-
-			// Disable non-connectable advertising.
-			GAPRole_SetParameter(GAPROLE_ADV_NONCONN_ENABLED, sizeof(uint8_t),
-					&advertEnabled);
-
-			advertEnabled = TRUE;
-
-			// Enabled connectable advertising.
-			GAPRole_SetParameter(GAPROLE_ADVERT_ENABLED, sizeof(uint8_t),
-					&advertEnabled);
-
-			// Reset flag for next connection.
-			firstConnFlag = false;
-
-			SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
-		}
-		break;
-#endif //PLUS_BROADCASTER
-
-	case GAPROLE_CONNECTED: {
-		linkDBInfo_t linkInfo;
-		uint8_t numActive = 0;
-
-		Util_startClock(&periodicClock);
-
-		numActive = linkDB_NumActive();
-
-		// Use numActive to determine the connection handle of the last
-		// connection
-		if (linkDB_GetInfo(numActive - 1, &linkInfo) == SUCCESS) {
-			Display_print1(dispHandle, 2, 0, "Num Conns: %d",
-					(uint16_t )numActive);
-			Display_print0(dispHandle, 3, 0,
-					Util_convertBdAddr2Str(linkInfo.addr));
-		} else {
-			uint8_t peerAddress[B_ADDR_LEN];
-
-			GAPRole_GetParameter(GAPROLE_CONN_BD_ADDR, peerAddress);
-
-			Display_print0(dispHandle, 2, 0, "Connected");
-			Display_print0(dispHandle, 3, 0,
-					Util_convertBdAddr2Str(peerAddress));
-		}
+case GAPROLE_ADVERTISING:
+	Display_print0(dispHandle, 2, 0, "Advertising");
+	break;
 
 #ifdef PLUS_BROADCASTER
-		// Only turn advertising on for this state when we first connect
-		// otherwise, when we go from connected_advertising back to this state
-		// we will be turning advertising back on.
-		if (firstConnFlag == false)
-		{
-			uint8_t advertEnabled = FALSE; // Turn on Advertising
+	/* After a connection is dropped a device in PLUS_BROADCASTER will continue
+	 * sending non-connectable advertisements and shall sending this change of
+	 * state to the application.  These are then disabled here so that sending
+	 * connectable advertisements can resume.
+	 */
+	case GAPROLE_ADVERTISING_NONCONN:
+	{
+		uint8_t advertEnabled = FALSE;
 
-			// Disable connectable advertising.
-			GAPRole_SetParameter(GAPROLE_ADVERT_ENABLED, sizeof(uint8_t),
-					&advertEnabled);
+		// Disable non-connectable advertising.
+		GAPRole_SetParameter(GAPROLE_ADV_NONCONN_ENABLED, sizeof(uint8_t),
+				&advertEnabled);
 
-			// Set to true for non-connectabel advertising.
-			advertEnabled = TRUE;
+		advertEnabled = TRUE;
 
-			// Enable non-connectable advertising.
-			GAPRole_SetParameter(GAPROLE_ADV_NONCONN_ENABLED, sizeof(uint8_t),
-					&advertEnabled);
-			firstConnFlag = true;
-		}
-#endif // PLUS_BROADCASTER
-	}
-		break;
+		// Enabled connectable advertising.
+		GAPRole_SetParameter(GAPROLE_ADVERT_ENABLED, sizeof(uint8_t),
+				&advertEnabled);
 
-	case GAPROLE_CONNECTED_ADV:
-		Display_print0(dispHandle, 2, 0, "Connected Advertising");
-		break;
-
-	case GAPROLE_WAITING:
-		Util_stopClock(&periodicClock);
-		SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
-
-		Display_print0(dispHandle, 2, 0, "Disconnected");
-
-		// Clear remaining lines
-		Display_clearLines(dispHandle, 3, 5);
-		break;
-
-	case GAPROLE_WAITING_AFTER_TIMEOUT:
-		SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
-
-		Display_print0(dispHandle, 2, 0, "Timed Out");
-
-		// Clear remaining lines
-		Display_clearLines(dispHandle, 3, 5);
-
-#ifdef PLUS_BROADCASTER
 		// Reset flag for next connection.
 		firstConnFlag = false;
-#endif //#ifdef (PLUS_BROADCASTER)
-		break;
 
-	case GAPROLE_ERROR:
-		Display_print0(dispHandle, 2, 0, "Error");
-		break;
-
-	default:
-		Display_clearLine(dispHandle, 2);
-		break;
+		SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
 	}
+	break;
+#endif //PLUS_BROADCASTER
+
+case GAPROLE_CONNECTED: {
+	linkDBInfo_t linkInfo;
+	uint8_t numActive = 0;
+
+	Util_startClock(&periodicClock);
+
+	numActive = linkDB_NumActive();
+
+	// Use numActive to determine the connection handle of the last
+	// connection
+	if (linkDB_GetInfo(numActive - 1, &linkInfo) == SUCCESS) {
+		Display_print1(dispHandle, 2, 0, "Num Conns: %d", (uint16_t )numActive);
+		Display_print0(dispHandle, 3, 0, Util_convertBdAddr2Str(linkInfo.addr));
+	} else {
+		uint8_t peerAddress[B_ADDR_LEN];
+
+		GAPRole_GetParameter(GAPROLE_CONN_BD_ADDR, peerAddress);
+
+		Display_print0(dispHandle, 2, 0, "Connected");
+		Display_print0(dispHandle, 3, 0, Util_convertBdAddr2Str(peerAddress));
+	}
+
+#ifdef PLUS_BROADCASTER
+	// Only turn advertising on for this state when we first connect
+	// otherwise, when we go from connected_advertising back to this state
+	// we will be turning advertising back on.
+	if (firstConnFlag == false)
+	{
+		uint8_t advertEnabled = FALSE; // Turn on Advertising
+
+		// Disable connectable advertising.
+		GAPRole_SetParameter(GAPROLE_ADVERT_ENABLED, sizeof(uint8_t),
+				&advertEnabled);
+
+		// Set to true for non-connectabel advertising.
+		advertEnabled = TRUE;
+
+		// Enable non-connectable advertising.
+		GAPRole_SetParameter(GAPROLE_ADV_NONCONN_ENABLED, sizeof(uint8_t),
+				&advertEnabled);
+		firstConnFlag = true;
+	}
+#endif // PLUS_BROADCASTER
+}
+	break;
+
+case GAPROLE_CONNECTED_ADV:
+	Display_print0(dispHandle, 2, 0, "Connected Advertising");
+	break;
+
+case GAPROLE_WAITING:
+	Util_stopClock(&periodicClock);
+	SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
+
+	Display_print0(dispHandle, 2, 0, "Disconnected");
+
+	// Clear remaining lines
+	Display_clearLines(dispHandle, 3, 5);
+	break;
+
+case GAPROLE_WAITING_AFTER_TIMEOUT:
+	SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
+
+	Display_print0(dispHandle, 2, 0, "Timed Out");
+
+	// Clear remaining lines
+	Display_clearLines(dispHandle, 3, 5);
+
+#ifdef PLUS_BROADCASTER
+	// Reset flag for next connection.
+	firstConnFlag = false;
+#endif //#ifdef (PLUS_BROADCASTER)
+	break;
+
+case GAPROLE_ERROR:
+	Display_print0(dispHandle, 2, 0, "Error");
+	break;
+
+default:
+	Display_clearLine(dispHandle, 2);
+	break;
+}
 
 // Update the state
 //gapProfileState = newState;
@@ -1499,7 +1495,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
  * @return  None.
  */
 static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID) {
-	SimpleBLEPeripheral_enqueueMsg(SBP_CHAR_CHANGE_EVT, paramID, NULL);
+SimpleBLEPeripheral_enqueueMsg(SBP_CHAR_CHANGE_EVT, paramID, NULL);
 }
 #endif //!FEATURE_OAD_ONCHIP
 
@@ -1515,25 +1511,25 @@ static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID) {
  */
 static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID) {
 #ifndef FEATURE_OAD_ONCHIP
-	uint8_t newValue;
+uint8_t newValue;
 
-	switch (paramID) {
-	case SIMPLEPROFILE_CHAR1:
-		SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR1, &newValue);
+switch (paramID) {
+case SIMPLEPROFILE_CHAR1:
+	SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR1, &newValue);
 
-		Display_print1(dispHandle, 4, 0, "Char 1: %d", (uint16_t )newValue);
-		break;
+	Display_print1(dispHandle, 4, 0, "Char 1: %d", (uint16_t )newValue);
+	break;
 
-	case SIMPLEPROFILE_CHAR3:
-		SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR3, &newValue);
+case SIMPLEPROFILE_CHAR3:
+	SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR3, &newValue);
 
-		Display_print1(dispHandle, 4, 0, "Char 3: %d", (uint16_t )newValue);
-		break;
+	Display_print1(dispHandle, 4, 0, "Char 3: %d", (uint16_t )newValue);
+	break;
 
-	default:
-		// should not reach here!
-		break;
-	}
+default:
+	// should not reach here!
+	break;
+}
 #endif //!FEATURE_OAD_ONCHIP
 }
 
@@ -1552,17 +1548,17 @@ static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID) {
  */
 static void SimpleBLEPeripheral_performPeriodicTask(void) {
 #ifndef FEATURE_OAD_ONCHIP
-	uint8_t valueToCopy;
+uint8_t valueToCopy;
 
 // Call to retrieve the value of the third characteristic in the profile
-	if (SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR3, &valueToCopy) == SUCCESS) {
-		// Call to set that value of the fourth characteristic in the profile.
-		// Note that if notifications of the fourth characteristic have been
-		// enabled by a GATT client device, then a notification will be sent
-		// every time this function is called.
-		SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR4, sizeof(uint8_t),
-				&valueToCopy);
-	}
+if (SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR3, &valueToCopy) == SUCCESS) {
+	// Call to set that value of the fourth characteristic in the profile.
+	// Note that if notifications of the fourth characteristic have been
+	// enabled by a GATT client device, then a notification will be sent
+	// every time this function is called.
+	SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR4, sizeof(uint8_t),
+			&valueToCopy);
+}
 #endif //!FEATURE_OAD_ONCHIP
 }
 
@@ -1581,28 +1577,28 @@ static void SimpleBLEPeripheral_performPeriodicTask(void) {
  * @return  None.
  */
 void SimpleBLEPeripheral_processOadWriteCB(uint8_t event, uint16_t connHandle,
-		uint8_t *pData)
+	uint8_t *pData)
 {
-	oadTargetWrite_t *oadWriteEvt = ICall_malloc( sizeof(oadTargetWrite_t) +
-			sizeof(uint8_t) * OAD_PACKET_SIZE);
+oadTargetWrite_t *oadWriteEvt = ICall_malloc( sizeof(oadTargetWrite_t) +
+		sizeof(uint8_t) * OAD_PACKET_SIZE);
 
-	if ( oadWriteEvt != NULL )
-	{
-		oadWriteEvt->event = event;
-		oadWriteEvt->connHandle = connHandle;
+if ( oadWriteEvt != NULL )
+{
+	oadWriteEvt->event = event;
+	oadWriteEvt->connHandle = connHandle;
 
-		oadWriteEvt->pData = (uint8_t *)(&oadWriteEvt->pData + 1);
-		memcpy(oadWriteEvt->pData, pData, OAD_PACKET_SIZE);
+	oadWriteEvt->pData = (uint8_t *)(&oadWriteEvt->pData + 1);
+	memcpy(oadWriteEvt->pData, pData, OAD_PACKET_SIZE);
 
-		Queue_enqueue(hOadQ, (Queue_Elem *)oadWriteEvt);
+	Queue_enqueue(hOadQ, (Queue_Elem *)oadWriteEvt);
 
-		// Post the application's semaphore.
-		Semaphore_post(sem);
-	}
-	else
-	{
-		// Fail silently.
-	}
+	// Post the application's semaphore.
+	Semaphore_post(sem);
+}
+else
+{
+	// Fail silently.
+}
 }
 #endif //FEATURE_OAD
 
@@ -1617,10 +1613,10 @@ void SimpleBLEPeripheral_processOadWriteCB(uint8_t event, uint16_t connHandle,
  */
 static void SimpleBLEPeripheral_clockHandler(UArg arg) {
 // Store the event.
-	events |= arg;
+events |= arg;
 
 // Wake up the application.
-	Semaphore_post(sem);
+Semaphore_post(sem);
 }
 
 /*********************************************************************
@@ -1634,83 +1630,32 @@ static void SimpleBLEPeripheral_clockHandler(UArg arg) {
  * @return  None.
  */
 static void SimpleBLEPeripheral_enqueueMsg(uint8_t event, uint8_t state,
-		uint8_t *pData) {
-	sbpEvt_t *pMsg;
+	uint8_t *pData) {
+sbpEvt_t *pMsg;
 
 // Create dynamic pointer to message.
-	if ((pMsg = ICall_malloc(sizeof(sbpEvt_t)))) {
-		pMsg->hdr.event = event;
-		pMsg->hdr.state = state;
+if ((pMsg = ICall_malloc(sizeof(sbpEvt_t)))) {
+	pMsg->hdr.event = event;
+	pMsg->hdr.state = state;
 
-		// Enqueue the message.
-		Util_enqueueMsg(appMsgQueue, sem, (uint8*) pMsg);
-	}
+	// Enqueue the message.
+	Util_enqueueMsg(appMsgQueue, sem, (uint8*) pMsg);
+}
 }
 
 //==============================MY BLE FUNCS================================
 
-static void StartAdvertiseMode() {
-	StopCentralMode();
-
-	Display_print0(dispHandle, 4, 0, "Starting Advertising");
-
-	uint8_t initialAdvertEnable = TRUE;
-	uint8 status;
-
-// Set the GAP Role Parameters
-	GAPRole_SetParameter(GAPROLE_ADVERT_ENABLED, sizeof(uint8_t),
-			&initialAdvertEnable);
-
-	GAPRole_SetParameter(GAPROLE_ADVERT_DATA, sizeof(advertData), advertData);
-
-// Start the stack in Peripheral mode.
-	status = GAPRole_StartDevice(&SimpleBLEPeripheral_gapRoleCBs);
-
-	if (status == SUCCESS) {
-		scanningStarted = TRUE;
-		Display_print0(dispHandle, 4, 0, "Advertising Mode is On");
-	} else {
-		Display_print1(dispHandle, 4, 0, "Advertising failed: %d", status);
-	}
-}
-static void StartCentralMode() {
-	uint8 status;
-
-//Start scanning if not already scanning
-	if ((scanningStarted == FALSE)) {
-		status = GAPObserverRole_StartDiscovery(DEFAULT_DISCOVERY_MODE,
-		DEFAULT_DISCOVERY_ACTIVE_SCAN,
-		DEFAULT_DISCOVERY_WHITE_LIST);
-
-		if (status == SUCCESS) {
-			scanningStarted = TRUE;
-			Display_print0(dispHandle, 4, 0, "Scanning On");
-		} else {
-			Display_print1(dispHandle, 4, 0, "Scanning failed: %d", status);
-		}
-
-	}
-}
-
-static void StopCentralMode() {
-	uint8 status;
-
-	if (scanningStarted == TRUE) {
-		status = GAPObserverRole_CancelDiscovery();
-
-		if (status == SUCCESS) {
-			scanningStarted = FALSE;
-			Display_print0(dispHandle, 4, 0, "Scanning Off");
-		} else {
-			Display_print0(dispHandle, 4, 0, "Scanning Off Fail");
-		}
-	}
+static void StartAdvertiseMode(){
 
 }
+static void StartCentralMode(){
+
+}
+
 void MyBLE_addDeviceInfo(uint8_t *pAddr, uint8_t addrType) {
 	uint8_t i;
 
-// If result count not at max
+	// If result count not at max
 	if (scanRes < DEFAULT_MAX_SCAN_RES) {
 		// Check if device is already in scan results
 		for (i = 0; i < scanRes; i++) {
@@ -1728,6 +1673,7 @@ void MyBLE_addDeviceInfo(uint8_t *pAddr, uint8_t addrType) {
 	}
 }
 
+
 static bool MyBLE_findLocalName(uint8_t *pEvtData, uint8_t dataLen) {
 	uint8_t adLen;
 	uint8_t adType;
@@ -1735,7 +1681,7 @@ static bool MyBLE_findLocalName(uint8_t *pEvtData, uint8_t dataLen) {
 
 	pEnd = pEvtData + dataLen - 1;
 
-// While end of data not reached
+	// While end of data not reached
 	while (pEvtData < pEnd) {
 		// Get length of next data item
 		adLen = *pEvtData++;
@@ -1762,30 +1708,24 @@ static bool MyBLE_findLocalName(uint8_t *pEvtData, uint8_t dataLen) {
 			}
 		}
 	}
-// No name found
+	// No name found
 	return FALSE;
 }
 
 void MyBLE_showDevices() {
 	MyPrint("MyBLE_showDevices");
-	uint8_t i;
-	for (i = 0; i < scanRes; i++) {
-		Display_print0(dispHandle, ROW_TWO, 0,
-				Util_convertBdAddr2Str(devList[i].addr));
-		Display_print1(dispHandle, ROW_THREE, 0, "%s", devList[i].localName);
+	//Navigate through discovery results
+	if (!scanningStarted && scanRes > 0) {
+		if (scanIdx >= scanRes) {
+			//Display the scan option
+//			state = BLE_STATE_BROWSING;
+			scanIdx = 0;
+		} else {
+			//Display next device
+//			state = BLE_STATE_BROWSING;
+			scanIdx++;
+		}
 	}
-//Navigate through discovery results
-//	if (!scanningStarted && scanRes > 0) {
-//		if (scanIdx >= scanRes) {
-//			//Display the scan option
-////			state = BLE_STATE_BROWSING;
-//			scanIdx = 0;
-//		} else {
-//			//Display next device
-////			state = BLE_STATE_BROWSING;
-//			scanIdx++;
-//		}
-//	}
 }
 
 static void MyBLE_addDeviceName(uint8_t i, uint8_t *pEvtData, uint8_t dataLen) {
@@ -1795,7 +1735,7 @@ static void MyBLE_addDeviceName(uint8_t i, uint8_t *pEvtData, uint8_t dataLen) {
 
 	pEnd = pEvtData + dataLen - 1;
 
-// While end of data not reached
+	// While end of data not reached
 	while (pEvtData < pEnd) {
 		// Get length of next scan response item
 		scanRspLen = *pEvtData++;
@@ -1816,6 +1756,10 @@ static void MyBLE_addDeviceName(uint8_t i, uint8_t *pEvtData, uint8_t dataLen) {
 					pEvtData++;
 					j++;
 				}
+				Display_print1(dispHandle, 5, 0, "The name w found is %s \n", devList[i].localName);
+//				Display_print1(dispHandle, 5, 0, "Scan Response Data: %s",
+//									Util_convertBytes2Str(devList[i].localName,
+//											devList[i].nameLength));
 			}
 		} else {
 			// Go to next scan response item
@@ -1833,11 +1777,11 @@ static void MyPrint(const char* str) {
 
 void ChangeBLEName() {
 	advertData[sizeof(advertData) - 2] = 'a';
-// Initialize Advertisement data
+	// Initialize Advertisement data
 	GAPRole_SetParameter(GAPROLE_ADVERT_DATA, sizeof(advertData), advertData);
-//try this too:
+	//try this too:
 //	attDeviceName[GAP_DEVICE_NAME_LEN-2] = 'a';
-//GGS_SetParameter(GGS_DEVICE_NAME_ATT, GAP_DEVICE_NAME_LEN, attDeviceName);
+	//GGS_SetParameter(GGS_DEVICE_NAME_ATT, GAP_DEVICE_NAME_LEN, attDeviceName);
 }
 
 UInt32 GetTime() {
@@ -1855,86 +1799,36 @@ char* GetDeviceNameFromDevList(uint8_t deviceNum) {
 
 bool isGateWay(uint8_t deviceNum) {
 	return TRUE;
-	//check if name contains g in start
-}
-
-
-bool IsNewGateWayName(uint8_t deviceNum) {
 	char* name = GetDeviceNameFromDevList(deviceNum);
-	//compare to lastGateWayName
-	//if true change lastGateWayName to name and secondLastGateWayName to lastGateWayName and return true
-	//else false
-	return true;	//TODO change
+	if (name[0] == 'g') //TODO UNIQUE GATEWAY NAME
+		return TRUE;
+	else
+		return FALSE;
 }
 
-static void GetMyHandle(uint8_t deviceNum) {
-	char* name = GetDeviceNameFromDevList(deviceNum);
-	//check if name contains my mac and if yes than update myhandle
-	//write it to flash
+void HandleNameReadFromDiscovery(uint8_t deviceNum) {
+//	char* name=GetDeviceNameFromDevList(deviceNum);
+//	if (memcmp(lastGateWayName,name,MAX_GATEWAY_NAME)==0)
+//		return;
+//	lastGateWayName=name;
+	SimpleBLEPeripheral_enqueueMsg(BLENewGateWayName, 0, NULL); // Not sending any data here, just a signal
 }
 
-static void GetMyHandleFromFlash() {
-	//update handle if exists in flash
+void HandleNewGateWayName() {
+	//handle new question,new feedback
 }
 
-static void SendAnswer(UInt32 answer) {
-	Display_print1(dispHandle, 2, 0, "Sending answer %d to gateway",(uint16_t )answer);
-	lastanswer = answer;
-	GenerateNewName(CLICKERWITHHANDLE);
-	ChangeBLEName();
-	TurnOnLed(GREENLED);
-	waitingForAnswerPress = FALSE;
+void FindGateway() {
+	foundGateway = TRUE;
+	//search devices
+	//change my name to init+device id
+	//get my appID
+	//set foundgateway
 }
 
-static void HandleNewQuestion() {
-	if (isClicker) {
-		StartCentralMode();
-	}
-}
-
-static void GenerateNewName(UInt32 state) {
-	if (isClicker) {
-		if (state == CLICKERWITHHANDLE) {
-			//change localData array name to:
-			//time,handle,handle
-			ChangeAdvertDataArr();
-		} else {
-			//change localData array name to:
-			// 'n'[1],time[2-4],unique id[10-20]
-			ChangeAdvertDataArr();
-		}
-	}
-
-	else {
-
-	}
-}
-
-static void ChangeAdvertDataArr() {
-//move local array to advertData array in the right place(if length less than 24 bytes-0 in the end)
-	//do tobase64
-}
-
-static void TurnOffLeds() {
-//turn off all leds
-}
-
-static void TurnOnLed(UInt32 led) {
-//turn on led for 2 seconds
-}
-
-static void HandleError() {
-	Display_print0(dispHandle, 4, 0, "ERROR");
-	TurnOnLed(REDLED);
-}
-static bool IsNewQuestion() {
-	//check lastGateWayName and secondLastGateWayName and compare questions parts
-	return TRUE;
-}
-static bool MyHandleHasProblem() {
-	//check lastGateWayName and secondLastGateWayName and extract array and check handle place
-
-	return FALSE;
+void DiscoverDevicesInBackgournd() {
+//	StartCentralMode();
+//	MyBLE_discoverDevices();//TODO CLOCK OR WHEN ENDS IN THE ROLE START IT AGAIN
 }
 
 /*********************************************************************
@@ -2334,6 +2228,7 @@ int main2(void) {
 // internal flash
 //#include "driverlib/flash.h"
 
+#include "inc/hw_fcfg1.h"
 static void readMyMac(){
 	uint32_t bleAddrlsb;
 

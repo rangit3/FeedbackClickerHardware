@@ -706,7 +706,7 @@ static void writeResultsForQuestion(char question);
 static void clickerHandleDeviceDiscovered(char* deviceName, int length);
 static void answerToQuestion(char handle, char counter, char question, char answer);
 static void requestForHandle();
-static void readMyMac();
+static char* readMyMac();
 
 // end of: Lior's functions
 
@@ -724,19 +724,24 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 	SimpleBLEPeripheral_init();
 
 	// Lior's Test
-	readMyMac();
+	char *myMac = readMyMac();
 
 	requestForHandle();
 
 	// test device discovery
-	char testNew[15] = {'C','L','K',0xff,'1','2','3','4','5','6','7','8','9','0','\0'};
-	gatewayHandleDeviceDiscovered(testNew, 14);
+	char testNew[17] = {'C','L','K',0xff};
+	testNew[16] = '\0';
+	strncpy(testNew+4, myMac,12);
+	gatewayHandleDeviceDiscovered(testNew, 16);
 	handleNextHandles();
-
-	clickerHandleDeviceDiscovered("GTWO12345678900",15);
+	char gatewayResponse[18] = "GTWO";
+	gatewayResponse[17] = '\0';
+	gatewayResponse[16] = '0'; // handle
+	strncpy(gatewayResponse+4, myMac,12);
+	clickerHandleDeviceDiscovered(gatewayResponse,17);
 
 	// ignore: mac already exist
-	gatewayHandleDeviceDiscovered(testNew, 14);
+	gatewayHandleDeviceDiscovered(testNew, 16);
 	advertiseQuestion('1',"ASDXFGHJ");
 
 	clickerHandleDeviceDiscovered("GTWQ1ASDXFGHJ",13);
@@ -1935,7 +1940,7 @@ static const char messageStart[] = CLICKER;
 #define QUESTION_INDEX 5
 #define ANSWER_INDEX 6
 
-#define MAC_ADDRESS_SIZE 10 // TBD
+#define MAC_ADDRESS_SIZE 12
 #define UNASWERED 'U'
 #define YES_ANS 'Y'
 #define NO_ANS 'N'
@@ -2102,7 +2107,7 @@ static void writeResultsForQuestion(char question) {
 static char lastQuestion = '\0';
 static char lastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS+1] = {0};
 static char lastHandle = '\0';
-static const char myMac[MAC_ADDRESS_SIZE+1] = {'1','2','3','4','5','6','7','8','9','0','\0'}; // temp. need to get from flash
+static char myMac[MAC_ADDRESS_SIZE+1];
 
 // clicker code
 static void clickerHandleDeviceDiscovered(char* deviceName, int length){ // length without null-terminate
@@ -2318,7 +2323,10 @@ int main2(void) {
 // internal flash
 //#include "driverlib/flash.h"
 #include "inc/hw_fcfg1.h"
-static void readMyMac(){
+#include <stdio.h>
+
+// mac is 6 bytes
+static char* readMyMac(){
 	uint32_t bleAddrlsb;
 
 	uint32_t bleAddrmsb;
@@ -2326,6 +2334,16 @@ static void readMyMac(){
 	bleAddrlsb = HWREG(FCFG1_BASE + FCFG1_O_MAC_BLE_0) ;
 	bleAddrmsb  =HWREG(FCFG1_BASE + FCFG1_O_MAC_BLE_1);
 
-	Display_print2(dispHandle, 5, 0, "my mac is '%x','%x'. \n", bleAddrlsb, bleAddrmsb);
+	Display_print2(dispHandle, 5, 0, "my mac is '%x','%x'. \n", bleAddrmsb, bleAddrlsb);
 
+	char tempAddress[9];
+	sprintf(tempAddress,"%x", bleAddrmsb);
+	strncpy(myMac, tempAddress+4, 4); // msb is only 2 bytes of data
+	sprintf(tempAddress,"%x", bleAddrlsb);
+	strncpy(myMac+4, tempAddress, 8);
+
+	Display_print1(dispHandle, 5, 0, "my mac address as chars is '%s'\n", myMac);
+
+	return myMac;
 }
+

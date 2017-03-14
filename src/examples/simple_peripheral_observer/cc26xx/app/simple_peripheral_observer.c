@@ -712,6 +712,8 @@ static void clickerHandleDeviceDiscovered(char* deviceName, int length);
 static void answerToQuestion(char handle, char counter, char question, char answer);
 static void requestForHandle();
 static char* readMyMac();
+static void bytesCharsToBitsChars(unsigned char* bytes, char* bits, int numberOfBits);
+static void bitsCharsToBytesChars(char* bits, unsigned char* bytes, int numberOfBits);
 
 // end of: Lior's functions
 
@@ -747,6 +749,20 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 
 	// ignore: mac already exist
 	gatewayHandleDeviceDiscovered(testNew, 16);
+
+	// test bits to bytes and bytes to bits
+	char bits[17] = "0110010001000001";
+	unsigned char bytes[3] = {0};
+	bytes[2] = '\0';
+	bitsCharsToBytesChars(bits, bytes, 16);
+	Display_print4(dispHandle, 5, 0, "bits %s -> to bytes HEX %x,%x , string '%s' \n", bits, bytes[0],bytes[1], bytes);
+	char re_bits[17] = {0};
+	re_bits[16] = '\0';
+	bytesCharsToBitsChars(bytes, re_bits, 16);
+	Display_print4(dispHandle, 5, 0, "bytes HEX %x,%x , string '%s' -> to re_bits %s \n", bytes[0],bytes[1], bytes, re_bits);
+	char* compare = strncmp(bits, re_bits,16) == 0 ? "good" : "BBBBBAAAAADDDDD !!!!! ";
+	Display_print1(dispHandle, 5, 0, "comparing bits before and after is:  %s \n", compare);
+
 	advertiseQuestion('1',"ASDXFGHJ");
 
 	clickerHandleDeviceDiscovered("GTWQ1ASDXFGHJ",13);
@@ -2058,8 +2074,8 @@ static const char MIN_HANDLE_CHAR = '0'; // ==ascii 48 , still have enough for 2
 
 static char messagesCounterByClicker[MAX_NUMBER_OF_CLICKERS] = {0}; // valid counter is from '1' to '9'
 static char questionNumberByClicker[MAX_NUMBER_OF_CLICKERS] = {0};  // no obligation on question index
-static char answersByClicker[MAX_NUMBER_OF_CLICKERS] = {UNASWERED};        // answers are 'U' for "Not Answered", 'Y' for Yes, 'N' for No
-static char macAdrresses[MAX_NUMBER_OF_CLICKERS][MAC_ADDRESS_SIZE+1];
+static char answersByClicker[MAX_NUMBER_OF_CLICKERS] = {0};        // answers are 'U' for "Not Answered", 'Y' for Yes, 'N' for No
+static char macAdrresses[MAX_NUMBER_OF_CLICKERS][MAC_ADDRESS_SIZE+1] = {0};
 
 static int lastMacIndex = -1;
 static int lastAssignedHandleIndex = -1;
@@ -2451,5 +2467,36 @@ static char* readMyMac(){
 	Display_print1(dispHandle, 5, 0, "my mac address as chars is '%s'\n", myMac);
 
 	return myMac;
+}
+
+// bits/numberOfBits is full power of 8
+// byte 0 correspond to leftmost 8 bits
+static void bitsCharsToBytesChars(char* bits, unsigned char* bytes, int numberOfBits){
+	int bitsIndex = 0;
+	int bytesIndex =  0;
+	while(numberOfBits > 0){
+		unsigned char val = 0;
+		for(int i = 0; i < 8 ; i++, bitsIndex++, numberOfBits--)
+		{
+			val |= (bits[bitsIndex] == '1') << (7 - i);
+		}
+		bytes[bytesIndex] = val;
+		bytesIndex++;
+	}
+}
+
+// bits/numberOfBits is full power of 8
+// byte 0 correspond to leftmost 8 bits
+static void bytesCharsToBitsChars(unsigned char* bytes, char* bits, int numberOfBits){
+	int bytesIndex =  0;
+	int bitsIndex = 0;
+	while(numberOfBits > 0){
+		unsigned char b = bytes[bytesIndex];
+		bytesIndex++;
+		for (int i = 7; i >= 0; --i, bitsIndex++, numberOfBits--)
+		{
+			bits[bitsIndex] = (b & (1 << i)) ? '1' : '0';
+		}
+	}
 }
 

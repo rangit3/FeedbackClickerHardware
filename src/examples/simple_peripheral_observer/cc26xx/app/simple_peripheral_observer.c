@@ -420,9 +420,10 @@ static void GetMyHandle(uint8_t deviceNum);
 static void GetMyHandleFromFlash();
 static void SendAnswer(UInt32 answer);
 static void HandleNewQuestion();
+static void RecieveAdvertDataArr();
 static void ChangeAdvertDataArr();
-static void LocalDataToBase64(const char* data);
-static void Base64ToLocalData(const char* data);
+static void LocalDataToBase64(unsigned char* data);
+static void Base64ToLocalData(unsigned char* data);
 
 static void GenerateNewName(UInt32 state);
 static void TurnOffLeds();
@@ -729,6 +730,14 @@ static void bitsCharsToBytesChars(char* bits, unsigned char* bytes, int numberOf
 static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 	// Initialize application
 	SimpleBLEPeripheral_init();
+
+
+	Display_print1(dispHandle, 5, 0, "local char is %d", localData[1]);
+	ChangeAdvertDataArr();
+	Display_print1(dispHandle, 5, 0, "local char is %d", advertData[6]);
+
+	RecieveAdvertDataArr();
+	Display_print1(dispHandle, 5, 0, "local char is %d", localData[1]);
 
 	// Lior's Test
 	char *myMac = readMyMac();
@@ -2015,14 +2024,33 @@ static void GenerateNewName(UInt32 state) {
 }
 
 static void ChangeAdvertDataArr() {
-	//copy localdata to advertData in the right place
+	unsigned char* data[MAX_GATEWAY_NAME];
+	LocalDataToBase64(data);
+	for (int i = 0; i < MAX_GATEWAY_NAME; ++i) {
+		advertData[i + 5] = data[i];
+	}
+	Display_print2(dispHandle, 5, 0, "device name from %s to base64 is %s",
+			localData,data);
 }
 
-static void LocalDataToBase64(const char* data) {
+static void RecieveAdvertDataArr() {
+	unsigned char* data[MAX_GATEWAY_NAME];
+	for (int i = 0; i < MAX_GATEWAY_NAME; ++i) {
+		data[i] = advertData[i + 5];
+	}
+	Base64ToLocalData(data);
+	for (int i = 0; i < MAX_GATEWAY_NAME; ++i) {
+		localData[i] = data[i];
+	}
+	Display_print2(dispHandle, 5, 0, "device name to %s from base64 is %s",
+			data,localData);
+}
+
+static void LocalDataToBase64(unsigned char* data) {
 	base64_encode(localData,data,MAX_GATEWAY_NAME,0);
 }
 
-static void Base64ToLocalData(const char* data) {
+static void Base64ToLocalData(unsigned char* data) {
 	base64_decode(data,localData,MAX_GATEWAY_NAME);
 }
 

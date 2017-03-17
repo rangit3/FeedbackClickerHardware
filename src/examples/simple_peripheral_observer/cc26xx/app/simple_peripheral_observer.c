@@ -710,11 +710,14 @@ static void handleNextHandles();
 static void advertiseQuestion(char question, char* answers);
 static void writeResultsForQuestion(char question);
 static void clickerHandleDeviceDiscovered(char* deviceName, int length);
-static void answerToQuestion(char handle, char counter, char question, char answer);
+static void answerToQuestion(char handle, char counter, char question,
+		char answer);
 static void requestForHandle();
 static char* readMyMac();
-static void bytesCharsToBitsChars(unsigned char* bytes, char* bits, int numberOfBits);
-static void bitsCharsToBytesChars(char* bits, unsigned char* bytes, int numberOfBits);
+static void bytesCharsToBitsChars(unsigned char* bytes, char* bits,
+		int numberOfBits);
+static void bitsCharsToBytesChars(char* bits, unsigned char* bytes,
+		int numberOfBits);
 
 // end of: Lior's functions
 
@@ -731,7 +734,6 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 	// Initialize application
 	SimpleBLEPeripheral_init();
 
-
 	Display_print1(dispHandle, 5, 0, "local char is %d", localData[1]);
 	ChangeAdvertDataArr();
 	Display_print1(dispHandle, 5, 0, "local char is %d", advertData[6]);
@@ -745,42 +747,49 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 	requestForHandle();
 
 	// test device discovery
-	char testNew[17] = {'C','L','K',0xff};
+	char testNew[17] = { 'C', 'L', 'K', 0xff };
 	testNew[16] = '\0';
-	strncpy(testNew+4, myMac,12);
+	strncpy(testNew + 4, myMac, 12);
 	gatewayHandleDeviceDiscovered(testNew, 16);
 	handleNextHandles();
 	char gatewayResponse[18] = "GTWO";
 	gatewayResponse[17] = '\0';
 	gatewayResponse[16] = '0'; // handle
-	strncpy(gatewayResponse+4, myMac,12);
-	clickerHandleDeviceDiscovered(gatewayResponse,17);
+	strncpy(gatewayResponse + 4, myMac, 12);
+	clickerHandleDeviceDiscovered(gatewayResponse, 17);
 
 	// ignore: mac already exist
 	gatewayHandleDeviceDiscovered(testNew, 16);
 
 	// test bits to bytes and bytes to bits
 	char bits[17] = "0110010001000001";
-	unsigned char bytes[3] = {0};
+	unsigned char bytes[3] = { 0 };
 	bytes[2] = '\0';
 	bitsCharsToBytesChars(bits, bytes, 16);
-	Display_print4(dispHandle, 5, 0, "bits %s -> to bytes HEX %x,%x , string '%s' \n", bits, bytes[0],bytes[1], bytes);
-	char re_bits[17] = {0};
+	Display_print4(dispHandle, 5, 0,
+			"bits %s -> to bytes HEX %x,%x , string '%s' \n", bits, bytes[0],
+			bytes[1], bytes);
+	char re_bits[17] = { 0 };
 	re_bits[16] = '\0';
 	bytesCharsToBitsChars(bytes, re_bits, 16);
-	Display_print4(dispHandle, 5, 0, "bytes HEX %x,%x , string '%s' -> to re_bits %s \n", bytes[0],bytes[1], bytes, re_bits);
-	char* compare = strncmp(bits, re_bits,16) == 0 ? "good" : "BBBBBAAAAADDDDD !!!!! ";
-	Display_print1(dispHandle, 5, 0, "comparing bits before and after is:  %s \n", compare);
+	Display_print4(dispHandle, 5, 0,
+			"bytes HEX %x,%x , string '%s' -> to re_bits %s \n", bytes[0],
+			bytes[1], bytes, re_bits);
+	char* compare =
+			strncmp(bits, re_bits, 16) == 0 ? "good" : "BBBBBAAAAADDDDD !!!!! ";
+	Display_print1(dispHandle, 5, 0,
+			"comparing bits before and after is:  %s \n", compare);
 
-	advertiseQuestion('1',"ASDXFGHJ");
+	advertiseQuestion('1', "ASDXFGHJ");
 
-	clickerHandleDeviceDiscovered("GTWQ1ASDXFGHJ",13);
+	clickerHandleDeviceDiscovered("GTWQ1ASDXFGHJ", 13);
 
 	writeResultsForQuestion('1'); // before answer
 
-	answerToQuestion('0','1','1','Y');
+	answerToQuestion('0', '1', '1', 'Y');
 
-	char ansYes1[8] = {'C','L','K','0' /*handle*/,'1' /*count*/,'1' /*q*/,'Y' /*a*/,'\0'};
+	char ansYes1[8] = { 'C', 'L', 'K', '0' /*handle*/, '1' /*count*/, '1' /*q*/,
+			'Y' /*a*/, '\0' };
 	gatewayHandleDeviceDiscovered(ansYes1, 7);
 
 	writeResultsForQuestion('1'); // after answer
@@ -812,7 +821,6 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 	writeResultsForQuestion('2'); // non answered
 
 	// end of: Lior's Test
-
 
 	// Application main loop
 	for (;;) {
@@ -1669,96 +1677,97 @@ static void SimpleBLEPeripheral_enqueueMsg(uint8_t event, uint8_t state,
 //========base 64==============//
 // Global variable.
 // Note: To change the charset to a URL encoding, replace the '+' and '/' with '*' and '-'
-unsigned char charset[]={"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"};
+unsigned char charset[] = {
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" };
 
-unsigned char revchar(char ch)
-{
-   if (ch >= 'A' && ch <= 'Z')
-      ch -= 'A';
-   else if (ch >= 'a' && ch <='z')
-      ch = ch - 'a' + 26;
-   else if (ch >= '0' && ch <='9')
-      ch = ch - '0' + 52;
-   else if (ch == '+')
-      ch = 62;
-   else if (ch == '/')
-      ch = 63;
-   return(ch);
+unsigned char revchar(char ch) {
+	if (ch >= 'A' && ch <= 'Z')
+		ch -= 'A';
+	else if (ch >= 'a' && ch <= 'z')
+		ch = ch - 'a' + 26;
+	else if (ch >= '0' && ch <= '9')
+		ch = ch - '0' + 52;
+	else if (ch == '+')
+		ch = 62;
+	else if (ch == '/')
+		ch = 63;
+	return (ch);
 }
 
-int base64_encode(unsigned char in[], unsigned char out[], int len, int newline_flag)
-{
-   int idx,idx2,blks,left_over;
-   // Since 3 input bytes = 4 output bytes, figure out how many even sets of 3 input bytes
-   // there are and process those. Multiplying by the equivilent of 3/3 (int arithmetic)
-   // will reduce a number to the lowest multiple of 3.
-   blks = (len / 3) * 3;
-   for (idx=0,idx2=0; idx < blks; idx += 3,idx2 += 4) {
-      out[idx2] = charset[in[idx] >> 2];
-      out[idx2+1] = charset[((in[idx] & 0x03) << 4) + (in[idx+1] >> 4)];
-      out[idx2+2] = charset[((in[idx+1] & 0x0f) << 2) + (in[idx+2] >> 6)];
-      out[idx2+3] = charset[in[idx+2] & 0x3F];
-      // The offical standard requires insertion of a newline every 76 chars
-      if (!(idx2 % 77) && newline_flag) {
-         out[idx2+4] = '\n';
-         idx2++;
-      }
-   }
-   left_over = len % 3;
-   if (left_over == 1) {
-      out[idx2] = charset[in[idx] >> 2];
-      out[idx2+1] = charset[(in[idx] & 0x03) << 4];
-      out[idx2+2] = '=';
-      out[idx2+3] = '=';
-      idx2 += 4;
-   }
-   else if (left_over == 2) {
-      out[idx2] = charset[in[idx] >> 2];
-      out[idx2+1] = charset[((in[idx] & 0x03) << 4) + (in[idx+1] >> 4)];
-      out[idx2+2] = charset[(in[idx+1] & 0x0F) << 2];
-      out[idx2+3] = '=';
-      idx2 += 4;
-   }
-   out[idx2] = '\0';
-   return(idx2);
+int base64_encode(unsigned char in[], unsigned char out[], int len,
+		int newline_flag) {
+	int idx, idx2, blks, left_over;
+	// Since 3 input bytes = 4 output bytes, figure out how many even sets of 3 input bytes
+	// there are and process those. Multiplying by the equivilent of 3/3 (int arithmetic)
+	// will reduce a number to the lowest multiple of 3.
+	blks = (len / 3) * 3;
+	for (idx = 0, idx2 = 0; idx < blks; idx += 3, idx2 += 4) {
+		out[idx2] = charset[in[idx] >> 2];
+		out[idx2 + 1] = charset[((in[idx] & 0x03) << 4) + (in[idx + 1] >> 4)];
+		out[idx2 + 2] =
+				charset[((in[idx + 1] & 0x0f) << 2) + (in[idx + 2] >> 6)];
+		out[idx2 + 3] = charset[in[idx + 2] & 0x3F];
+		// The offical standard requires insertion of a newline every 76 chars
+		if (!(idx2 % 77) && newline_flag) {
+			out[idx2 + 4] = '\n';
+			idx2++;
+		}
+	}
+	left_over = len % 3;
+	if (left_over == 1) {
+		out[idx2] = charset[in[idx] >> 2];
+		out[idx2 + 1] = charset[(in[idx] & 0x03) << 4];
+		out[idx2 + 2] = '=';
+		out[idx2 + 3] = '=';
+		idx2 += 4;
+	} else if (left_over == 2) {
+		out[idx2] = charset[in[idx] >> 2];
+		out[idx2 + 1] = charset[((in[idx] & 0x03) << 4) + (in[idx + 1] >> 4)];
+		out[idx2 + 2] = charset[(in[idx + 1] & 0x0F) << 2];
+		out[idx2 + 3] = '=';
+		idx2 += 4;
+	}
+	out[idx2] = '\0';
+	return (idx2);
 }
 
 /*
-ADD: Option to strip out newlines
-*/
-int base64_decode(unsigned char in[], unsigned char out[], int len)
-{
-   unsigned char ch;
-   int idx,idx2,blks,left_over;
+ ADD: Option to strip out newlines
+ */
+int base64_decode(unsigned char in[], unsigned char out[], int len) {
+	unsigned char ch;
+	int idx, idx2, blks, left_over;
 
-   if (in[len-1] == '=')
-      len--;
-   if (in[len-1] == '=')
-      len--;
+	if (in[len - 1] == '=')
+		len--;
+	if (in[len - 1] == '=')
+		len--;
 
-   blks = (len / 4) * 4;
-   for (idx=0,idx2=0; idx2 < blks; idx += 3,idx2 += 4) {
-      out[idx] = (revchar(in[idx2]) << 2) + ((revchar(in[idx2+1]) & 0x30) >> 4);
-      out[idx+1] = (revchar(in[idx2+1]) << 4) + (revchar(in[idx2+2]) >> 2);
-      out[idx+2] = (revchar(in[idx2+2]) << 6) + revchar(in[idx2+3]);
-   }
-   left_over = len % 4;
-   if (left_over == 2) {
-      out[idx] = (revchar(in[idx2]) << 2) + ((revchar(in[idx2+1]) & 0x30) >> 4);
-      out[idx+1] = (revchar(in[idx2+1]) << 4);
-      idx += 2;
-   }
-   else if (left_over == 3) {
-      out[idx] = (revchar(in[idx2]) << 2) + ((revchar(in[idx2+1]) & 0x30) >> 4);
-      out[idx+1] = (revchar(in[idx2+1]) << 4) + (revchar(in[idx2+2]) >> 2);
-      out[idx+2] = revchar(in[idx2+2]) << 6;
-      idx += 3;
-   }
-   out[idx] = '\0';
-   return(idx);
+	blks = (len / 4) * 4;
+	for (idx = 0, idx2 = 0; idx2 < blks; idx += 3, idx2 += 4) {
+		out[idx] = (revchar(in[idx2]) << 2)
+				+ ((revchar(in[idx2 + 1]) & 0x30) >> 4);
+		out[idx + 1] = (revchar(in[idx2 + 1]) << 4)
+				+ (revchar(in[idx2 + 2]) >> 2);
+		out[idx + 2] = (revchar(in[idx2 + 2]) << 6) + revchar(in[idx2 + 3]);
+	}
+	left_over = len % 4;
+	if (left_over == 2) {
+		out[idx] = (revchar(in[idx2]) << 2)
+				+ ((revchar(in[idx2 + 1]) & 0x30) >> 4);
+		out[idx + 1] = (revchar(in[idx2 + 1]) << 4);
+		idx += 2;
+	} else if (left_over == 3) {
+		out[idx] = (revchar(in[idx2]) << 2)
+				+ ((revchar(in[idx2 + 1]) & 0x30) >> 4);
+		out[idx + 1] = (revchar(in[idx2 + 1]) << 4)
+				+ (revchar(in[idx2 + 2]) >> 2);
+		out[idx + 2] = revchar(in[idx2 + 2]) << 6;
+		idx += 3;
+	}
+	out[idx] = '\0';
+	return (idx);
 }
-
-
 
 //==============================MY BLE FUNCS================================
 
@@ -1971,7 +1980,6 @@ bool isGateWay(uint8_t deviceNum) {
 	//check if name contains g in start
 }
 
-
 bool IsNewGateWayName(uint8_t deviceNum) {
 	char* name = GetDeviceNameFromDevList(deviceNum);
 	//compare to lastGateWayName
@@ -1991,7 +1999,8 @@ static void GetMyHandleFromFlash() {
 }
 
 static void SendAnswer(UInt32 answer) {
-	Display_print1(dispHandle, 2, 0, "Sending answer %d to gateway",(uint16_t )answer);
+	Display_print1(dispHandle, 2, 0, "Sending answer %d to gateway",
+			(uint16_t )answer);
 	lastanswer = answer;
 	GenerateNewName(CLICKERWITHHANDLE);
 	ChangeBLEName();
@@ -2030,7 +2039,7 @@ static void ChangeAdvertDataArr() {
 		advertData[i + 5] = data[i];
 	}
 	Display_print2(dispHandle, 5, 0, "device name from %s to base64 is %s",
-			localData,data);
+			localData, data);
 }
 
 static void RecieveAdvertDataArr() {
@@ -2043,15 +2052,15 @@ static void RecieveAdvertDataArr() {
 		localData[i] = data[i];
 	}
 	Display_print2(dispHandle, 5, 0, "device name to %s from base64 is %s",
-			data,localData);
+			data, localData);
 }
 
 static void LocalDataToBase64(unsigned char* data) {
-	base64_encode(localData,data,MAX_GATEWAY_NAME,0);
+	base64_encode(localData, data, MAX_GATEWAY_NAME, 0);
 }
 
 static void Base64ToLocalData(unsigned char* data) {
-	base64_decode(data,localData,MAX_GATEWAY_NAME);
+	base64_decode(data, localData, MAX_GATEWAY_NAME);
 }
 
 static void TurnOffLeds() {
@@ -2100,15 +2109,15 @@ static const char messageStart[] = CLICKER;
 static const char NO_HANDLE = CHAR_MAX;
 static const char MIN_HANDLE_CHAR = '0'; // ==ascii 48 , still have enough for 200 clickers
 
-static char messagesCounterByClicker[MAX_NUMBER_OF_CLICKERS] = {0}; // valid counter is from '1' to '9'
-static char questionNumberByClicker[MAX_NUMBER_OF_CLICKERS] = {0};  // no obligation on question index
-static char answersByClicker[MAX_NUMBER_OF_CLICKERS] = {0};        // answers are 'U' for "Not Answered", 'Y' for Yes, 'N' for No
-static char macAdrresses[MAX_NUMBER_OF_CLICKERS][MAC_ADDRESS_SIZE+1] = {0};
+static char messagesCounterByClicker[MAX_NUMBER_OF_CLICKERS] = { 0 }; // valid counter is from '1' to '9'
+static char questionNumberByClicker[MAX_NUMBER_OF_CLICKERS] = { 0 }; // no obligation on question index
+static char answersByClicker[MAX_NUMBER_OF_CLICKERS] = { 0 }; // answers are 'U' for "Not Answered", 'Y' for Yes, 'N' for No
+static char macAdrresses[MAX_NUMBER_OF_CLICKERS][MAC_ADDRESS_SIZE + 1] = { 0 };
 
 static int lastMacIndex = -1;
 static int lastAssignedHandleIndex = -1;
 
-static char tempMacAddress[MAC_ADDRESS_SIZE+1];
+static char tempMacAddress[MAC_ADDRESS_SIZE + 1];
 
 // prefix size is the same : 3+command
 #define OFFER_HANDLE 'O'
@@ -2120,18 +2129,20 @@ static char tempMacAddress[MAC_ADDRESS_SIZE+1];
 #define QUESTION 'Q'
 #define QUESTION_MESSAGE_LENGTH (PREFIX_SIZE + 1 +NUMBER_OF_CHARS_FOR_ALL_CLICKERS)
 
-static char tempDeviceNameForHandleOffering[OFFER_MESSAGE_LENGTH+1] = {'G','T','W','O'};
-static char tempDeviceNameForQuestion[QUESTION_MESSAGE_LENGTH+1] = {'G','T','W','Q'};
-
+static char tempDeviceNameForHandleOffering[OFFER_MESSAGE_LENGTH + 1] = { 'G',
+		'T', 'W', 'O' };
+static char tempDeviceNameForQuestion[QUESTION_MESSAGE_LENGTH + 1] = { 'G', 'T',
+		'W', 'Q' };
 
 // Gateway code
-static void gatewayHandleDeviceDiscovered(char* deviceName, int length){ // length without null-terminate
-	if(length < MIN_MESSAGE){
+static void gatewayHandleDeviceDiscovered(char* deviceName, int length) { // length without null-terminate
+	if (length < MIN_MESSAGE) {
 		return; // not relevant name
 	}
 
-	for(int i = 0 ; i < sizeof(messageStart) -1 /*null-terminate*/ ; i++, length--){
-		if(messageStart[i] != deviceName[i]){
+	for (int i = 0; i < sizeof(messageStart) - 1 /*null-terminate*/;
+			i++, length--) {
+		if (messageStart[i] != deviceName[i]) {
 			return; // not relevant
 		}
 	}
@@ -2139,57 +2150,72 @@ static void gatewayHandleDeviceDiscovered(char* deviceName, int length){ // leng
 	char handleAsChar = deviceName[HANDLE_INDEX];
 	length--;
 
-	if(handleAsChar == NO_HANDLE){ // new clicker - try add to mac addresses
-		if(length != MAC_ADDRESS_SIZE){
+	if (handleAsChar == NO_HANDLE) { // new clicker - try add to mac addresses
+		if (length != MAC_ADDRESS_SIZE) {
 			// ERROR !!!
-			Display_print3(dispHandle, 5, 0, "ERROR found in device name: '%s' , the length after prefix (%d) is not equal to MAC address length (%d) !!! \n", deviceName, length, MAC_ADDRESS_SIZE);
+			Display_print3(dispHandle, 5, 0,
+					"ERROR found in device name: '%s' , the length after prefix (%d) is not equal to MAC address length (%d) !!! \n",
+					deviceName, length, MAC_ADDRESS_SIZE);
 			return;
 		}
 
-		strncpy(tempMacAddress , deviceName+PREFIX_SIZE, MAC_ADDRESS_SIZE);
+		strncpy(tempMacAddress, deviceName + PREFIX_SIZE, MAC_ADDRESS_SIZE);
 		tempMacAddress[MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
 		// search all MACs already allocated
 
-		for(int i = 0 ; i <= lastMacIndex; i++){
-			if(strncmp(tempMacAddress , macAdrresses[i], MAC_ADDRESS_SIZE) == 0){
-				Display_print1(dispHandle, 5, 0, "DEBUG: mac address '%s' already exist \n", tempMacAddress);
+		for (int i = 0; i <= lastMacIndex; i++) {
+			if (strncmp(tempMacAddress, macAdrresses[i], MAC_ADDRESS_SIZE)
+					== 0) {
+				Display_print1(dispHandle, 5, 0,
+						"DEBUG: mac address '%s' already exist \n",
+						tempMacAddress);
 				return; // already in the list
 			}
 		}
 
-		if(lastAssignedHandleIndex >= MAX_NUMBER_OF_CLICKERS - 1){
+		if (lastAssignedHandleIndex >= MAX_NUMBER_OF_CLICKERS - 1) {
 			// ERROR!!!
-			Display_print1(dispHandle, 5, 0, "Reached max clickers index (%d), can't assign anymore", lastAssignedHandleIndex);
+			Display_print1(dispHandle, 5, 0,
+					"Reached max clickers index (%d), can't assign anymore",
+					lastAssignedHandleIndex);
 			return;
 		}
 
 		// not in list - add it and increment counter
 		lastMacIndex++;
-		strncpy(macAdrresses[lastMacIndex] , tempMacAddress, MAC_ADDRESS_SIZE);
+		strncpy(macAdrresses[lastMacIndex], tempMacAddress, MAC_ADDRESS_SIZE);
 		macAdrresses[lastMacIndex][MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
 
-		Display_print2(dispHandle, 5, 0, "MAC was added by device name: '%s' at index %d \n", deviceName, lastMacIndex);
+		Display_print2(dispHandle, 5, 0,
+				"MAC was added by device name: '%s' at index %d \n", deviceName,
+				lastMacIndex);
 	}
 	// should be valid counter
-	else{
-		char lastHandleChar = MIN_HANDLE_CHAR+lastAssignedHandleIndex;
-		if(handleAsChar < MIN_HANDLE_CHAR || handleAsChar > lastHandleChar) {
+	else {
+		char lastHandleChar = MIN_HANDLE_CHAR + lastAssignedHandleIndex;
+		if (handleAsChar < MIN_HANDLE_CHAR || handleAsChar > lastHandleChar) {
 			// ERROR
-			Display_print4(dispHandle, 5, 0, "ERROR found in device name: '%s' , the given handle ('%c') is not between range ('%c'-'%c') !!! \n", deviceName, handleAsChar, MIN_HANDLE_CHAR, lastHandleChar);
+			Display_print4(dispHandle, 5, 0,
+					"ERROR found in device name: '%s' , the given handle ('%c') is not between range ('%c'-'%c') !!! \n",
+					deviceName, handleAsChar, MIN_HANDLE_CHAR, lastHandleChar);
 			return;
 		}
 		// find counter
 		char counter = deviceName[COUNTER_INDEX];
-		if(counter < MIN_COUNTER || counter > MAX_COUNTER) {
+		if (counter < MIN_COUNTER || counter > MAX_COUNTER) {
 			// ERROR
-			Display_print4(dispHandle, 5, 0, "ERROR found in device name: '%s' , the given counter ('%c') is not legal (not '%c'-'%c') !!! \n", deviceName, counter, MIN_COUNTER, MAX_COUNTER);
+			Display_print4(dispHandle, 5, 0,
+					"ERROR found in device name: '%s' , the given counter ('%c') is not legal (not '%c'-'%c') !!! \n",
+					deviceName, counter, MIN_COUNTER, MAX_COUNTER);
 			return;
 		}
 
-		int handle = (int)(handleAsChar-MIN_HANDLE_CHAR); // make it integer
+		int handle = (int) (handleAsChar - MIN_HANDLE_CHAR); // make it integer
 
-		if(messagesCounterByClicker[handle] == counter){ // is same ?
-			Display_print2(dispHandle, 5, 0, "DEBUG: for device name: '%s' , the given counter ('%c') is already stored \n", deviceName, counter);
+		if (messagesCounterByClicker[handle] == counter) { // is same ?
+			Display_print2(dispHandle, 5, 0,
+					"DEBUG: for device name: '%s' , the given counter ('%c') is already stored \n",
+					deviceName, counter);
 			return;
 		}
 
@@ -2199,50 +2225,61 @@ static void gatewayHandleDeviceDiscovered(char* deviceName, int length){ // leng
 		questionNumberByClicker[handle] = question;
 
 		char answer = deviceName[ANSWER_INDEX];
-		if(answer != YES_ANS && answer != NO_ANS){
+		if (answer != YES_ANS && answer != NO_ANS) {
 			answersByClicker[handle] = UNASWERED;
 			// ERROR
-			Display_print4(dispHandle, 5, 0, "ERROR found in device name: '%s' , the answer given ('%c') is not legal (not '%c' nor '%c') !!! \n", deviceName, answer, YES_ANS, NO_ANS);
+			Display_print4(dispHandle, 5, 0,
+					"ERROR found in device name: '%s' , the answer given ('%c') is not legal (not '%c' nor '%c') !!! \n",
+					deviceName, answer, YES_ANS, NO_ANS);
 			return;
 		}
 
 		answersByClicker[handle] = answer;
-		Display_print4(dispHandle, 5, 0, "Answer was added by device name: '%s', handle number %d question '%c' answer '%c' \n", deviceName, handle, question, answer);
+		Display_print4(dispHandle, 5, 0,
+				"Answer was added by device name: '%s', handle number %d question '%c' answer '%c' \n",
+				deviceName, handle, question, answer);
 	}
 
 }
 
 static void handleNextHandles() {
 
-	for(int i = lastAssignedHandleIndex+1 ; i <= lastMacIndex ;i++,lastAssignedHandleIndex++){
-		strncpy(tempDeviceNameForHandleOffering+PREFIX_SIZE, macAdrresses[i],MAC_ADDRESS_SIZE);
-		tempDeviceNameForHandleOffering[OFFER_MESSAGE_LENGTH-1] = i+MIN_HANDLE_CHAR;
-		tempDeviceNameForHandleOffering[OFFER_MESSAGE_LENGTH] =  '\0';
-		Display_print3(dispHandle, 5, 0, "Next handle %d should be assigned to mac %s , full name should be %s \n", i, macAdrresses[i],tempDeviceNameForHandleOffering);
+	for (int i = lastAssignedHandleIndex + 1; i <= lastMacIndex;
+			i++, lastAssignedHandleIndex++) {
+		strncpy(tempDeviceNameForHandleOffering + PREFIX_SIZE, macAdrresses[i],
+				MAC_ADDRESS_SIZE);
+		tempDeviceNameForHandleOffering[OFFER_MESSAGE_LENGTH - 1] = i
+				+ MIN_HANDLE_CHAR;
+		tempDeviceNameForHandleOffering[OFFER_MESSAGE_LENGTH] = '\0';
+		Display_print3(dispHandle, 5, 0,
+				"Next handle %d should be assigned to mac %s , full name should be %s \n",
+				i, macAdrresses[i], tempDeviceNameForHandleOffering);
 		// do the procedure of name change
 	}
 
 }
 
-static void advertiseQuestion(char question, char* answers){
+static void advertiseQuestion(char question, char* answers) {
 	tempDeviceNameForQuestion[PREFIX_SIZE] = question;
-	strncpy(tempDeviceNameForQuestion+PREFIX_SIZE+1, answers, NUMBER_OF_CHARS_FOR_ALL_CLICKERS);
+	strncpy(tempDeviceNameForQuestion + PREFIX_SIZE + 1, answers,
+			NUMBER_OF_CHARS_FOR_ALL_CLICKERS);
 	tempDeviceNameForQuestion[QUESTION_MESSAGE_LENGTH] = '\0';
-	Display_print3(dispHandle, 5, 0, "Advertising question ('%c') and answers ('%s') , full name should be %s \n", question, answers, tempDeviceNameForQuestion);
+	Display_print3(dispHandle, 5, 0,
+			"Advertising question ('%c') and answers ('%s') , full name should be %s \n",
+			question, answers, tempDeviceNameForQuestion);
 	// do the procedure of name change
 }
 
-
 static void writeResultsForQuestion(char question) {
-	int numYes=0;
-	int numNo=0;
-	for(int i = 0 ; i <= lastAssignedHandleIndex; i++){
+	int numYes = 0;
+	int numNo = 0;
+	for (int i = 0; i <= lastAssignedHandleIndex; i++) {
 		char questionForClicker = questionNumberByClicker[i];
-		if(questionForClicker == question){
+		if (questionForClicker == question) {
 			char answer = answersByClicker[i];
-			if(answer == YES_ANS){
+			if (answer == YES_ANS) {
 				numYes++;
-			}else if(answer == NO_ANS){
+			} else if (answer == NO_ANS) {
 				numNo++;
 			}
 		}
@@ -2250,97 +2287,110 @@ static void writeResultsForQuestion(char question) {
 
 	int notAnswered = lastAssignedHandleIndex + 1 - numYes - numNo;
 
-	Display_print4(dispHandle, 5, 0, "Results for question '%c': YES = %d , NO = %d , NOT ANSWERERD = %d \n", question, numYes, numNo, notAnswered);
+	Display_print4(dispHandle, 5, 0,
+			"Results for question '%c': YES = %d , NO = %d , NOT ANSWERERD = %d \n",
+			question, numYes, numNo, notAnswered);
 }
 
-
 static char lastQuestion = '\0';
-static char lastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS+1] = {0};
+static char lastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS + 1] = { 0 };
 static char lastHandle = '\0';
-static char myMac[MAC_ADDRESS_SIZE+1];
+static char myMac[MAC_ADDRESS_SIZE + 1];
 
 // clicker code
-static void clickerHandleDeviceDiscovered(char* deviceName, int length){ // length without null-terminate
+static void clickerHandleDeviceDiscovered(char* deviceName, int length) { // length without null-terminate
 	// start is the same
-	if(length < PREFIX_SIZE){
+	if (length < PREFIX_SIZE) {
 		return; // not relevant name
 	}
 
 	char command = deviceName[GATEWAY_COMMAND];
-	if(command == OFFER_HANDLE){
-		if(length != OFFER_MESSAGE_LENGTH){
-			Display_print3(dispHandle, 5, 0, "DEBUG: in name: '%s' , the length for OFFER HANDLE (%d) is not equal to requested (%d) !!! \n", deviceName, length, OFFER_MESSAGE_LENGTH);
+	if (command == OFFER_HANDLE) {
+		if (length != OFFER_MESSAGE_LENGTH) {
+			Display_print3(dispHandle, 5, 0,
+					"DEBUG: in name: '%s' , the length for OFFER HANDLE (%d) is not equal to requested (%d) !!! \n",
+					deviceName, length, OFFER_MESSAGE_LENGTH);
 			return;
 		}
 
-		for(int i = 0 ; i < PREFIX_SIZE ; i++){
-			if(tempDeviceNameForHandleOffering[i] != deviceName[i]){
-				Display_print1(dispHandle, 5, 0, "DEBUG: in name: '%s' , prefix for OFFER HANDLE is not as requested ('%s') !!! \n", deviceName);
+		for (int i = 0; i < PREFIX_SIZE; i++) {
+			if (tempDeviceNameForHandleOffering[i] != deviceName[i]) {
+				Display_print1(dispHandle, 5, 0,
+						"DEBUG: in name: '%s' , prefix for OFFER HANDLE is not as requested ('%s') !!! \n",
+						deviceName);
 				return;
 			}
 		}
 
-		strncpy(tempMacAddress , deviceName+PREFIX_SIZE, MAC_ADDRESS_SIZE);
+		strncpy(tempMacAddress, deviceName + PREFIX_SIZE, MAC_ADDRESS_SIZE);
 		tempMacAddress[MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
-		if(strncmp(tempMacAddress, myMac, MAC_ADDRESS_SIZE)==0){
+		if (strncmp(tempMacAddress, myMac, MAC_ADDRESS_SIZE) == 0) {
 			// my mac - get handle
-			lastHandle = deviceName[OFFER_MESSAGE_LENGTH-1];
-			Display_print3(dispHandle, 5, 0, "Handle '%c' is assigned to mac '%s' by device name '%s'! \n",lastHandle, myMac, deviceName);
+			lastHandle = deviceName[OFFER_MESSAGE_LENGTH - 1];
+			Display_print3(dispHandle, 5, 0,
+					"Handle '%c' is assigned to mac '%s' by device name '%s'! \n",
+					lastHandle, myMac, deviceName);
 		}
 
-
-	}
-	else if(command == QUESTION){
-		if(length != QUESTION_MESSAGE_LENGTH){
-			Display_print3(dispHandle, 5, 0, "DEBUG: in name: '%s' , the length for QUESTION MESSAGE (%d) is not equal to requested (%d) !!! \n", deviceName, length, QUESTION_MESSAGE_LENGTH);
+	} else if (command == QUESTION) {
+		if (length != QUESTION_MESSAGE_LENGTH) {
+			Display_print3(dispHandle, 5, 0,
+					"DEBUG: in name: '%s' , the length for QUESTION MESSAGE (%d) is not equal to requested (%d) !!! \n",
+					deviceName, length, QUESTION_MESSAGE_LENGTH);
 			return;
 		}
 
-		for(int i = 0 ; i < PREFIX_SIZE ; i++){
-			if(tempDeviceNameForQuestion[i] != deviceName[i]){
-				Display_print1(dispHandle, 5, 0, "DEBUG: in name: '%s' , prefix for QUESTION MESSAGE is not as requested ('%s') !!! \n", deviceName);
+		for (int i = 0; i < PREFIX_SIZE; i++) {
+			if (tempDeviceNameForQuestion[i] != deviceName[i]) {
+				Display_print1(dispHandle, 5, 0,
+						"DEBUG: in name: '%s' , prefix for QUESTION MESSAGE is not as requested ('%s') !!! \n",
+						deviceName);
 				return;
 			}
 		}
 
 		// update question and numbers
 		lastQuestion = deviceName[PREFIX_SIZE];
-		strncpy(lastAnswers, deviceName+1+PREFIX_SIZE, NUMBER_OF_CHARS_FOR_ALL_CLICKERS);
+		strncpy(lastAnswers, deviceName + 1 + PREFIX_SIZE,
+				NUMBER_OF_CHARS_FOR_ALL_CLICKERS);
 		lastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] = '\0'; // add null-terminate
-		Display_print3(dispHandle, 5, 0, "last question '%c' and answers '%s' by device name '%s'! \n",lastQuestion, lastAnswers, deviceName);
+		Display_print3(dispHandle, 5, 0,
+				"last question '%c' and answers '%s' by device name '%s'! \n",
+				lastQuestion, lastAnswers, deviceName);
 
-
-
-	}
-	else{
+	} else {
 		return; // not relevant
 	}
 }
 
-static char tempAnswerForQuestion[MIN_MESSAGE+1]= {CLICKER};
+static char tempAnswerForQuestion[MIN_MESSAGE + 1] = { CLICKER };
 
-static void answerToQuestion(char handle, char counter, char question, char answer){
+static void answerToQuestion(char handle, char counter, char question,
+		char answer) {
 	tempAnswerForQuestion[HANDLE_INDEX] = handle;
 	tempAnswerForQuestion[COUNTER_INDEX] = counter;
 	tempAnswerForQuestion[QUESTION_INDEX] = question;
 	tempAnswerForQuestion[ANSWER_INDEX] = answer;
 	tempAnswerForQuestion[MIN_MESSAGE] = '\0'; // add null-terminate
-	Display_print5(dispHandle, 5, 0, "answer to question %c' with answer '%c' by handle '%c' and counter '%c'. device name is '%s'! \n",question, answer, handle,counter, tempAnswerForQuestion);
+	Display_print5(dispHandle, 5, 0,
+			"answer to question %c' with answer '%c' by handle '%c' and counter '%c'. device name is '%s'! \n",
+			question, answer, handle, counter, tempAnswerForQuestion);
 
 	// do the procedure of name change
 }
 
-static char tempRequestHandle[PREFIX_SIZE + MAC_ADDRESS_SIZE +1] = {CLICKER};
+static char tempRequestHandle[PREFIX_SIZE + MAC_ADDRESS_SIZE + 1] = { CLICKER };
 
-static void requestForHandle(){
+static void requestForHandle() {
 	tempRequestHandle[HANDLE_INDEX] = NO_HANDLE;
-	strncpy(tempRequestHandle+PREFIX_SIZE, myMac, MAC_ADDRESS_SIZE);
+	strncpy(tempRequestHandle + PREFIX_SIZE, myMac, MAC_ADDRESS_SIZE);
 	tempRequestHandle[PREFIX_SIZE + MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
-	Display_print2(dispHandle, 5, 0, "Request for handle by mac '%s'. device name is '%s'! \n", myMac, tempRequestHandle);
+	Display_print2(dispHandle, 5, 0,
+			"Request for handle by mac '%s'. device name is '%s'! \n", myMac,
+			tempRequestHandle);
 
 	// do the procedure of name change
 }
-
 
 /*
  *  ======== empty.c ========
@@ -2360,10 +2410,9 @@ static void requestForHandle(){
 
 /* Board Header files */
 //#include "Board.h"
-
 static PIN_Config BoardFlashPinTable[] = {
 Board_SPI_FLASH_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL
-        | PIN_DRVSTR_MIN, /* Ext. flash chip select */
+		| PIN_DRVSTR_MIN, /* Ext. flash chip select */
 
 PIN_TERMINATE };
 
@@ -2373,101 +2422,101 @@ static SPI_Handle spiHandle = NULL;
 #define RDID_REMS_CODE 0x90 /* Manufacturer Device ID */
 
 void taskFucntion(UArg arg0, UArg arg1) {
-    System_printf("task started\n");
-    System_flush();
+	System_printf("task started\n");
+	System_flush();
 
-    uint8_t wbuf[] = { RDID_REMS_CODE, 0x0, 0x0, 0x0 };
+	uint8_t wbuf[] = { RDID_REMS_CODE, 0x0, 0x0, 0x0 };
 
-    // chip select
-    PIN_setOutputValue(hFlashPin, Board_SPI_FLASH_CS, Board_FLASH_CS_ON);
+	// chip select
+	PIN_setOutputValue(hFlashPin, Board_SPI_FLASH_CS, Board_FLASH_CS_ON);
 
-    SPI_Transaction masterTransaction;
+	SPI_Transaction masterTransaction;
 
-    masterTransaction.count = sizeof(wbuf);
-    masterTransaction.txBuf = (void*) wbuf;
-    masterTransaction.arg = NULL;
-    masterTransaction.rxBuf = NULL;
+	masterTransaction.count = sizeof(wbuf);
+	masterTransaction.txBuf = (void*) wbuf;
+	masterTransaction.arg = NULL;
+	masterTransaction.rxBuf = NULL;
 
-    Bool success = SPI_transfer(spiHandle, &masterTransaction);
+	Bool success = SPI_transfer(spiHandle, &masterTransaction);
 
-    if (!success) {
-        // chip select off
-        PIN_setOutputValue(hFlashPin, Board_SPI_FLASH_CS, Board_FLASH_CS_OFF);
-        System_abort("failure in spi write\n");
-    }
+	if (!success) {
+		// chip select off
+		PIN_setOutputValue(hFlashPin, Board_SPI_FLASH_CS, Board_FLASH_CS_OFF);
+		System_abort("failure in spi write\n");
+	}
 
-    UChar infoBuf[2];
-    masterTransaction.count = sizeof(infoBuf);
-    masterTransaction.txBuf = NULL;
-    masterTransaction.arg = NULL;
-    masterTransaction.rxBuf = (void*) infoBuf;
+	UChar infoBuf[2];
+	masterTransaction.count = sizeof(infoBuf);
+	masterTransaction.txBuf = NULL;
+	masterTransaction.arg = NULL;
+	masterTransaction.rxBuf = (void*) infoBuf;
 
-    success = SPI_transfer(spiHandle, &masterTransaction);
+	success = SPI_transfer(spiHandle, &masterTransaction);
 
-    // chip select off anyhow
-    PIN_setOutputValue(hFlashPin, Board_SPI_FLASH_CS, Board_FLASH_CS_OFF);
+	// chip select off anyhow
+	PIN_setOutputValue(hFlashPin, Board_SPI_FLASH_CS, Board_FLASH_CS_OFF);
 
-    if (!success) {
-        System_abort("failure in spi read\n");
-    }
+	if (!success) {
+		System_abort("failure in spi read\n");
+	}
 
-    /*
-     print should be:
+	/*
+	 print should be:
 
-     .manfId = MF_MACRONIX = C2,  // Macronics
-     .devId = 0x14,          // MX25R8035F
-     .deviceSize = 0x100000  // 1 MByte (8 Mbit)
-     */
+	 .manfId = MF_MACRONIX = C2,  // Macronics
+	 .devId = 0x14,          // MX25R8035F
+	 .deviceSize = 0x100000  // 1 MByte (8 Mbit)
+	 */
 
-    int i = 0;
-    for (; i < 2; i++) {
-        System_printf("read buffer @ index %d, value is 0x%x\n", i, infoBuf[i]);
-        System_flush();
-    }
+	int i = 0;
+	for (; i < 2; i++) {
+		System_printf("read buffer @ index %d, value is 0x%x\n", i, infoBuf[i]);
+		System_flush();
+	}
 }
 /*
  *  ======== main ========
  */
 int main2(void) {
-    //Task_Params taskParams;
+	//Task_Params taskParams;
 
-    /* Call board init functions */
-    Board_initGeneral()
-    ;
-    Board_initSPI();
+	/* Call board init functions */
+	Board_initGeneral()
+	;
+	Board_initSPI();
 
-    Task_Handle task = Task_create(taskFucntion, NULL, NULL);
-    if (task == NULL) {
-        System_abort("Task create failed\n");
-    }
+	Task_Handle task = Task_create(taskFucntion, NULL, NULL);
+	if (task == NULL) {
+		System_abort("Task create failed\n");
+	}
 
-    PIN_State pinState;
-    hFlashPin = PIN_open(&pinState, BoardFlashPinTable);
+	PIN_State pinState;
+	hFlashPin = PIN_open(&pinState, BoardFlashPinTable);
 
-    if (hFlashPin == NULL) {
-        System_abort("Pin Open failed\n");
-    }
+	if (hFlashPin == NULL) {
+		System_abort("Pin Open failed\n");
+	}
 
-    SPI_Params spiParams;
-    SPI_Params_init(&spiParams);
-    spiParams.mode = SPI_MASTER;
-    spiParams.transferMode = SPI_MODE_BLOCKING;
+	SPI_Params spiParams;
+	SPI_Params_init(&spiParams);
+	spiParams.mode = SPI_MASTER;
+	spiParams.transferMode = SPI_MODE_BLOCKING;
 
-    /* Attempt to open SPI. */
-    spiHandle = SPI_open(Board_SPI0, &spiParams);
-    if (spiHandle == NULL) {
-        /* Error opening SPI */
-        System_abort("Error initializing board spi\n");
-    }
+	/* Attempt to open SPI. */
+	spiHandle = SPI_open(Board_SPI0, &spiParams);
+	if (spiHandle == NULL) {
+		/* Error opening SPI */
+		System_abort("Error initializing board spi\n");
+	}
 
-    //System_printf("Starting the example\nSystem provider is set to SysMin. "
-    //        "Halt the target to view any SysMin contents in ROV.\n");
-    /* SysMin will only print to the console when you call flush or exit */
-    //System_flush();
-    /* Start BIOS */
-    BIOS_start();
+	//System_printf("Starting the example\nSystem provider is set to SysMin. "
+	//        "Halt the target to view any SysMin contents in ROV.\n");
+	/* SysMin will only print to the console when you call flush or exit */
+	//System_flush();
+	/* Start BIOS */
+	BIOS_start();
 
-    return (0);
+	return (0);
 }
 
 // internal flash
@@ -2476,36 +2525,38 @@ int main2(void) {
 #include <stdio.h>
 
 // mac is 6 bytes
-static char* readMyMac(){
+static char* readMyMac() {
 	uint32_t bleAddrlsb;
 
 	uint32_t bleAddrmsb;
 
-	bleAddrlsb = HWREG(FCFG1_BASE + FCFG1_O_MAC_BLE_0) ;
-	bleAddrmsb  =HWREG(FCFG1_BASE + FCFG1_O_MAC_BLE_1);
+	bleAddrlsb = HWREG(FCFG1_BASE + FCFG1_O_MAC_BLE_0);
+	bleAddrmsb = HWREG(FCFG1_BASE + FCFG1_O_MAC_BLE_1);
 
-	Display_print2(dispHandle, 5, 0, "my mac is '%x','%x'. \n", bleAddrmsb, bleAddrlsb);
+	Display_print2(dispHandle, 5, 0, "my mac is '%x','%x'. \n", bleAddrmsb,
+			bleAddrlsb);
 
 	char tempAddress[9];
-	sprintf(tempAddress,"%x", bleAddrmsb);
-	strncpy(myMac, tempAddress+4, 4); // msb is only 2 bytes of data
-	sprintf(tempAddress,"%x", bleAddrlsb);
-	strncpy(myMac+4, tempAddress, 8);
+	sprintf(tempAddress, "%x", bleAddrmsb);
+	strncpy(myMac, tempAddress + 4, 4); // msb is only 2 bytes of data
+	sprintf(tempAddress, "%x", bleAddrlsb);
+	strncpy(myMac + 4, tempAddress, 8);
 
-	Display_print1(dispHandle, 5, 0, "my mac address as chars is '%s'\n", myMac);
+	Display_print1(dispHandle, 5, 0, "my mac address as chars is '%s'\n",
+			myMac);
 
 	return myMac;
 }
 
 // bits/numberOfBits is full power of 8
 // byte 0 correspond to leftmost 8 bits
-static void bitsCharsToBytesChars(char* bits, unsigned char* bytes, int numberOfBits){
+static void bitsCharsToBytesChars(char* bits, unsigned char* bytes,
+		int numberOfBits) {
 	int bitsIndex = 0;
-	int bytesIndex =  0;
-	while(numberOfBits > 0){
+	int bytesIndex = 0;
+	while (numberOfBits > 0) {
 		unsigned char val = 0;
-		for(int i = 0; i < 8 ; i++, bitsIndex++, numberOfBits--)
-		{
+		for (int i = 0; i < 8; i++, bitsIndex++, numberOfBits--) {
 			val |= (bits[bitsIndex] == '1') << (7 - i);
 		}
 		bytes[bytesIndex] = val;
@@ -2515,14 +2566,14 @@ static void bitsCharsToBytesChars(char* bits, unsigned char* bytes, int numberOf
 
 // bits/numberOfBits is full power of 8
 // byte 0 correspond to leftmost 8 bits
-static void bytesCharsToBitsChars(unsigned char* bytes, char* bits, int numberOfBits){
-	int bytesIndex =  0;
+static void bytesCharsToBitsChars(unsigned char* bytes, char* bits,
+		int numberOfBits) {
+	int bytesIndex = 0;
 	int bitsIndex = 0;
-	while(numberOfBits > 0){
+	while (numberOfBits > 0) {
 		unsigned char b = bytes[bytesIndex];
 		bytesIndex++;
-		for (int i = 7; i >= 0; --i, bitsIndex++, numberOfBits--)
-		{
+		for (int i = 7; i >= 0; --i, bitsIndex++, numberOfBits--) {
 			bits[bitsIndex] = (b & (1 << i)) ? '1' : '0';
 		}
 	}

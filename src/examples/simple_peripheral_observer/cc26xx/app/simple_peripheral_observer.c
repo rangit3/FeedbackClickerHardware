@@ -131,7 +131,9 @@
 //======================MY BLE DEFS========================
 #ifdef PLUS_OBSERVER
 
-#define MAX_GATEWAY_NAME					  25
+#define MAX_GATEWAY_NAME					  24
+
+#define MAX_GATEWAY_BASE64_NAME				  18
 // Maximum number of scan responses
 #define DEFAULT_MAX_SCAN_RES                  8
 // Maximum number of scan responses
@@ -259,54 +261,77 @@ Char sbpTaskStack[SBP_TASK_STACK_SIZE];
 
 // Profile state and parameters
 //static gaprole_States_t gapProfileState = GAPROLE_INIT;
+//
+//// GAP - SCAN RSP data (max size = 31 bytes)
+//static uint8_t scanRspData[] = {
+//		// complete name
+//		0x13,// length of this data
+//		GAP_ADTYPE_LOCAL_NAME_COMPLETE, 'P', 'e', 'r', 'i', 'p', 'h', 'e', 'r',
+//		'a', 'l', 'O', 'b', 's', 'e', 'r', 'v', 'e', 'r',
+//		// connection interval range
+//		0x05,// length of this data
+//		GAP_ADTYPE_SLAVE_CONN_INTERVAL_RANGE, LO_UINT16(
+//				DEFAULT_DESIRED_MIN_CONN_INTERVAL),   // 100ms
+//		HI_UINT16(DEFAULT_DESIRED_MIN_CONN_INTERVAL), LO_UINT16(
+//				DEFAULT_DESIRED_MAX_CONN_INTERVAL),   // 1s
+//		HI_UINT16(DEFAULT_DESIRED_MAX_CONN_INTERVAL),
+//
+//		// Tx power level
+//		0x02,// length of this data
+//		GAP_ADTYPE_POWER_LEVEL, 0       // 0dBm
+//		};
 
-// GAP - SCAN RSP data (max size = 31 bytes)
-static uint8_t scanRspData[] = {
-		// complete name
-		0x13,// length of this data
-		GAP_ADTYPE_LOCAL_NAME_COMPLETE, 'P', 'e', 'r', 'i', 'p', 'h', 'e', 'r',
-		'a', 'l', 'O', 'b', 's', 'e', 'r', 'v', 'e', 'r',
-		// connection interval range
-		0x05,// length of this data
-		GAP_ADTYPE_SLAVE_CONN_INTERVAL_RANGE, LO_UINT16(
-				DEFAULT_DESIRED_MIN_CONN_INTERVAL),   // 100ms
-		HI_UINT16(DEFAULT_DESIRED_MIN_CONN_INTERVAL), LO_UINT16(
-				DEFAULT_DESIRED_MAX_CONN_INTERVAL),   // 1s
-		HI_UINT16(DEFAULT_DESIRED_MAX_CONN_INTERVAL),
-
-		// Tx power level
-		0x02,// length of this data
-		GAP_ADTYPE_POWER_LEVEL, 0       // 0dBm
-		};
-
-// GAP - Advertisement data (max size = 31 bytes, though this is
-// best kept short to conserve power while advertisting)
 static uint8_t advertData[] = {
-// Flags; this sets the device to use limited discoverable
-// mode (advertises for 30 seconds at a time) instead of general
-// discoverable mode (advertises indefinitely)
+		// Flags; this sets the device to use limited discoverable
+		// mode (advertises for 30 seconds at a time) or general
+		// discoverable mode (advertises indefinitely), depending
+		// on the DEFAULT_DISCOVERY_MODE define.
 		0x02,// length of this data
 		GAP_ADTYPE_FLAGS,
 		DEFAULT_DISCOVERABLE_MODE | GAP_ADTYPE_FLAGS_BREDR_NOT_SUPPORTED,
 
-		// service UUID, to notify central devices what services are included
-		// in this peripheral
-#if !defined(FEATURE_OAD) || defined(FEATURE_OAD_ONCHIP)
-		0x03,   // length of this data
-#else //OAD for external flash
-		0x05,  // lenght of this data
-#endif //FEATURE_OAD
-		GAP_ADTYPE_16BIT_MORE,      // some of the UUID's, but not all
-#ifdef FEATURE_OAD
-		LO_UINT16(OAD_SERVICE_UUID),
-		HI_UINT16(OAD_SERVICE_UUID),
-#endif //FEATURE_OAD
-#ifndef FEATURE_OAD_ONCHIP
-		LO_UINT16(SIMPLEPROFILE_SERV_UUID), HI_UINT16(SIMPLEPROFILE_SERV_UUID)
-#endif //FEATURE_OAD_ONCHIP
-		};
+		// complete name
+		MAX_GATEWAY_NAME + 1,
+		GAP_ADTYPE_LOCAL_NAME_COMPLETE, 'P', 'r', 'o', 'j', 'e', 'c', 't', ' ',
+		'Z', 'e', 'r', 'o', 'P', 'r', 'o', '=', '+', '/', 't', ' ', 'Z', 'e',
+		'r', 'o',
 
-static uint8_t localData[];
+};
+
+static uint8_t localData[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, }; //18 bytes-MAX_GATEWAY_BASE64_NAME
+
+static uint8_t localData2[] = { '1', '*', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, }; //18 bytes-MAX_GATEWAY_BASE64_NAME
+
+
+//
+//// GAP - Advertisement data (max size = 31 bytes, though this is
+//// best kept short to conserve power while advertisting)
+//static uint8_t advertData[] = {
+//// Flags; this sets the device to use limited discoverable
+//// mode (advertises for 30 seconds at a time) instead of general
+//// discoverable mode (advertises indefinitely)
+//		0x02,// length of this data
+//		GAP_ADTYPE_FLAGS,
+//		DEFAULT_DISCOVERABLE_MODE | GAP_ADTYPE_FLAGS_BREDR_NOT_SUPPORTED,
+//
+//		// service UUID, to notify central devices what services are included
+//		// in this peripheral
+//#if !defined(FEATURE_OAD) || defined(FEATURE_OAD_ONCHIP)
+//		0x03,   // length of this data
+//#else //OAD for external flash
+//		0x05,  // lenght of this data
+//#endif //FEATURE_OAD
+//		GAP_ADTYPE_16BIT_MORE,      // some of the UUID's, but not all
+//#ifdef FEATURE_OAD
+//		LO_UINT16(OAD_SERVICE_UUID),
+//		HI_UINT16(OAD_SERVICE_UUID),
+//#endif //FEATURE_OAD
+//#ifndef FEATURE_OAD_ONCHIP
+//		LO_UINT16(SIMPLEPROFILE_SERV_UUID), HI_UINT16(SIMPLEPROFILE_SERV_UUID)
+//#endif //FEATURE_OAD_ONCHIP
+//		};
 
 // GAP GATT Attributes
 static uint8_t attDeviceName[GAP_DEVICE_NAME_LEN] = "Peripheral Observer";
@@ -428,6 +453,8 @@ static void RecieveAdvertDataArr();
 static void ChangeAdvertDataArr();
 static void LocalDataToBase64(unsigned char* data);
 static void Base64ToLocalData(unsigned char* data);
+static void HandleNewDeviceDiscovered();
+
 
 static void GenerateNewName(UInt32 state);
 static void TurnOffLeds();
@@ -588,8 +615,7 @@ static void SimpleBLEPeripheral_init(void) {
 		GAPRole_SetParameter(GAPROLE_ADVERT_OFF_TIME, sizeof(uint16_t),
 				&advertOffTime);
 
-		GAPRole_SetParameter(GAPROLE_SCAN_RSP_DATA, sizeof(scanRspData),
-				scanRspData);
+//		GAPRole_SetParameter(GAPROLE_SCAN_RSP_DATA, sizeof(scanRspData),scanRspData);
 		GAPRole_SetParameter(GAPROLE_ADVERT_DATA, sizeof(advertData),
 				advertData);
 
@@ -757,6 +783,22 @@ static bool isWaitingForAnswers = FALSE;
 static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 	// Initialize application
 	SimpleBLEPeripheral_init();
+
+	//Ran test
+//	Display_print1(dispHandle, 5, 0, "local char is %d", localData[1]);
+//	Display_print1(dispHandle, 5, 0, "local2 char is %d", localData2[1]);
+//
+//	unsigned char data[MAX_GATEWAY_NAME];
+//
+//	base64_encode(localData, data, MAX_GATEWAY_NAME, 0);
+//
+//	Display_print2(dispHandle, 5, 0, "device name from %s to base64 is %s",
+//			localData, data);
+//
+//	base64_decode(data, localData2, MAX_GATEWAY_NAME);
+//
+//	Display_print2(dispHandle, 5, 0, "device name from base64  %s to %s", data,
+//			localData2);
 
 	// Lior's Test
 	isWaitingForAnswers = TRUE; // for testing
@@ -978,6 +1020,10 @@ static void SimpleBLEPeripheralObserver_processRoleEvent(
 			}
 			Display_print1(dispHandle, 5, 0, "name found is %s",
 					devList[scanRes - 1].localName);
+
+			Base64ToLocalData((unsigned char*)devList[scanRes - 1].localName);
+			HandleNewDeviceDiscovered();
+
 			Display_print1(dispHandle, 4, 0, "Scan Response Addr: %s",
 					Util_convertBdAddr2Str(pEvent->deviceInfo.addr));
 			Display_print1(dispHandle, 5, 0, "Scan Response Data: %s",
@@ -1202,6 +1248,7 @@ static void SimpleBLEPeripheral_handleKeys(uint8_t shift, uint8_t keys) {
 //
 //			else {  // in advertise
 			ChangeBLEName();
+			RecieveAdvertDataArr();
 //			}
 		}
 		if (keys & KEY_LEFT) {
@@ -1972,12 +2019,21 @@ static void MyPrint(const char* str) {
 }
 
 void ChangeBLEName() {
-	advertData[sizeof(advertData) - 2] = 'a';
+//	advertData[sizeof(advertData) - 2] = lastanswer + '0';
+	ChangeAdvertDataArr();
+
 // Initialize Advertisement data
+//	Display_print1(dispHandle, 5, 0, "trying change device name changed to %s", advertData);
+
 	GAPRole_SetParameter(GAPROLE_ADVERT_DATA, sizeof(advertData), advertData);
+	Display_print1(dispHandle, 5, 0, "device name changed to %s", advertData);
+
+	//TODO get data from localData array and change to base64
 //try this too:
-//	attDeviceName[GAP_DEVICE_NAME_LEN-2] = 'a';
-//GGS_SetParameter(GGS_DEVICE_NAME_ATT, GAP_DEVICE_NAME_LEN, attDeviceName);
+	//	GAPRole_SetParameter(GAPROLE_SCAN_RSP_DATA, sizeof(scanRspData),scanRspData);
+	//	scanRspData[3]='a';
+//	attDeviceName[GAP_DEVICE_NAME_LEN - 2] = 'a';
+//	GGS_SetParameter(GGS_DEVICE_NAME_ATT, GAP_DEVICE_NAME_LEN, attDeviceName);
 }
 
 UInt32 GetTime() {
@@ -2051,7 +2107,7 @@ static void GenerateNewName(UInt32 state) {
 }
 
 static void ChangeAdvertDataArr() {
-	unsigned char* data[MAX_GATEWAY_NAME];
+	unsigned char data[MAX_GATEWAY_NAME];
 	LocalDataToBase64(data);
 	for (int i = 0; i < MAX_GATEWAY_NAME; ++i) {
 		advertData[i + 5] = data[i];
@@ -2061,25 +2117,27 @@ static void ChangeAdvertDataArr() {
 }
 
 static void RecieveAdvertDataArr() {
-	unsigned char* data[MAX_GATEWAY_NAME];
+	unsigned char data[MAX_GATEWAY_NAME];
 	for (int i = 0; i < MAX_GATEWAY_NAME; ++i) {
 		data[i] = advertData[i + 5];
 	}
 	Base64ToLocalData(data);
-	for (int i = 0; i < MAX_GATEWAY_NAME; ++i) {
-		localData[i] = data[i];
-	}
-	Display_print2(dispHandle, 5, 0, "device name to %s from base64 is %s",
+	Display_print2(dispHandle, 5, 0, "device name is %s and decoded is %s",
 			data, localData);
 }
 
 static void LocalDataToBase64(unsigned char* data) {
-	base64_encode(localData, data, MAX_GATEWAY_NAME, 0);
+	base64_encode(localData, data, MAX_GATEWAY_BASE64_NAME, 0);
 }
 
 static void Base64ToLocalData(unsigned char* data) {
 	base64_decode(data, localData, MAX_GATEWAY_NAME);
 }
+
+static void HandleNewDeviceDiscovered(){
+	//lior should call his functions from here-name sitting in localData
+}
+
 
 static void TurnOffLeds() {
 //turn off all leds

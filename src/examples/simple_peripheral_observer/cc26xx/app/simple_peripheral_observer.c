@@ -2412,6 +2412,7 @@ static void advertiseQuestionFirstTime(){
 
 #include <ti/sysbios/hal/Seconds.h>
 #define QUESTION_TIME_SEC 60
+#define HANDLE_ANSWERS_SLEEP_TICKS 100000
 static void handelAnswers(){
 	unsigned char question = '0' + questionCounter;
 	isWaitingForAnswers = TRUE;
@@ -2425,7 +2426,7 @@ static void handelAnswers(){
 		bitsCharsToBytesChars(clickersAnsweredForCurrentQuestion, currentAnswersInChars, MAX_NUMBER_OF_CLICKERS);
 		advertiseQuestion(question, currentAnswersInChars);
 
-		Task_sleep(100000);
+		Task_sleep(HANDLE_ANSWERS_SLEEP_TICKS);
 	}
 
 	isWaitingForAnswers = FALSE;
@@ -2464,6 +2465,7 @@ static unsigned char lastQuestion = '\0';
 static unsigned char lastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS + 1] = {0};
 static unsigned char lastHandle = '\0';
 static unsigned char myMac[MAC_ADDRESS_SIZE + 1];
+static unsigned char lastCounter = MIN_COUNTER;
 
 static void clickerHandleDeviceDiscovered(unsigned char* deviceName, int length) { // length without null-terminate
 	// start is the same
@@ -2588,6 +2590,82 @@ static unsigned char* readMyMac() {
 
 	return myMac;
 }
+
+
+static void advanceCounter() {
+	lastCounter++;
+	if(lastCounter > MAX_COUNTER){
+		lastCounter = MIN_COUNTER;
+	}
+}
+
+#define WAIT_APPROVE_QUESTION_TIME_SEC 30
+#define WAIT_APPROVE_QUESTION_SLEEP_TICKS 100000
+
+static unsigned char tempLastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS + 1] = {0};
+static unsigned char lastAnswersInBits[MAX_NUMBER_OF_CLICKERS+1] = {0};
+static bool validateQuestionApproved(unsigned char question){
+
+	Seconds_set(0);
+
+	while(Seconds_get() < WAIT_APPROVE_QUESTION_TIME_SEC){
+
+		if(lastQuestion != question){
+			Display_print2(dispHandle, 5, 0,
+					"ERROR: last question was changed to '%c' before validating current question '%c' ! \n",
+					lastQuestion, question);
+			return FALSE;
+		}
+
+		// copy so if it changes in the middle we have the old one
+		ucharsCopy(tempLastAnswers, lastAnswers, NUMBER_OF_CHARS_FOR_ALL_CLICKERS);
+
+		bytesCharsToBitsChars(tempLastAnswers, lastAnswersInBits, MAX_NUMBER_OF_CLICKERS);
+
+		if(lastAnswersInBits[lastHandle] == '1'){
+			lastAnswersInBits[MAX_NUMBER_OF_CLICKERS] = '\0';
+			Display_print3(dispHandle, 5, 0,
+					"Question %c was approved answer by gateway for handle %c according to bits %s ! \n",
+					question, lastHandle, lastAnswersInBits);
+			return TRUE;
+		}
+
+		Task_sleep(WAIT_APPROVE_QUESTION_SLEEP_TICKS);
+	}
+
+	return FALSE;
+}
+
+
+// clicker flow
+static void clickerFlow() {
+	readMyMac();
+
+	requestForHandle();
+
+	// wait till handle arrive
+
+	while(TRUE) {
+
+		// wait for question to arrive + user click
+
+		unsigned char answer = 'Y';
+
+		answerToQuestion(lastHandle, lastCounter, lastQuestion, answer);
+
+		advanceCounter();
+
+		bool approved = validateQuestionApproved(lastQuestion);
+		if(approved){
+			// turn green led
+		}
+		else{
+			// turn red led
+		}
+
+	}
+}
+
 
 // bits/numberOfBits is full power of 8
 // byte 0 correspond to leftmost 8 bits

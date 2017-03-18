@@ -80,6 +80,8 @@
 
 #include "simple_peripheral_observer.h"
 
+#include <xdc/runtime/Timestamp.h>
+
 /*********************************************************************
  * CONSTANTS
  */
@@ -747,6 +749,7 @@ static void answerToQuestion(unsigned char handle, unsigned char counter,
 		unsigned char question, unsigned char answer);
 static void requestForHandle();
 static unsigned char* readMyMac();
+static bool validateQuestionApproved(unsigned char question);
 static void bytesCharsToBitsChars(unsigned char* bytes, unsigned char* bits,
 		int numberOfBits);
 static void bitsCharsToBytesChars(unsigned char* bits, unsigned char* bytes,
@@ -839,9 +842,9 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 	Display_print1(dispHandle, 5, 0,
 			"comparing bits before and after is:  %s \n", ((ucharsCompare(bits, re_bits, 16) == 0) ? "good" : "BBBBBAAAAADDDDD !!!!! "));
 
-	advertiseQuestion('1', "ASDXFGHJ");
+	advertiseQuestion('1', "dddddddd");
 
-	clickerHandleDeviceDiscovered("GTWQ1ASDXFGHJ", 13);
+	clickerHandleDeviceDiscovered("GTWQ1dddddddd", 13);
 
 	writeResultsForQuestion('1'); // before answer
 
@@ -850,6 +853,21 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 	unsigned char ansYes1[8] = { 'C', 'L', 'K', '0' /*handle*/, '1' /*count*/, '1' /*q*/,
 			'Y' /*a*/, '\0' };
 	gatewayHandleDeviceDiscovered(ansYes1, 7);
+
+	unsigned char approveQuestion[14] = "GTWQ1dddddddd";
+	approveQuestion[13] = '\0';
+	approveQuestion[5] = (char)128;
+	clickerHandleDeviceDiscovered(approveQuestion, 13);
+
+	bool approved = validateQuestionApproved('1');
+	if(!approved){
+		Display_print0(dispHandle, 5, 0,
+					   "ERROR: Question was not approved by gateway \n !!!");
+	}
+	else{
+		Display_print0(dispHandle, 5, 0,
+					   "Success in approving question 1 answer ! \n");
+	}
 
 	writeResultsForQuestion('1'); // after answer
 
@@ -2410,16 +2428,16 @@ static void advertiseQuestionFirstTime(){
 
 }
 
-#include <ti/sysbios/hal/Seconds.h>
 #define QUESTION_TIME_SEC 60
 #define HANDLE_ANSWERS_SLEEP_TICKS 100000
 static void handelAnswers(){
 	unsigned char question = '0' + questionCounter;
 	isWaitingForAnswers = TRUE;
 
-	Seconds_set(0);
-	while(Seconds_get() < QUESTION_TIME_SEC){
-
+	xdc_runtime_Types_FreqHz freq;
+	Timestamp_getFreq(&freq);
+	unsigned int start = Timestamp_get32();
+	while( (( Timestamp_get32()-start ) / freq.lo) < QUESTION_TIME_SEC){
 		writeResultsForQuestion(question);
 
 		// update the name
@@ -2464,6 +2482,7 @@ static void gatewayFlow() {
 static unsigned char lastQuestion = '\0';
 static unsigned char lastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS + 1] = {0};
 static unsigned char lastHandle = '\0';
+static int lastHandleIndex = -1;
 static unsigned char myMac[MAC_ADDRESS_SIZE + 1];
 static unsigned char lastCounter = MIN_COUNTER;
 
@@ -2496,9 +2515,10 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName, int length)
 		if (ucharsCompare(tempMacAddress, myMac, MAC_ADDRESS_SIZE) == 0) {
 			// my mac - get handle
 			lastHandle = deviceName[OFFER_MESSAGE_LENGTH - 1];
-			Display_print3(dispHandle, 5, 0,
-					"Handle '%c' is assigned to mac '%s' by device name '%s'! \n",
-					lastHandle, myMac, deviceName);
+			lastHandleIndex = lastHandle - MIN_HANDLE_CHAR;
+			Display_print4(dispHandle, 5, 0,
+					"Handle '%c', index %d is assigned to mac '%s' by device name '%s'! \n",
+					lastHandle, lastHandleIndex, myMac, deviceName);
 		}
 
 	} else if (command == QUESTION) {
@@ -2604,11 +2624,12 @@ static void advanceCounter() {
 
 static unsigned char tempLastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS + 1] = {0};
 static unsigned char lastAnswersInBits[MAX_NUMBER_OF_CLICKERS+1] = {0};
+
 static bool validateQuestionApproved(unsigned char question){
-
-	Seconds_set(0);
-
-	while(Seconds_get() < WAIT_APPROVE_QUESTION_TIME_SEC){
+	xdc_runtime_Types_FreqHz freq;
+	Timestamp_getFreq(&freq);
+	unsigned int start = Timestamp_get32();
+	while( (( Timestamp_get32()-start ) / freq.lo) < WAIT_APPROVE_QUESTION_TIME_SEC){
 
 		if(lastQuestion != question){
 			Display_print2(dispHandle, 5, 0,
@@ -2619,18 +2640,20 @@ static bool validateQuestionApproved(unsigned char question){
 
 		// copy so if it changes in the middle we have the old one
 		ucharsCopy(tempLastAnswers, lastAnswers, NUMBER_OF_CHARS_FOR_ALL_CLICKERS);
+		tempLastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] = '\0';
 
 		bytesCharsToBitsChars(tempLastAnswers, lastAnswersInBits, MAX_NUMBER_OF_CLICKERS);
+		lastAnswersInBits[MAX_NUMBER_OF_CLICKERS] = '\0';
 
-		if(lastAnswersInBits[lastHandle] == '1'){
-			lastAnswersInBits[MAX_NUMBER_OF_CLICKERS] = '\0';
+		if(lastAnswersInBits[lastHandleIndex] == '1'){
 			Display_print3(dispHandle, 5, 0,
-					"Question %c was approved answer by gateway for handle %c according to bits %s ! \n",
-					question, lastHandle, lastAnswersInBits);
+					"Question '%c' was approved answer by gateway for handle '%c', index %d ! \n",
+					question, lastHandle,lastHandleIndex);
 			return TRUE;
 		}
 
 		Task_sleep(WAIT_APPROVE_QUESTION_SLEEP_TICKS);
+
 	}
 
 	return FALSE;

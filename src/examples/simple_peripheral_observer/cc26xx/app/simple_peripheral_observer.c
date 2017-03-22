@@ -383,15 +383,15 @@ const char *AdvTypeStrings[] = { "Connectable undirected",
 		"Non-connectable undirected", "Scan response" };
 
 //============MY Vars==================
-static bool release = FALSE;
+static bool release = TRUE;
 
 #define ON_DEBUG TRUE
 
 //static bool release = TRUE;
 
-#define IS_CLICKER TRUE
+static bool IS_CLICKER = TRUE;
 
-#define IS_GATEWAY !IS_CLICKER
+static bool IS_GATEWAY = FALSE;
 
 
 //static bool isClicker = FALSE;
@@ -469,6 +469,7 @@ static void ChangeAdvertDataArr();
 static void LocalDataToBase64(unsigned char* data);
 static void Base64ToLocalData(unsigned char* data);
 static void HandleNewDeviceDiscovered();
+static void handleButtonClick(bool button);
 
 
 //static void GenerateNewName(UInt32 state);
@@ -1282,16 +1283,13 @@ void static handleUserClickOnButton(bool leftButton){
  */
 static void SimpleBLEPeripheral_handleKeys(uint8_t shift, uint8_t keys) {
 	(void) shift;  // Intentionally unreferenced parameter
-	if(ON_DEBUG){
-	    if (keys & KEY_RIGHT) {
-	        handleUserClickOnButton(FALSE);
-	    }
-
-	    if (keys & KEY_LEFT) {
-	        handleUserClickOnButton(TRUE);
-	    }
-	}
-	else if (release) {
+	if (release) {
+		if (keys & KEY_RIGHT) {
+			handleButtonClick(TRUE);
+		}
+		if (keys & KEY_LEFT) {
+			handleButtonClick(FALSE);
+		}
 	} else { //debug mode
 		if (keys & KEY_RIGHT) {
 //			if (scanningStarted == TRUE) {
@@ -2176,7 +2174,16 @@ static void HandleNewDeviceDiscovered(){
 	}
 }
 
+static void handleButtonClick(bool button){
+	if(button){
+		Display_print0(dispHandle, 4, 0, "lior clicked yes!!");
 
+	}
+	else{
+			Display_print0(dispHandle, 4, 0, "lior clicked no!!");
+
+		}
+}
 
 
 //static void TurnOffLeds() {
@@ -2879,5 +2886,4 @@ static void bytesCharsToBitsChars(unsigned char* bytes, unsigned char* bits,
 }
 
 // end of: Lior's functions
-
 

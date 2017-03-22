@@ -385,11 +385,11 @@ const char *AdvTypeStrings[] = { "Connectable undirected",
 //============MY Vars==================
 static bool release = TRUE;
 
-#define ON_DEBUG TRUE
+#define ON_DEBUG FALSE
 
 //static bool release = TRUE;
 
-static bool IS_CLICKER = TRUE;
+//static bool IS_CLICKER = TRUE;
 
 static bool IS_GATEWAY = FALSE;
 
@@ -1256,18 +1256,6 @@ static void SimpleBLEPeripheral_freeAttRsp(uint8_t status) {
 
 #ifdef PLUS_OBSERVER
 
-static void handleGatewayButtonClick();
-static void handleClickerButtonClick(bool leftButton);
-
-// Lior handle clicks
-void static handleUserClickOnButton(bool leftButton){
-    Display_print1(dispHandle, 5, 0, "user click with leftButton =  %d \n", leftButton);
-    if(IS_GATEWAY){
-        handleGatewayButtonClick(); // don't care which button
-    } else{
-        handleClickerButtonClick(leftButton);
-    }
-}
 
 /*********************************************************************
  * @fn      SimpleBLECentral_handleKeys
@@ -2174,15 +2162,27 @@ static void HandleNewDeviceDiscovered(){
 	}
 }
 
+static void handleGatewayButtonClick();
+static void handleClickerButtonClick(bool button);
+
 static void handleButtonClick(bool button){
 	if(button){
-		Display_print0(dispHandle, 4, 0, "lior clicked yes!!");
+		Display_print0(dispHandle, 4, 0, "clicked yes!!");
 
 	}
 	else{
-			Display_print0(dispHandle, 4, 0, "lior clicked no!!");
+			Display_print0(dispHandle, 4, 0, "clicked no!!");
 
 		}
+
+
+	// Lior handle clicks
+	    if(IS_GATEWAY){
+	        handleGatewayButtonClick(); // don't care which button
+	    } else{
+	        handleClickerButtonClick(button);
+	    }
+
 }
 
 
@@ -2284,6 +2284,12 @@ static unsigned char tempDeviceNameForQuestion[QUESTION_MESSAGE_LENGTH + 1] = { 
 
 static int questionCounter = 0;
 
+static void questionTimeElapsed(){
+    gatewayWaitForNewQuestion = TRUE;
+    gatewayWaitForAnswers = FALSE;
+}
+
+
 static void handleGatewayButtonClick(){
 	if(gatewayWaitForNewQuestion){
 
@@ -2296,15 +2302,14 @@ static void handleGatewayButtonClick(){
 		gatewayWaitForAnswers = TRUE;
 
 	} else{
-		Display_print0(dispHandle, 5, 0,
-						"DEBUG: user clicked for new gateway question, but not waiting for one !!! \n");
+        Display_print1(dispHandle, 5, 0,
+                        "Question '%d' time is elapsed by user click ! \n", questionCounter);
+
+	    questionTimeElapsed();
+
 	}
 }
 
-static void questionTimeElappsed(){
-    gatewayWaitForNewQuestion = TRUE;
-	gatewayWaitForAnswers = FALSE;
-}
 
 // Gateway code
 static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
@@ -2675,8 +2680,8 @@ static void requestForHandle() {
 
 
 
-static void handleClickerButtonClick(bool leftButton){
-	if(ON_DEBUG && clickerfirstTimeClick){ // not on debug it should happen automatically on start
+static void handleClickerButtonClick(bool button){
+	if(clickerfirstTimeClick){ // not on debug it should happen automatically on start
 	    clickerfirstTimeClick = FALSE;
 
 		readMyMac();
@@ -2698,7 +2703,7 @@ static void handleClickerButtonClick(bool leftButton){
     }
     else if(clickerWaitForUserAnswer){
         clickerWaitForUserAnswer = FALSE;
-        unsigned char answer = leftButton ? NO_ANS : YES_ANS;
+        unsigned char answer = button ? YES_ANS : NO_ANS;
         answerToQuestion(lastHandle, lastCounter, lastQuestionRecievedFromGateway, answer);
 
         lastQuestionAnswered = lastQuestionRecievedFromGateway;
@@ -2712,6 +2717,9 @@ static void handleClickerButtonClick(bool leftButton){
           approveQuestion[13] = '\0';
           approveQuestion[5] = (char)128;
           clickerHandleDeviceDiscovered(approveQuestion);
+    }else{
+        Display_print0(dispHandle, 5, 0,
+                        "DEBUG: user clicked, but not waiting for click ! \n");
     }
 
 

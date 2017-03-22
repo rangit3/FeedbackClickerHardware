@@ -2345,8 +2345,7 @@ static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
 		// treat it right away
 		handleNextHandles();
 	}
-	// should be valid counter
-	else {
+	else {  // should be valid counter
 		if(!gatewayWaitForAnswers){
 			Display_print1(dispHandle, 5, 0,
 							"Gateway got new answer, but not waiting for answers!!! device name: '%s' \n", deviceName);
@@ -2380,27 +2379,35 @@ static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
 			return;
 		}
 
-		// new - update
-		messagesCounterByClicker[handle] = counter;
-		unsigned char question = deviceName[QUESTION_INDEX];
-		questionNumberByClicker[handle] = question;
+		unsigned char myRequestedQuestion = '0' + questionCounter;
+        unsigned char question = deviceName[QUESTION_INDEX];
 
-		unsigned char answer = deviceName[ANSWER_INDEX];
-		if (answer != YES_ANS && answer != NO_ANS) {
-			answersByClicker[handle] = UNASWERED;
-			// ERROR
-			Display_print4(dispHandle, 5, 0,
-					"ERROR found in device name: '%s' , the answer given ('%c') is not legal (not '%c' nor '%c') !!! \n",
-					deviceName, answer, YES_ANS, NO_ANS);
-			return;
+		if(question == myRequestedQuestion){
+
+            // new - update
+            messagesCounterByClicker[handle] = counter;
+            questionNumberByClicker[handle] = question;
+
+            unsigned char answer = deviceName[ANSWER_INDEX];
+
+            if (answer != YES_ANS && answer != NO_ANS) {
+                answersByClicker[handle] = UNASWERED;
+                // ERROR
+                Display_print4(dispHandle, 5, 0,
+                        "ERROR found in device name: '%s' , the answer given ('%c') is not legal (not '%c' nor '%c') !!! \n",
+                        deviceName, answer, YES_ANS, NO_ANS);
+                return;
+            }
+
+            answersByClicker[handle] = answer;
+            clickersAnsweredForCurrentQuestion[handle] = '1';
+            Display_print4(dispHandle, 5, 0,
+                    "Answer was added by device name: '%s', handle number %d question '%c' answer '%c' \n",
+                    deviceName, handle, question, answer);
+
+
+            updateNameForNewAnswer();
 		}
-
-		answersByClicker[handle] = answer;
-		clickersAnsweredForCurrentQuestion[handle] = '1';
-		Display_print4(dispHandle, 5, 0,
-				"Answer was added by device name: '%s', handle number %d question '%c' answer '%c' \n",
-				deviceName, handle, question, answer);
-		updateNameForNewAnswer();
 	}
 }
 
@@ -2554,6 +2561,7 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName){
 			Display_print1(dispHandle, 5, 0,
 								"DEBUG: in name: '%s' , OFFER HANDLE requested, but not expected for me ! \n",
 								deviceName);
+			return;
 		}
 
 
@@ -2569,6 +2577,7 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName){
 
 			clickerWaitForHandleOffering = FALSE;
 			clickerWaitForNewQuestion = TRUE;
+			return;
 		}
 
 	} else if (command == QUESTION) {
@@ -2679,7 +2688,8 @@ static void handleClickerButtonClick(bool leftButton){
     else if(ON_DEBUG && clickerWaitForNewQuestion){
         // send some question data
         clickerHandleDeviceDiscovered("GTWQ1dddddddd");
-    } else if(clickerWaitForUserAnswer){
+    }
+    else if(clickerWaitForUserAnswer){
         clickerWaitForUserAnswer = FALSE;
         unsigned char answer = leftButton ? NO_ANS : YES_ANS;
         answerToQuestion(lastHandle, lastCounter, lastQuestionRecievedFromGateway, answer);
@@ -2688,7 +2698,8 @@ static void handleClickerButtonClick(bool leftButton){
         advanceCounter();
 
         clickerWaitForValidationOnAnswer = TRUE;
-    } else if(ON_DEBUG && clickerWaitForValidationOnAnswer){
+    }
+    else if(ON_DEBUG && clickerWaitForValidationOnAnswer){
           // send some question data
           unsigned char approveQuestion[14] = "GTWQ1dddddddd"; // start as question data
           approveQuestion[13] = '\0';

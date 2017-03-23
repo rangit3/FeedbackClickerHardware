@@ -2234,7 +2234,7 @@ static bool gatewayWaitForNewQuestion = TRUE;
 static bool gatewayWaitForAnswers = FALSE;
 
 
-#define MAX_NUMBER_OF_CLICKERS 200
+#define MAX_NUMBER_OF_CLICKERS 96
 #define CLICKER "CLK"
 static const unsigned char messageStart[] = CLICKER;
 #define PREFIX_SIZE 4 // CLK (3) + handle (1)
@@ -2270,12 +2270,10 @@ static unsigned char tempMacAddress[MAC_ADDRESS_SIZE + 1];
 #define OFFER_MESSAGE_LENGTH (PREFIX_SIZE + MAC_ADDRESS_SIZE + 1/*handle*/)
 
 // 2^8 > 200
-#define NUMBER_OF_CHARS_FOR_ALL_CLICKERS 8
+#define NUMBER_OF_CHARS_FOR_ALL_CLICKERS 12
 #define QUESTION 'Q'
 #define QUESTION_MESSAGE_LENGTH (PREFIX_SIZE + 1 +NUMBER_OF_CHARS_FOR_ALL_CLICKERS)
 
-static unsigned char clickersAnsweredForCurrentQuestion[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] = {0};
-static unsigned char currentAnswersInChars[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] = {0};
 
 static unsigned char tempDeviceNameForHandleOffering[OFFER_MESSAGE_LENGTH + 1] = { 'G',
         'T', 'W', 'O' };
@@ -2412,7 +2410,6 @@ static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
             }
 
             answersByClicker[handle] = answer;
-            clickersAnsweredForCurrentQuestion[handle] = '1';
             Display_print4(dispHandle, 5, 0,
                     "Answer was added by device name: '%s', handle number %d question '%c' answer '%c' \n",
                     deviceName, handle, question, answer);
@@ -2482,7 +2479,15 @@ static void updateNameForNewAnswer(){
     unsigned char question = '0' + questionCounter;
 
     // update the name
-    bitsCharsToBytesChars(clickersAnsweredForCurrentQuestion, currentAnswersInChars, MAX_NUMBER_OF_CLICKERS);
+    unsigned char answersBits[MAX_NUMBER_OF_CLICKERS] = {0};
+    for (int i = 0; i <= lastAssignedHandleIndex; i++) {
+        if(answersByClicker[i] == YES_ANS || answersByClicker[i] == NO_ANS){
+            answersBits[i] = '1';
+        }
+    }
+
+    unsigned char currentAnswersInChars[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] = {0};
+    bitsCharsToBytesChars(answersBits, currentAnswersInChars, MAX_NUMBER_OF_CLICKERS);
     advertiseQuestion(question, currentAnswersInChars);
 
     writeResultsForQuestion(question);
@@ -2492,12 +2497,14 @@ static void updateNameForNewAnswer(){
 static void advertiseQuestionFirstTime(){
     unsigned char question = '0' + questionCounter;
     // zeros the answers buffer
+    unsigned char answersBits[MAX_NUMBER_OF_CLICKERS] = {0};
     for (int i = 0; i <= lastAssignedHandleIndex; i++) {
         answersByClicker[i] = UNASWERED;
-        clickersAnsweredForCurrentQuestion[i] = '0';
     }
 
-    bitsCharsToBytesChars(clickersAnsweredForCurrentQuestion, currentAnswersInChars, MAX_NUMBER_OF_CLICKERS);
+
+    unsigned char currentAnswersInChars[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] = {0};
+    bitsCharsToBytesChars(answersBits, currentAnswersInChars, MAX_NUMBER_OF_CLICKERS);
 
     advertiseQuestion(question, currentAnswersInChars);
 

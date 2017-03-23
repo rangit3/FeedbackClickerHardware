@@ -391,7 +391,7 @@ static bool release = TRUE;
 
 //static bool IS_CLICKER = TRUE;
 
-static bool IS_GATEWAY = FALSE;
+static bool IS_GATEWAY = TRUE;
 
 
 //static bool isClicker = FALSE;
@@ -2492,13 +2492,9 @@ static void updateNameForNewAnswer(){
 static void advertiseQuestionFirstTime(){
     unsigned char question = '0' + questionCounter;
     // zeros the answers buffer
-    for (int i = 0; i < MAX_NUMBER_OF_CLICKERS; i++) {
+    for (int i = 0; i <= lastAssignedHandleIndex; i++) {
         answersByClicker[i] = UNASWERED;
         clickersAnsweredForCurrentQuestion[i] = '0';
-    }
-
-    for(int i = 0 ; i < NUMBER_OF_CHARS_FOR_ALL_CLICKERS ; i++){
-        currentAnswersInChars[i] = 0;
     }
 
     bitsCharsToBytesChars(clickersAnsweredForCurrentQuestion, currentAnswersInChars, MAX_NUMBER_OF_CLICKERS);

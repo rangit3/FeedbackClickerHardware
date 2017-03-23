@@ -2245,7 +2245,7 @@ static const unsigned char messageStart[] = CLICKER;
 #define ANSWER_INDEX 6
 
 #define MAC_ADDRESS_SIZE 12
-#define UNASWERED 'U'
+#define UN_ANSWERED 'U'
 #define YES_ANS 'Y'
 #define NO_ANS 'N'
 #define MIN_COUNTER '1'
@@ -2401,7 +2401,7 @@ static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
             unsigned char answer = deviceName[ANSWER_INDEX];
 
             if (answer != YES_ANS && answer != NO_ANS) {
-                answersByClicker[handle] = UNASWERED;
+                answersByClicker[handle] = UN_ANSWERED;
                 // ERROR
                 Display_print4(dispHandle, 5, 0,
                         "ERROR found in device name: '%s' , the answer given ('%c') is not legal (not '%c' nor '%c') !!! \n",
@@ -2497,15 +2497,12 @@ static void updateNameForNewAnswer(){
 static void advertiseQuestionFirstTime(){
     unsigned char question = '0' + questionCounter;
     // zeros the answers buffer
-    unsigned char answersBits[MAX_NUMBER_OF_CLICKERS] = {0};
     for (int i = 0; i <= lastAssignedHandleIndex; i++) {
-        answersByClicker[i] = UNASWERED;
+        answersByClicker[i] = UN_ANSWERED;
     }
 
 
     unsigned char currentAnswersInChars[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] = {0};
-    bitsCharsToBytesChars(answersBits, currentAnswersInChars, MAX_NUMBER_OF_CLICKERS);
-
     advertiseQuestion(question, currentAnswersInChars);
 
 }

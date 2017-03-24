@@ -519,40 +519,7 @@ static oadTargetCBs_t simpleBLEPeripheral_oadCBs =
 #endif //FEATURE_OAD
 
 
-//static void ClickerProjectFlow_taskFxn(UArg a0, UArg a1) {
-//	Display_print0(dispHandle, 5, 0, "ClickerProjectFlow_taskFxn started \n");
-//
-//	if(IS_GATEWAY){
-//		gatewayFlow();
-//	}
-//
-//	else{
-//		clickerFlow();
-//	}
-//
-//
-//}
 
-
-/*********************************************************************
- * PUBLIC FUNCTIONS
- */
-
-//static void ClickerProjectoFlow_createTask(){
-////	Task_Params taskParams;
-////
-////	// Configure task
-////	Task_Params_init(&taskParams);
-////	taskParams.stack = flowTaskStack;
-////	taskParams.stackSize = SBP_TASK_STACK_SIZE;
-////	taskParams.priority = 1;
-////
-////	Task_construct(&flowTask, ClickerProjectFlow_taskFxn, &taskParams, NULL);
-////
-////	flowSemaphore = Semaphore_create(0, NULL, NULL);
-//	answersReachedSemphore = Semaphore_create(0, NULL, NULL);
-//
-//}
 
 /*********************************************************************
  * @fn      SimpleBLEPeripheral_createTask
@@ -800,119 +767,6 @@ static void clickerOnStart();
 static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
     // Initialize application
     SimpleBLEPeripheral_init();
-
-    //Ran test
-    //	Display_print1(dispHandle, 5, 0, "local char is %d", localData[1]);
-    //	Display_print1(dispHandle, 5, 0, "local2 char is %d", localData2[1]);
-    //
-    //	unsigned char data[MAX_GATEWAY_NAME];
-    //
-    //	base64_encode(localData, data, MAX_GATEWAY_NAME, 0);
-    //
-    //	Display_print2(dispHandle, 5, 0, "device name from %s to base64 is %s",
-    //			localData, data);
-    //
-    //	base64_decode(data, localData2, MAX_GATEWAY_NAME);
-    //
-    //	Display_print2(dispHandle, 5, 0, "device name from base64  %s to %s", data,
-    //			localData2);
-
-    ////	 Lior's Test
-    //	isWaitingForAnswers = TRUE; // for testing
-    //	unsigned char *myMac = readMyMac();
-    //
-    //	requestForHandle();
-    //
-    //	// test device discovery
-    //	unsigned char testNew[17] = { 'C', 'L', 'K', 0xff };
-    //	testNew[16] = '\0';
-    //	ucharsCopy(testNew + 4, myMac, 12);
-    //	gatewayHandleDeviceDiscovered(testNew);
-    //	handleNextHandles();
-    //	unsigned char gatewayResponse[18] = "GTWO";
-    //	gatewayResponse[17] = '\0';
-    //	gatewayResponse[16] = '0'; // handle
-    //	ucharsCopy(gatewayResponse + 4, myMac, 12);
-    //	clickerHandleDeviceDiscovered(gatewayResponse);
-    //
-    //	// ignore: mac already exist
-    //	gatewayHandleDeviceDiscovered(testNew);
-    //
-    //	// test bits to bytes and bytes to bits
-    //	unsigned char bits[17] = "0110010001000001";
-    //	unsigned char bytes[3] = { 0 };
-    //	bytes[2] = '\0';
-    //	bitsCharsToBytesChars(bits, bytes, 16);
-    //	Display_print4(dispHandle, 5, 0,
-    //			"bits %s -> to bytes HEX %x,%x , string '%s' \n", bits, bytes[0],
-    //			bytes[1], bytes);
-    //	unsigned char re_bits[17] = { 0 };
-    //	re_bits[16] = '\0';
-    //	bytesCharsToBitsChars(bytes, re_bits, 16);
-    //	Display_print4(dispHandle, 5, 0,
-    //			"bytes HEX %x,%x , string '%s' -> to re_bits %s \n", bytes[0],
-    //			bytes[1], bytes, re_bits);
-    //
-    //	Display_print1(dispHandle, 5, 0,
-    //			"comparing bits before and after is:  %s \n", ((ucharsCompare(bits, re_bits, 16) == 0) ? "good" : "BBBBBAAAAADDDDD !!!!! "));
-    //
-    //	advertiseQuestion('1', "dddddddd");
-    //
-    //	clickerHandleDeviceDiscovered("GTWQ1dddddddd");
-    //
-    //	writeResultsForQuestion('1'); // before answer
-    //
-    //	answerToQuestion('0', '1', '1', 'Y');
-    //
-    //	unsigned char ansYes1[8] = { 'C', 'L', 'K', '0' /*handle*/, '1' /*count*/, '1' /*q*/,
-    //			'Y' /*a*/, '\0' };
-    //	gatewayHandleDeviceDiscovered(ansYes1);
-    //
-    //	unsigned char approveQuestion[14] = "GTWQ1dddddddd";
-    //	approveQuestion[13] = '\0';
-    //	approveQuestion[5] = (char)128;
-    //	clickerHandleDeviceDiscovered(approveQuestion);
-    //
-    //	bool approved = validateQuestionApproved('1');
-    //	if(!approved){
-    //		Display_print0(dispHandle, 5, 0,
-    //					   "ERROR: Question was not approved by gateway \n !!!");
-    //	}
-    //	else{
-    //		Display_print0(dispHandle, 5, 0,
-    //					   "Success in approving question 1 answer ! \n");
-    //	}
-    //
-    //	writeResultsForQuestion('1'); // after answer
-    //
-    //	unsigned char temp[8];
-    //	temp[7] = '\0';
-    //
-    //	// error: handle not given
-    //	ucharsCopy(temp, ansYes1, 7);
-    //	temp[3] = '1';
-    //	gatewayHandleDeviceDiscovered(temp);
-    //
-    //	// error: wrong counter
-    //	ucharsCopy(temp, ansYes1, 7);
-    //	temp[4] = '0';
-    //	gatewayHandleDeviceDiscovered(temp);
-    //
-    //	// ignore: same counter, although message is different - it's client fault
-    //	ucharsCopy(temp, ansYes1, 7);
-    //	temp[6] = 'N';
-    //	gatewayHandleDeviceDiscovered(temp);
-    //
-    //	// error: wrong answer
-    //	ucharsCopy(temp, ansYes1, 7);
-    //	temp[4] = '2'; // next counter
-    //	temp[6] = 'G';
-    //	gatewayHandleDeviceDiscovered(temp);
-    //
-    //	writeResultsForQuestion('2'); // non answered
-    //
-    //	isWaitingForAnswers = FALSE; // for testing
-    //	// end of: Lior's Test
 
     // Application main loop
     for (;;) {
@@ -2909,4 +2763,158 @@ static void bytesCharsToBitsChars(unsigned char* bytes, unsigned char* bits,
 }
 
 // end of: Lior's functions
+
+//comments:
+//static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
+    // Initialize application
+//    SimpleBLEPeripheral_init();
+
+    //Ran test
+    //	Display_print1(dispHandle, 5, 0, "local char is %d", localData[1]);
+    //	Display_print1(dispHandle, 5, 0, "local2 char is %d", localData2[1]);
+    //
+    //	unsigned char data[MAX_GATEWAY_NAME];
+    //
+    //	base64_encode(localData, data, MAX_GATEWAY_NAME, 0);
+    //
+    //	Display_print2(dispHandle, 5, 0, "device name from %s to base64 is %s",
+    //			localData, data);
+    //
+    //	base64_decode(data, localData2, MAX_GATEWAY_NAME);
+    //
+    //	Display_print2(dispHandle, 5, 0, "device name from base64  %s to %s", data,
+    //			localData2);
+
+    ////	 Lior's Test
+    //	isWaitingForAnswers = TRUE; // for testing
+    //	unsigned char *myMac = readMyMac();
+    //
+    //	requestForHandle();
+    //
+    //	// test device discovery
+    //	unsigned char testNew[17] = { 'C', 'L', 'K', 0xff };
+    //	testNew[16] = '\0';
+    //	ucharsCopy(testNew + 4, myMac, 12);
+    //	gatewayHandleDeviceDiscovered(testNew);
+    //	handleNextHandles();
+    //	unsigned char gatewayResponse[18] = "GTWO";
+    //	gatewayResponse[17] = '\0';
+    //	gatewayResponse[16] = '0'; // handle
+    //	ucharsCopy(gatewayResponse + 4, myMac, 12);
+    //	clickerHandleDeviceDiscovered(gatewayResponse);
+    //
+    //	// ignore: mac already exist
+    //	gatewayHandleDeviceDiscovered(testNew);
+    //
+    //	// test bits to bytes and bytes to bits
+    //	unsigned char bits[17] = "0110010001000001";
+    //	unsigned char bytes[3] = { 0 };
+    //	bytes[2] = '\0';
+    //	bitsCharsToBytesChars(bits, bytes, 16);
+    //	Display_print4(dispHandle, 5, 0,
+    //			"bits %s -> to bytes HEX %x,%x , string '%s' \n", bits, bytes[0],
+    //			bytes[1], bytes);
+    //	unsigned char re_bits[17] = { 0 };
+    //	re_bits[16] = '\0';
+    //	bytesCharsToBitsChars(bytes, re_bits, 16);
+    //	Display_print4(dispHandle, 5, 0,
+    //			"bytes HEX %x,%x , string '%s' -> to re_bits %s \n", bytes[0],
+    //			bytes[1], bytes, re_bits);
+    //
+    //	Display_print1(dispHandle, 5, 0,
+    //			"comparing bits before and after is:  %s \n", ((ucharsCompare(bits, re_bits, 16) == 0) ? "good" : "BBBBBAAAAADDDDD !!!!! "));
+    //
+    //	advertiseQuestion('1', "dddddddd");
+    //
+    //	clickerHandleDeviceDiscovered("GTWQ1dddddddd");
+    //
+    //	writeResultsForQuestion('1'); // before answer
+    //
+    //	answerToQuestion('0', '1', '1', 'Y');
+    //
+    //	unsigned char ansYes1[8] = { 'C', 'L', 'K', '0' /*handle*/, '1' /*count*/, '1' /*q*/,
+    //			'Y' /*a*/, '\0' };
+    //	gatewayHandleDeviceDiscovered(ansYes1);
+    //
+    //	unsigned char approveQuestion[14] = "GTWQ1dddddddd";
+    //	approveQuestion[13] = '\0';
+    //	approveQuestion[5] = (char)128;
+    //	clickerHandleDeviceDiscovered(approveQuestion);
+    //
+    //	bool approved = validateQuestionApproved('1');
+    //	if(!approved){
+    //		Display_print0(dispHandle, 5, 0,
+    //					   "ERROR: Question was not approved by gateway \n !!!");
+    //	}
+    //	else{
+    //		Display_print0(dispHandle, 5, 0,
+    //					   "Success in approving question 1 answer ! \n");
+    //	}
+    //
+    //	writeResultsForQuestion('1'); // after answer
+    //
+    //	unsigned char temp[8];
+    //	temp[7] = '\0';
+    //
+    //	// error: handle not given
+    //	ucharsCopy(temp, ansYes1, 7);
+    //	temp[3] = '1';
+    //	gatewayHandleDeviceDiscovered(temp);
+    //
+    //	// error: wrong counter
+    //	ucharsCopy(temp, ansYes1, 7);
+    //	temp[4] = '0';
+    //	gatewayHandleDeviceDiscovered(temp);
+    //
+    //	// ignore: same counter, although message is different - it's client fault
+    //	ucharsCopy(temp, ansYes1, 7);
+    //	temp[6] = 'N';
+    //	gatewayHandleDeviceDiscovered(temp);
+    //
+    //	// error: wrong answer
+    //	ucharsCopy(temp, ansYes1, 7);
+    //	temp[4] = '2'; // next counter
+    //	temp[6] = 'G';
+    //	gatewayHandleDeviceDiscovered(temp);
+    //
+    //	writeResultsForQuestion('2'); // non answered
+    //
+    //	isWaitingForAnswers = FALSE; // for testing
+    //	// end of: Lior's Test
+
+
+//static void ClickerProjectFlow_taskFxn(UArg a0, UArg a1) {
+//	Display_print0(dispHandle, 5, 0, "ClickerProjectFlow_taskFxn started \n");
+//
+//	if(IS_GATEWAY){
+//		gatewayFlow();
+//	}
+//
+//	else{
+//		clickerFlow();
+//	}
+//
+//
+//}
+
+
+/*********************************************************************
+ * PUBLIC FUNCTIONS
+ */
+
+//static void ClickerProjectoFlow_createTask(){
+////	Task_Params taskParams;
+////
+////	// Configure task
+////	Task_Params_init(&taskParams);
+////	taskParams.stack = flowTaskStack;
+////	taskParams.stackSize = SBP_TASK_STACK_SIZE;
+////	taskParams.priority = 1;
+////
+////	Task_construct(&flowTask, ClickerProjectFlow_taskFxn, &taskParams, NULL);
+////
+////	flowSemaphore = Semaphore_create(0, NULL, NULL);
+//	answersReachedSemphore = Semaphore_create(0, NULL, NULL);
+//
+//}
 

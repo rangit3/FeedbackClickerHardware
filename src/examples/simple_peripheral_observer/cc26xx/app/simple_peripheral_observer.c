@@ -944,6 +944,7 @@ static void SimpleBLEPeripheralObserver_processRoleEvent(
 		ICall_free(pEvent->discCmpl.pDevList);
 		ICall_free(pEvent);
 
+		StartCentralMode();
 	}
 		break;
 
@@ -1198,7 +1199,6 @@ static void SimpleBLEPeripheral_processAppMsg(sbpEvt_t *pMsg) {
 		break;
 
 	case BLEStartObserving: {
-		MyPrint("Process BLEStartObserving");
 		StartCentralMode();
 	}
 		break;
@@ -2717,7 +2717,6 @@ static void processNameChange(unsigned char* array, int length) {
 
 	ChangeBLEName();
 
-	StartCentralMode();
 }
 
 static void ucharsCopy(unsigned char *dest, const unsigned char *src, size_t n) {

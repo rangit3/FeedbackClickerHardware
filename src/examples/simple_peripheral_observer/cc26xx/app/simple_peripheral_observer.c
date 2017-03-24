@@ -388,8 +388,12 @@ static bool release = TRUE;
 
 //static bool IS_CLICKER = TRUE;
 
-static bool IS_GATEWAY = FALSE;
+static bool IS_GATEWAY = TRUE;
 
+static char* NAME(){
+   char* name = IS_GATEWAY ? "GATEWAY" : "CLICKER";
+   return name;
+}
 //static bool isClicker = FALSE;
 
 //static UInt32 lastTimestamp = 0;
@@ -906,7 +910,7 @@ static void SimpleBLEPeripheralObserver_processRoleEvent(
 				MyBLE_addDeviceName(scanRes - 1, pEvent->deviceInfo.pEvtData,
 						pEvent->deviceInfo.dataLen);
 			}
-			Display_print1(dispHandle, 5, 0, "name found is %s",
+			Display_print2(dispHandle, 5, 0, "%s name found is %s", NAME(),
 					devList[scanRes - 1].localName);
 
 			Base64ToLocalDiscoveredData((unsigned char*) devList[scanRes - 1].localName);
@@ -2007,6 +2011,7 @@ static void gatewayHandleDeviceDiscovered(unsigned char* deviceName);
 static void clickerHandleDeviceDiscovered(unsigned char* deviceName);
 
 static void HandleNewDeviceDiscovered() {
+    Display_print1(dispHandle, 5, 0, "%s handle device discovered \n", NAME());
 	if (IS_GATEWAY) {
 		gatewayHandleDeviceDiscovered(localDiscoveredData);
 	} else {
@@ -2019,15 +2024,15 @@ static void handleClickerButtonClick(bool button);
 static bool isFirstTime = TRUE; // debug
 static void handleButtonClick(bool button) {
 	if (button) {
-		Display_print0(dispHandle, 4, 0, "clicked yes!!");
+		Display_print1(dispHandle, 4, 0, "%s clicked yes!!", NAME());
 
 	} else {
-		Display_print0(dispHandle, 4, 0, "clicked no!!");
+		Display_print1(dispHandle, 4, 0, "%s clicked no!!", NAME());
 
 	}
 
 	if (isFirstTime) {
-		Display_print0(dispHandle, 4, 0, "DEBUG FIRST TIME CLICK - INIT() !");
+		Display_print1(dispHandle, 4, 0, "%s DEBUG FIRST TIME CLICK - INIT() !", NAME());
 
 		isFirstTime = FALSE;
 		if (IS_GATEWAY) {
@@ -2150,6 +2155,8 @@ static void questionTimeElapsed() {
 }
 
 static void handleGatewayButtonClick() {
+    Display_print0(dispHandle, 5, 0, "GATEWAY handling click ! \n");
+
 	if (gatewayWaitForNewQuestion) {
 
 		gatewayWaitForNewQuestion = FALSE;
@@ -2161,12 +2168,14 @@ static void handleGatewayButtonClick() {
 		gatewayWaitForAnswers = TRUE;
 
 	} else {
-		Display_print1(dispHandle, 5, 0,
-				"Question '%d' time is elapsed by user click ! \n",
-				questionCounter);
+//		Display_print1(dispHandle, 5, 0,
+//				"Question '%d' time is elapsed by user click ! \n",
+//				questionCounter);
+//
+//		questionTimeElapsed();
 
-		questionTimeElapsed();
-
+	          Display_print0(dispHandle, 5, 0, "DEBUG GATEWAY DOING CENTRAL MODE ! \n");
+	    StartCentralMode();
 	}
 }
 
@@ -2552,6 +2561,8 @@ static void clickerOnStart() {
 }
 
 static void handleClickerButtonClick(bool button) {
+    Display_print0(dispHandle, 5, 0, "CLICKER handling click ! \n");
+
 	if (ON_DEBUG && clickerWaitForHandleOffering) {
 		// approve
 		unsigned char gatewayResponse[18] = "GTWO";
@@ -2579,8 +2590,11 @@ static void handleClickerButtonClick(bool button) {
 		approveQuestion[5] = (char) 128;
 		clickerHandleDeviceDiscovered(approveQuestion);
 	} else {
-		Display_print0(dispHandle, 5, 0,
-				"DEBUG: user clicked, but not waiting for click ! \n");
+//		Display_print0(dispHandle, 5, 0,
+//				"DEBUG: user clicked, but not waiting for click - doing central ! \n");
+
+        Display_print0(dispHandle, 5, 0, "DEBUG CLICKER DOING CENTRAL MODE ! \n");
+        StartCentralMode();
 	}
 
 }

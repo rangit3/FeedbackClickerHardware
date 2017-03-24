@@ -391,7 +391,7 @@ static bool release = TRUE;
 
 //static bool IS_CLICKER = TRUE;
 
-static bool IS_GATEWAY = TRUE;
+static bool IS_GATEWAY = FALSE;
 
 
 //static bool isClicker = FALSE;
@@ -785,6 +785,8 @@ static void SimpleBLEPeripheral_init(void) {
 #endif // FEATURE_OAD
 }
 
+
+static void clickerOnStart();
 
 /*********************************************************************
  * @fn      SimpleBLEPeripheral_taskFxn
@@ -2164,7 +2166,7 @@ static void HandleNewDeviceDiscovered(){
 
 static void handleGatewayButtonClick();
 static void handleClickerButtonClick(bool button);
-
+static bool isFirstTime = TRUE; // debug
 static void handleButtonClick(bool button){
     if(button){
         Display_print0(dispHandle, 4, 0, "clicked yes!!");
@@ -2172,6 +2174,20 @@ static void handleButtonClick(bool button){
     }
     else{
         Display_print0(dispHandle, 4, 0, "clicked no!!");
+
+    }
+
+    if(isFirstTime){
+        Display_print0(dispHandle, 4, 0, "DEBUG FIRST TIME CLICK - INIT() !");
+
+        isFirstTime = FALSE;
+        if(IS_GATEWAY){
+            StartCentralMode(); // need to scan right away
+        } else{
+            clickerOnStart();
+        }
+
+        return;
 
     }
 
@@ -2539,7 +2555,6 @@ static void advanceCounter();
 
 // clicker flags
 
-static bool clickerfirstTimeClick = TRUE; // DEBUG should be removed and this should happen on start
 static bool clickerWaitForHandleOffering = FALSE;
 static bool clickerWaitForNewQuestion = FALSE;
 static bool clickerWaitForUserAnswer = FALSE;
@@ -2679,17 +2694,15 @@ static void requestForHandle() {
 }
 
 
+static void clickerOnStart(){
+    readMyMac();
+    requestForHandle();
+
+    clickerWaitForHandleOffering = TRUE;
+}
 
 static void handleClickerButtonClick(bool button){
-    if(clickerfirstTimeClick){ // not on debug it should happen automatically on start
-        clickerfirstTimeClick = FALSE;
-
-        readMyMac();
-        requestForHandle();
-
-        clickerWaitForHandleOffering = TRUE;
-    }
-    else if(ON_DEBUG && clickerWaitForHandleOffering){
+    if(ON_DEBUG && clickerWaitForHandleOffering){
         // approve
         unsigned char gatewayResponse[18] = "GTWO";
         gatewayResponse[17] = '\0';
@@ -2843,6 +2856,8 @@ static void copyToLocalDataAndChangeName(unsigned char* array, int length){
     copyArrayToLocalData(array, length);
 
     ChangeBLEName();
+
+    StartCentralMode();
 }
 
 

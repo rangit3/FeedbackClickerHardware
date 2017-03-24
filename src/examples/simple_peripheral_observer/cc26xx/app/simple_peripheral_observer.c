@@ -214,9 +214,9 @@
 
 // App event passed from profiles.
 typedef struct {
-    appEvtHdr_t hdr;  // event header.
+	appEvtHdr_t hdr;  // event header.
 #ifdef PLUS_OBSERVER
-    uint8 *pData; // event data pointer
+	uint8 *pData; // event data pointer
 #endif
 } sbpEvt_t;
 
@@ -261,11 +261,9 @@ static uint16_t events;
 Task_Struct sbpTask;
 Char sbpTaskStack[SBP_TASK_STACK_SIZE];
 
-
 // Task configuration
 //Task_Struct flowTask;
 //Char flowTaskStack[SBP_TASK_STACK_SIZE];
-
 
 // Profile state and parameters
 //static gaprole_States_t gapProfileState = GAPROLE_INIT;
@@ -290,19 +288,19 @@ Char sbpTaskStack[SBP_TASK_STACK_SIZE];
 //		};
 
 static uint8_t advertData[] = {
-        // Flags; this sets the device to use limited discoverable
-        // mode (advertises for 30 seconds at a time) or general
-        // discoverable mode (advertises indefinitely), depending
-        // on the DEFAULT_DISCOVERY_MODE define.
-        0x02,// length of this data
-        GAP_ADTYPE_FLAGS,
-        DEFAULT_DISCOVERABLE_MODE | GAP_ADTYPE_FLAGS_BREDR_NOT_SUPPORTED,
+		// Flags; this sets the device to use limited discoverable
+		// mode (advertises for 30 seconds at a time) or general
+		// discoverable mode (advertises indefinitely), depending
+		// on the DEFAULT_DISCOVERY_MODE define.
+		0x02,// length of this data
+		GAP_ADTYPE_FLAGS,
+		DEFAULT_DISCOVERABLE_MODE | GAP_ADTYPE_FLAGS_BREDR_NOT_SUPPORTED,
 
-        // complete name
-        MAX_GATEWAY_NAME + 1,
-        GAP_ADTYPE_LOCAL_NAME_COMPLETE, 'P', 'r', 'o', 'j', 'e', 'c', 't', ' ',
-        'Z', 'e', 'r', 'o', 'P', 'r', 'o', '=', '+', '/', 't', ' ', 'Z', 'e',
-        'r', 'o',
+		// complete name
+		MAX_GATEWAY_NAME + 1,
+		GAP_ADTYPE_LOCAL_NAME_COMPLETE, 'P', 'r', 'o', 'j', 'e', 'c', 't', ' ',
+		'Z', 'e', 'r', 'o', 'P', 'r', 'o', '=', '+', '/', 't', ' ', 'Z', 'e',
+		'r', 'o',
 
 };
 
@@ -311,7 +309,6 @@ static uint8_t localData[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 //static uint8_t localData2[] = { '1', '*', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 //		0, 0, 0, }; //18 bytes-MAX_GATEWAY_BASE64_NAME
-
 
 //
 //// GAP - Advertisement data (max size = 31 bytes, though this is
@@ -351,14 +348,14 @@ static uint8_t rspTxRetry = 0;
 
 // Screen row
 enum {
-    ROW_ZERO = 0,
-    ROW_ONE = 1,
-    ROW_TWO = 2,
-    ROW_THREE = 3,
-    ROW_FOUR = 4,
-    ROW_FIVE = 5,
-    ROW_SIX = 6,
-    ROW_SEVEN = 7
+	ROW_ZERO = 0,
+	ROW_ONE = 1,
+	ROW_TWO = 2,
+	ROW_THREE = 3,
+	ROW_FOUR = 4,
+	ROW_FIVE = 5,
+	ROW_SIX = 6,
+	ROW_SEVEN = 7
 };
 
 #ifdef PLUS_OBSERVER
@@ -366,10 +363,10 @@ enum {
 static uint8_t scanRes;
 
 typedef struct {
-    char localName[MAX_GATEWAY_NAME];	 		 //!< Device's Name
-    uint8_t addrType;            //!< Address Type: @ref ADDRTYPE_DEFINES
-    uint8_t addr[B_ADDR_LEN];    //!< Device's Address
-    uint8_t nameLength; 	 	 //!< Device name length
+	char localName[MAX_GATEWAY_NAME];	 		 //!< Device's Name
+	uint8_t addrType;            //!< Address Type: @ref ADDRTYPE_DEFINES
+	uint8_t addr[B_ADDR_LEN];    //!< Device's Address
+	uint8_t nameLength; 	 	 //!< Device name length
 } devRecInfo_t;
 
 // Scan result list
@@ -379,8 +376,8 @@ static uint8_t deviceInfoCnt = 0;
 #endif
 
 const char *AdvTypeStrings[] = { "Connectable undirected",
-        "Connectable directed", "Scannable undirected",
-        "Non-connectable undirected", "Scan response" };
+		"Connectable directed", "Scannable undirected",
+		"Non-connectable undirected", "Scan response" };
 
 //============MY Vars==================
 static bool release = TRUE;
@@ -392,7 +389,6 @@ static bool release = TRUE;
 //static bool IS_CLICKER = TRUE;
 
 static bool IS_GATEWAY = FALSE;
-
 
 //static bool isClicker = FALSE;
 
@@ -430,7 +426,7 @@ static void SimpleBLEPeripheral_performPeriodicTask(void);
 static void SimpleBLEPeripheral_clockHandler(UArg arg);
 void SimpleBLEPeripheral_keyChangeHandler(uint8 keysPressed);
 static void SimpleBLEPeripheral_ObserverStateChangeCB(
-        gapPeripheralObserverRoleEvent_t *pEvent);
+		gapPeripheralObserverRoleEvent_t *pEvent);
 
 static void SimpleBLEPeripheral_sendAttRsp(void);
 static void SimpleBLEPeripheral_freeAttRsp(uint8_t status);
@@ -440,7 +436,7 @@ static void SimpleBLEPeripheral_stateChangeCB(gaprole_States_t newState);
 static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID);
 #endif //!FEATURE_OAD_ONCHIP
 static void SimpleBLEPeripheral_enqueueMsg(uint8_t event, uint8_t state,
-        uint8_t *pData);
+		uint8_t *pData);
 
 //===============MY BLE FUNCS====================
 //static void StartAdvertiseMode();
@@ -482,7 +478,7 @@ static void handleButtonClick(bool button);
 //==================end my funcs====================
 #ifdef FEATURE_OAD
 void SimpleBLEPeripheral_processOadWriteCB(uint8_t event, uint16_t connHandle,
-        uint8_t *pData);
+		uint8_t *pData);
 #endif //FEATURE_OAD
 
 /*********************************************************************
@@ -491,35 +487,32 @@ void SimpleBLEPeripheral_processOadWriteCB(uint8_t event, uint16_t connHandle,
 
 // GAP Role Callbacks
 static gapRolesCBs_t SimpleBLEPeripheral_gapRoleCBs = {
-        SimpleBLEPeripheral_stateChangeCB     // Profile State Change Callbacks
+		SimpleBLEPeripheral_stateChangeCB     // Profile State Change Callbacks
 #ifdef PLUS_OBSERVER
-        , SimpleBLEPeripheral_ObserverStateChangeCB
+		, SimpleBLEPeripheral_ObserverStateChangeCB
 #endif
 
-};
+		};
 
 // GAP Bond Manager Callbacks
 static gapBondCBs_t simpleBLEPeripheral_BondMgrCBs = {
-        NULL, // Passcode callback (not used by application)
-        NULL  // Pairing / Bonding state Callback (not used by application)
-};
+NULL, // Passcode callback (not used by application)
+		NULL  // Pairing / Bonding state Callback (not used by application)
+		};
 
 // Simple GATT Profile Callbacks
 #ifndef FEATURE_OAD_ONCHIP
 static simpleProfileCBs_t SimpleBLEPeripheral_simpleProfileCBs = {
-        SimpleBLEPeripheral_charValueChangeCB // Characteristic value change callback
-};
+		SimpleBLEPeripheral_charValueChangeCB // Characteristic value change callback
+		};
 #endif //!FEATURE_OAD_ONCHIP
 
 #ifdef FEATURE_OAD
 static oadTargetCBs_t simpleBLEPeripheral_oadCBs =
 {
-        SimpleBLEPeripheral_processOadWriteCB // Write Callback.
+	SimpleBLEPeripheral_processOadWriteCB // Write Callback.
 };
 #endif //FEATURE_OAD
-
-
-
 
 /*********************************************************************
  * @fn      SimpleBLEPeripheral_createTask
@@ -531,18 +524,18 @@ static oadTargetCBs_t simpleBLEPeripheral_oadCBs =
  * @return  None.
  */
 void SimpleBLEPeripheral_createTask(void) {
-    Task_Params taskParams;
+	Task_Params taskParams;
 
-    // Configure task
-    Task_Params_init(&taskParams);
-    taskParams.stack = sbpTaskStack;
-    taskParams.stackSize = SBP_TASK_STACK_SIZE;
-    taskParams.priority = SBP_TASK_PRIORITY;
+	// Configure task
+	Task_Params_init(&taskParams);
+	taskParams.stack = sbpTaskStack;
+	taskParams.stackSize = SBP_TASK_STACK_SIZE;
+	taskParams.priority = SBP_TASK_PRIORITY;
 
-    Task_construct(&sbpTask, SimpleBLEPeripheral_taskFxn, &taskParams, NULL);
+	Task_construct(&sbpTask, SimpleBLEPeripheral_taskFxn, &taskParams, NULL);
 
-    // Lior create semaphore for gateway wait for question
-    //	questionRequestedSemaphore = Semaphore_create(0, NULL, NULL);
+	// Lior create semaphore for gateway wait for question
+	//	questionRequestedSemaphore = Semaphore_create(0, NULL, NULL);
 }
 
 /*********************************************************************
@@ -558,200 +551,199 @@ void SimpleBLEPeripheral_createTask(void) {
  * @return  None.
  */
 static void SimpleBLEPeripheral_init(void) {
-    // ******************************************************************
-    // N0 STACK API CALLS CAN OCCUR BEFORE THIS CALL TO ICall_registerApp
-    // ******************************************************************
-    // Register the current thread as an ICall dispatcher application
-    // so that the application can send and receive messages.
-    ICall_registerApp(&selfEntity, &sem);
+	// ******************************************************************
+	// N0 STACK API CALLS CAN OCCUR BEFORE THIS CALL TO ICall_registerApp
+	// ******************************************************************
+	// Register the current thread as an ICall dispatcher application
+	// so that the application can send and receive messages.
+	ICall_registerApp(&selfEntity, &sem);
 
 #ifdef USE_RCOSC
-    RCOSC_enableCalibration();
+	RCOSC_enableCalibration();
 #endif // USE_RCOSC
 
-    // Create an RTOS queue for message from profile to be sent to app.
-    appMsgQueue = Util_constructQueue(&appMsg);
+	// Create an RTOS queue for message from profile to be sent to app.
+	appMsgQueue = Util_constructQueue(&appMsg);
 
-    // Create one-shot clocks for internal periodic events.
-    Util_constructClock(&periodicClock, SimpleBLEPeripheral_clockHandler,
-            SBP_PERIODIC_EVT_PERIOD, 0, false, SBP_PERIODIC_EVT);
-
-#ifdef PLUS_OBSERVER
-    Board_initKeys(SimpleBLEPeripheral_keyChangeHandler);
-#endif
-
-    dispHandle = Display_open(Display_Type_UART, NULL); //ZH change to UART for LP UART support
+	// Create one-shot clocks for internal periodic events.
+	Util_constructClock(&periodicClock, SimpleBLEPeripheral_clockHandler,
+	SBP_PERIODIC_EVT_PERIOD, 0, false, SBP_PERIODIC_EVT);
 
 #ifdef PLUS_OBSERVER
-    //Setup GAP Observer params
-    {
-        uint8_t scanRes = DEFAULT_MAX_SCAN_RES;
-
-        GAPRole_SetParameter(GAPROLE_MAX_SCAN_RES, sizeof(uint8_t), &scanRes);
-
-        // Set the GAP Characteristics
-        GAP_SetParamValue(TGAP_GEN_DISC_SCAN, DEFAULT_SCAN_DURATION); //how long to scan (in scan state)
-        GAP_SetParamValue(TGAP_LIM_DISC_SCAN, DEFAULT_SCAN_DURATION);
-
-        //Set scan interval
-        GAP_SetParamValue(TGAP_GEN_DISC_SCAN_INT,
-                (DEFAULT_SCAN_INTERVAL) / (0.625)); //period for one scan channel
-
-        //Set scan window
-        GAP_SetParamValue(TGAP_GEN_DISC_SCAN_WIND,
-                (DEFAULT_SCAN_WINDOW) / (0.625)); //active scanning time within scan interval
-
-    }
+	Board_initKeys(SimpleBLEPeripheral_keyChangeHandler);
 #endif
 
-    // Setup the GAP
-    GAP_SetParamValue(TGAP_CONN_PAUSE_PERIPHERAL,
-            DEFAULT_CONN_PAUSE_PERIPHERAL);
+	dispHandle = Display_open(Display_Type_UART, NULL); //ZH change to UART for LP UART support
 
-    // Setup the GAP Peripheral Role Profile
-    {
-        // For all hardware platforms, device starts advertising upon initialization
-        uint8_t initialAdvertEnable = TRUE;
+#ifdef PLUS_OBSERVER
+	//Setup GAP Observer params
+	{
+		uint8_t scanRes = DEFAULT_MAX_SCAN_RES;
 
-        // By setting this to zero, the device will go into the waiting state after
-        // being discoverable for 30.72 second, and will not being advertising again
-        // until the enabler is set back to TRUE
-        uint16_t advertOffTime = 0;
+		GAPRole_SetParameter(GAPROLE_MAX_SCAN_RES, sizeof(uint8_t), &scanRes);
 
-        uint8_t enableUpdateRequest = DEFAULT_ENABLE_UPDATE_REQUEST;
-        uint16_t desiredMinInterval = DEFAULT_DESIRED_MIN_CONN_INTERVAL;
-        uint16_t desiredMaxInterval = DEFAULT_DESIRED_MAX_CONN_INTERVAL;
-        uint16_t desiredSlaveLatency = DEFAULT_DESIRED_SLAVE_LATENCY;
-        uint16_t desiredConnTimeout = DEFAULT_DESIRED_CONN_TIMEOUT;
+		// Set the GAP Characteristics
+		GAP_SetParamValue(TGAP_GEN_DISC_SCAN, DEFAULT_SCAN_DURATION); //how long to scan (in scan state)
+		GAP_SetParamValue(TGAP_LIM_DISC_SCAN, DEFAULT_SCAN_DURATION);
 
-        // Set the GAP Role Parameters
-        GAPRole_SetParameter(GAPROLE_ADVERT_ENABLED, sizeof(uint8_t),
-                &initialAdvertEnable);
-        GAPRole_SetParameter(GAPROLE_ADVERT_OFF_TIME, sizeof(uint16_t),
-                &advertOffTime);
+		//Set scan interval
+		GAP_SetParamValue(TGAP_GEN_DISC_SCAN_INT,
+				(DEFAULT_SCAN_INTERVAL) / (0.625)); //period for one scan channel
 
-        //		GAPRole_SetParameter(GAPROLE_SCAN_RSP_DATA, sizeof(scanRspData),scanRspData);
-        GAPRole_SetParameter(GAPROLE_ADVERT_DATA, sizeof(advertData),
-                advertData);
+		//Set scan window
+		GAP_SetParamValue(TGAP_GEN_DISC_SCAN_WIND,
+				(DEFAULT_SCAN_WINDOW) / (0.625)); //active scanning time within scan interval
 
-        GAPRole_SetParameter(GAPROLE_PARAM_UPDATE_ENABLE, sizeof(uint8_t),
-                &enableUpdateRequest);
-        GAPRole_SetParameter(GAPROLE_MIN_CONN_INTERVAL, sizeof(uint16_t),
-                &desiredMinInterval);
-        GAPRole_SetParameter(GAPROLE_MAX_CONN_INTERVAL, sizeof(uint16_t),
-                &desiredMaxInterval);
-        GAPRole_SetParameter(GAPROLE_SLAVE_LATENCY, sizeof(uint16_t),
-                &desiredSlaveLatency);
-        GAPRole_SetParameter(GAPROLE_TIMEOUT_MULTIPLIER, sizeof(uint16_t),
-                &desiredConnTimeout);
-    }
+	}
+#endif
 
-    // Set the GAP Characteristics
-    GGS_SetParameter(GGS_DEVICE_NAME_ATT, GAP_DEVICE_NAME_LEN, attDeviceName);
+	// Setup the GAP
+	GAP_SetParamValue(TGAP_CONN_PAUSE_PERIPHERAL,
+	DEFAULT_CONN_PAUSE_PERIPHERAL);
 
-    // Set advertising interval
-    {
-        uint16_t advInt = DEFAULT_ADVERTISING_INTERVAL;
+	// Setup the GAP Peripheral Role Profile
+	{
+		// For all hardware platforms, device starts advertising upon initialization
+		uint8_t initialAdvertEnable = TRUE;
 
-        GAP_SetParamValue(TGAP_LIM_DISC_ADV_INT_MIN, advInt);
-        GAP_SetParamValue(TGAP_LIM_DISC_ADV_INT_MAX, advInt);
-        GAP_SetParamValue(TGAP_GEN_DISC_ADV_INT_MIN, advInt);
-        GAP_SetParamValue(TGAP_GEN_DISC_ADV_INT_MAX, advInt);
-    }
+		// By setting this to zero, the device will go into the waiting state after
+		// being discoverable for 30.72 second, and will not being advertising again
+		// until the enabler is set back to TRUE
+		uint16_t advertOffTime = 0;
 
-    // Setup the GAP Bond Manager
-    {
-        uint32_t passkey = 0; // passkey "000000"
-        uint8_t pairMode = GAPBOND_PAIRING_MODE_WAIT_FOR_REQ;
-        uint8_t mitm = TRUE;
-        uint8_t ioCap = GAPBOND_IO_CAP_DISPLAY_ONLY;
-        uint8_t bonding = TRUE;
+		uint8_t enableUpdateRequest = DEFAULT_ENABLE_UPDATE_REQUEST;
+		uint16_t desiredMinInterval = DEFAULT_DESIRED_MIN_CONN_INTERVAL;
+		uint16_t desiredMaxInterval = DEFAULT_DESIRED_MAX_CONN_INTERVAL;
+		uint16_t desiredSlaveLatency = DEFAULT_DESIRED_SLAVE_LATENCY;
+		uint16_t desiredConnTimeout = DEFAULT_DESIRED_CONN_TIMEOUT;
 
-        GAPBondMgr_SetParameter(GAPBOND_DEFAULT_PASSCODE, sizeof(uint32_t),
-                &passkey);
-        GAPBondMgr_SetParameter(GAPBOND_PAIRING_MODE, sizeof(uint8_t),
-                &pairMode);
-        GAPBondMgr_SetParameter(GAPBOND_MITM_PROTECTION, sizeof(uint8_t),
-                &mitm);
-        GAPBondMgr_SetParameter(GAPBOND_IO_CAPABILITIES, sizeof(uint8_t),
-                &ioCap);
-        GAPBondMgr_SetParameter(GAPBOND_BONDING_ENABLED, sizeof(uint8_t),
-                &bonding);
-    }
+		// Set the GAP Role Parameters
+		GAPRole_SetParameter(GAPROLE_ADVERT_ENABLED, sizeof(uint8_t),
+				&initialAdvertEnable);
+		GAPRole_SetParameter(GAPROLE_ADVERT_OFF_TIME, sizeof(uint16_t),
+				&advertOffTime);
 
-    // Initialize GATT attributes
-    GGS_AddService(GATT_ALL_SERVICES);           // GAP
-    GATTServApp_AddService(GATT_ALL_SERVICES);   // GATT attributes
-    DevInfo_AddService();                        // Device Information Service
+		//		GAPRole_SetParameter(GAPROLE_SCAN_RSP_DATA, sizeof(scanRspData),scanRspData);
+		GAPRole_SetParameter(GAPROLE_ADVERT_DATA, sizeof(advertData),
+				advertData);
+
+		GAPRole_SetParameter(GAPROLE_PARAM_UPDATE_ENABLE, sizeof(uint8_t),
+				&enableUpdateRequest);
+		GAPRole_SetParameter(GAPROLE_MIN_CONN_INTERVAL, sizeof(uint16_t),
+				&desiredMinInterval);
+		GAPRole_SetParameter(GAPROLE_MAX_CONN_INTERVAL, sizeof(uint16_t),
+				&desiredMaxInterval);
+		GAPRole_SetParameter(GAPROLE_SLAVE_LATENCY, sizeof(uint16_t),
+				&desiredSlaveLatency);
+		GAPRole_SetParameter(GAPROLE_TIMEOUT_MULTIPLIER, sizeof(uint16_t),
+				&desiredConnTimeout);
+	}
+
+	// Set the GAP Characteristics
+	GGS_SetParameter(GGS_DEVICE_NAME_ATT, GAP_DEVICE_NAME_LEN, attDeviceName);
+
+	// Set advertising interval
+	{
+		uint16_t advInt = DEFAULT_ADVERTISING_INTERVAL;
+
+		GAP_SetParamValue(TGAP_LIM_DISC_ADV_INT_MIN, advInt);
+		GAP_SetParamValue(TGAP_LIM_DISC_ADV_INT_MAX, advInt);
+		GAP_SetParamValue(TGAP_GEN_DISC_ADV_INT_MIN, advInt);
+		GAP_SetParamValue(TGAP_GEN_DISC_ADV_INT_MAX, advInt);
+	}
+
+	// Setup the GAP Bond Manager
+	{
+		uint32_t passkey = 0; // passkey "000000"
+		uint8_t pairMode = GAPBOND_PAIRING_MODE_WAIT_FOR_REQ;
+		uint8_t mitm = TRUE;
+		uint8_t ioCap = GAPBOND_IO_CAP_DISPLAY_ONLY;
+		uint8_t bonding = TRUE;
+
+		GAPBondMgr_SetParameter(GAPBOND_DEFAULT_PASSCODE, sizeof(uint32_t),
+				&passkey);
+		GAPBondMgr_SetParameter(GAPBOND_PAIRING_MODE, sizeof(uint8_t),
+				&pairMode);
+		GAPBondMgr_SetParameter(GAPBOND_MITM_PROTECTION, sizeof(uint8_t),
+				&mitm);
+		GAPBondMgr_SetParameter(GAPBOND_IO_CAPABILITIES, sizeof(uint8_t),
+				&ioCap);
+		GAPBondMgr_SetParameter(GAPBOND_BONDING_ENABLED, sizeof(uint8_t),
+				&bonding);
+	}
+
+	// Initialize GATT attributes
+	GGS_AddService(GATT_ALL_SERVICES);           // GAP
+	GATTServApp_AddService(GATT_ALL_SERVICES);   // GATT attributes
+	DevInfo_AddService();                        // Device Information Service
 
 #ifndef FEATURE_OAD_ONCHIP
-    SimpleProfile_AddService(GATT_ALL_SERVICES); // Simple GATT Profile
+	SimpleProfile_AddService(GATT_ALL_SERVICES); // Simple GATT Profile
 #endif //!FEATURE_OAD_ONCHIP
 
 #ifdef FEATURE_OAD
-    VOID OAD_addService();                 // OAD Profile
-    OAD_register((oadTargetCBs_t *)&simpleBLEPeripheral_oadCBs);
-    hOadQ = Util_constructQueue(&oadQ);
+	VOID OAD_addService();                 // OAD Profile
+	OAD_register((oadTargetCBs_t *)&simpleBLEPeripheral_oadCBs);
+	hOadQ = Util_constructQueue(&oadQ);
 #endif //FEATURE_OAD
 
 #ifdef IMAGE_INVALIDATE
-    Reset_addService();
+	Reset_addService();
 #endif //IMAGE_INVALIDATE
 
 #ifndef FEATURE_OAD_ONCHIP
-    // Setup the SimpleProfile Characteristic Values
-    {
-        uint8_t charValue1 = 1;
-        uint8_t charValue2 = 2;
-        uint8_t charValue3 = 3;
-        uint8_t charValue4 = 4;
-        uint8_t charValue5[SIMPLEPROFILE_CHAR5_LEN] = { 1, 2, 3, 4, 5 };
+	// Setup the SimpleProfile Characteristic Values
+	{
+		uint8_t charValue1 = 1;
+		uint8_t charValue2 = 2;
+		uint8_t charValue3 = 3;
+		uint8_t charValue4 = 4;
+		uint8_t charValue5[SIMPLEPROFILE_CHAR5_LEN] = { 1, 2, 3, 4, 5 };
 
-        SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR1, sizeof(uint8_t),
-                &charValue1);
-        SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR2, sizeof(uint8_t),
-                &charValue2);
-        SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR3, sizeof(uint8_t),
-                &charValue3);
-        SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR4, sizeof(uint8_t),
-                &charValue4);
-        SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR5, SIMPLEPROFILE_CHAR5_LEN,
-                charValue5);
-    }
+		SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR1, sizeof(uint8_t),
+				&charValue1);
+		SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR2, sizeof(uint8_t),
+				&charValue2);
+		SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR3, sizeof(uint8_t),
+				&charValue3);
+		SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR4, sizeof(uint8_t),
+				&charValue4);
+		SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR5, SIMPLEPROFILE_CHAR5_LEN,
+				charValue5);
+	}
 
-    // Register callback with SimpleGATTprofile
-    SimpleProfile_RegisterAppCBs(&SimpleBLEPeripheral_simpleProfileCBs);
+	// Register callback with SimpleGATTprofile
+	SimpleProfile_RegisterAppCBs(&SimpleBLEPeripheral_simpleProfileCBs);
 #endif //!FEATURE_OAD_ONCHIP
 
-    // Start the Device
-    VOID GAPRole_StartDevice(&SimpleBLEPeripheral_gapRoleCBs);
+	// Start the Device
+	VOID GAPRole_StartDevice(&SimpleBLEPeripheral_gapRoleCBs);
 
-    // Start Bond Manager
-    VOID GAPBondMgr_Register(&simpleBLEPeripheral_BondMgrCBs);
+	// Start Bond Manager
+	VOID GAPBondMgr_Register(&simpleBLEPeripheral_BondMgrCBs);
 
-    // Register with GAP for HCI/Host messages
-    GAP_RegisterForMsgs(selfEntity);
+	// Register with GAP for HCI/Host messages
+	GAP_RegisterForMsgs(selfEntity);
 
-    // Register for GATT local events and ATT Responses pending for transmission
-    GATT_RegisterForMsgs(selfEntity);
+	// Register for GATT local events and ATT Responses pending for transmission
+	GATT_RegisterForMsgs(selfEntity);
 
-    HCI_LE_ReadMaxDataLenCmd();
+	HCI_LE_ReadMaxDataLenCmd();
 
 #if defined FEATURE_OAD
 #if defined (HAL_IMAGE_A)
-    Display_print0(dispHandle, 0, 0, "BLE Peripheral A");
+	Display_print0(dispHandle, 0, 0, "BLE Peripheral A");
 #else
-    Display_print0(dispHandle, 0, 0, "BLE Peripheral B");
+	Display_print0(dispHandle, 0, 0, "BLE Peripheral B");
 #endif // HAL_IMAGE_A
 #else
 #ifdef PLUS_OBSERVER
-    Display_print0(dispHandle, 0, 0, "BLE Peripheral Observer");
+	Display_print0(dispHandle, 0, 0, "BLE Peripheral Observer");
 #else
-    Display_print0(dispHandle, 0, 0, "BLE Peripheral");
+	Display_print0(dispHandle, 0, 0, "BLE Peripheral");
 #endif
 #endif // FEATURE_OAD
 }
-
 
 static void clickerOnStart();
 
@@ -765,90 +757,90 @@ static void clickerOnStart();
  * @return  None.
  */
 static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
-    // Initialize application
-    SimpleBLEPeripheral_init();
+	// Initialize application
+	SimpleBLEPeripheral_init();
 
-    // Application main loop
-    for (;;) {
-        // Waits for a signal to the semaphore associated with the calling thread.
-        // Note that the semaphore associated with a thread is signaled when a
-        // message is queued to the message receive queue of the thread or when
-        // ICall_signal() function is called onto the semaphore.
-        ICall_Errno errno = ICall_wait(ICALL_TIMEOUT_FOREVER);
+	// Application main loop
+	for (;;) {
+		// Waits for a signal to the semaphore associated with the calling thread.
+		// Note that the semaphore associated with a thread is signaled when a
+		// message is queued to the message receive queue of the thread or when
+		// ICall_signal() function is called onto the semaphore.
+		ICall_Errno errno = ICall_wait(ICALL_TIMEOUT_FOREVER);
 
-        if (errno == ICALL_ERRNO_SUCCESS) {
-            ICall_EntityID dest;
-            ICall_ServiceEnum src;
-            ICall_HciExtEvt *pMsg = NULL;
+		if (errno == ICALL_ERRNO_SUCCESS) {
+			ICall_EntityID dest;
+			ICall_ServiceEnum src;
+			ICall_HciExtEvt *pMsg = NULL;
 
-            if (ICall_fetchServiceMsg(&src, &dest,
-                    (void **) &pMsg) == ICALL_ERRNO_SUCCESS) {
-                uint8 safeToDealloc = TRUE;
+			if (ICall_fetchServiceMsg(&src, &dest,
+					(void **) &pMsg) == ICALL_ERRNO_SUCCESS) {
+				uint8 safeToDealloc = TRUE;
 
-                if ((src == ICALL_SERVICE_CLASS_BLE) && (dest == selfEntity)) {
-                    ICall_Stack_Event *pEvt = (ICall_Stack_Event *) pMsg;
+				if ((src == ICALL_SERVICE_CLASS_BLE) && (dest == selfEntity)) {
+					ICall_Stack_Event *pEvt = (ICall_Stack_Event *) pMsg;
 
-                    // Check for BLE stack events first
-                    if (pEvt->signature == 0xffff) {
-                        if (pEvt->event_flag & SBP_CONN_EVT_END_EVT) {
-                            // Try to retransmit pending ATT Response (if any)
-                            SimpleBLEPeripheral_sendAttRsp();
-                        }
-                    } else {
-                        // Process inter-task message
-                        safeToDealloc = SimpleBLEPeripheral_processStackMsg(
-                                (ICall_Hdr *) pMsg);
-                    }
-                }
+					// Check for BLE stack events first
+					if (pEvt->signature == 0xffff) {
+						if (pEvt->event_flag & SBP_CONN_EVT_END_EVT) {
+							// Try to retransmit pending ATT Response (if any)
+							SimpleBLEPeripheral_sendAttRsp();
+						}
+					} else {
+						// Process inter-task message
+						safeToDealloc = SimpleBLEPeripheral_processStackMsg(
+								(ICall_Hdr *) pMsg);
+					}
+				}
 
-                if (pMsg && safeToDealloc) {
-                    ICall_freeMsg(pMsg);
-                }
-            }
+				if (pMsg && safeToDealloc) {
+					ICall_freeMsg(pMsg);
+				}
+			}
 
-            // If RTOS queue is not empty, process app message.
-            while (!Queue_empty(appMsgQueue)) {
-                sbpEvt_t *pMsg = (sbpEvt_t *) Util_dequeueMsg(appMsgQueue);
-                if (pMsg) {
-                    // Process message.
-                    SimpleBLEPeripheral_processAppMsg(pMsg);
+			// If RTOS queue is not empty, process app message.
+			while (!Queue_empty(appMsgQueue)) {
+				sbpEvt_t *pMsg = (sbpEvt_t *) Util_dequeueMsg(appMsgQueue);
+				if (pMsg) {
+					// Process message.
+					SimpleBLEPeripheral_processAppMsg(pMsg);
 
-                    // Free the space from the message.
-                    ICall_free(pMsg);
-                }
-            }
-        }
+					// Free the space from the message.
+					ICall_free(pMsg);
+				}
+			}
+		}
 
-        if (events & SBP_PERIODIC_EVT) {
-            events &= ~SBP_PERIODIC_EVT;
+		if (events & SBP_PERIODIC_EVT) {
+			events &= ~SBP_PERIODIC_EVT;
 
-            Util_startClock(&periodicClock);
+			Util_startClock(&periodicClock);
 
-            // Perform periodic application task
-            SimpleBLEPeripheral_performPeriodicTask();
-        }
+			// Perform periodic application task
+			SimpleBLEPeripheral_performPeriodicTask();
+		}
 
 #ifdef FEATURE_OAD
-        while (!Queue_empty(hOadQ))
-        {
-            oadTargetWrite_t *oadWriteEvt = Queue_dequeue(hOadQ);
+		while (!Queue_empty(hOadQ))
+		{
+			oadTargetWrite_t *oadWriteEvt = Queue_dequeue(hOadQ);
 
-            // Identify new image.
-            if (oadWriteEvt->event == OAD_WRITE_IDENTIFY_REQ)
-            {
-                OAD_imgIdentifyWrite(oadWriteEvt->connHandle, oadWriteEvt->pData);
-            }
-            // Write a next block request.
-            else if (oadWriteEvt->event == OAD_WRITE_BLOCK_REQ)
-            {
-                OAD_imgBlockWrite(oadWriteEvt->connHandle, oadWriteEvt->pData);
-            }
+			// Identify new image.
+			if (oadWriteEvt->event == OAD_WRITE_IDENTIFY_REQ)
+			{
+				OAD_imgIdentifyWrite(oadWriteEvt->connHandle, oadWriteEvt->pData);
+			}
+			// Write a next block request.
+			else if (oadWriteEvt->event == OAD_WRITE_BLOCK_REQ)
+			{
+				OAD_imgBlockWrite(oadWriteEvt->connHandle, oadWriteEvt->pData);
+			}
 
-            // Free buffer.
-            ICall_free(oadWriteEvt);
-        }
+			// Free buffer.
+			ICall_free(oadWriteEvt);
+		}
 #endif //FEATURE_OAD
-    }
+	}
 }
 
 /*********************************************************************
@@ -862,22 +854,22 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
  * @return  Adv/Scan data as a string
  */
 char *Util_convertBytes2Str(uint8_t *pData, uint8_t length) {
-    uint8_t charCnt;
-    char hex[] = "0123456789ABCDEF";
-    static char str[(3 * 31) + 1];
-    char *pStr = str;
+	uint8_t charCnt;
+	char hex[] = "0123456789ABCDEF";
+	static char str[(3 * 31) + 1];
+	char *pStr = str;
 
-    //*pStr++ = '0';
-    //*pStr++ = 'x';
+	//*pStr++ = '0';
+	//*pStr++ = 'x';
 
-    for (charCnt = 0; charCnt < length; charCnt++) {
-        *pStr++ = hex[*pData >> 4];
-        *pStr++ = hex[*pData++ & 0x0F];
-        *pStr++ = ':';
-    }
-    pStr = NULL;
+	for (charCnt = 0; charCnt < length; charCnt++) {
+		*pStr++ = hex[*pData >> 4];
+		*pStr++ = hex[*pData++ & 0x0F];
+		*pStr++ = ':';
+	}
+	pStr = NULL;
 
-    return str;
+	return str;
 }
 
 #ifdef PLUS_OBSERVER        
@@ -891,24 +883,25 @@ char *Util_convertBytes2Str(uint8_t *pData, uint8_t length) {
  * @return  none
  */
 static void SimpleBLEPeripheralObserver_processRoleEvent(
-        gapPeripheralObserverRoleEvent_t *pEvent) {
-    switch (pEvent->gap.opcode) {
+		gapPeripheralObserverRoleEvent_t *pEvent) {
+	switch (pEvent->gap.opcode) {
 
-    case GAP_DEVICE_INFO_EVENT: {
-        //Print scan response data otherwise advertising data
-        if (pEvent->deviceInfo.eventType == GAP_ADRPT_SCAN_RSP) {
-            if (MyBLE_findLocalName(pEvent->deviceInfo.pEvtData,
-                    pEvent->deviceInfo.dataLen)) {
-                MyBLE_addDeviceInfo(pEvent->deviceInfo.addr,
-                        pEvent->deviceInfo.addrType);
-                MyBLE_addDeviceName(scanRes - 1, pEvent->deviceInfo.pEvtData,
-                        pEvent->deviceInfo.dataLen);
-            }
-            Display_print1(dispHandle, 5, 0, "name found is %s",
-                    devList[scanRes - 1].localName);
+	case GAP_DEVICE_INFO_EVENT: {
+		//Print scan response data otherwise advertising data
+		if (pEvent->deviceInfo.eventType == GAP_ADRPT_SCAN_RSP) {
 
-            Base64ToLocalData((unsigned char*)devList[scanRes - 1].localName);
-            HandleNewDeviceDiscovered();
+			if (MyBLE_findLocalName(pEvent->deviceInfo.pEvtData,
+					pEvent->deviceInfo.dataLen)) {
+				MyBLE_addDeviceInfo(pEvent->deviceInfo.addr,
+						pEvent->deviceInfo.addrType);
+				MyBLE_addDeviceName(scanRes - 1, pEvent->deviceInfo.pEvtData,
+						pEvent->deviceInfo.dataLen);
+			}
+			Display_print1(dispHandle, 5, 0, "name found is %s",
+					devList[scanRes - 1].localName);
+
+			Base64ToLocalData((unsigned char*) devList[scanRes - 1].localName);
+			HandleNewDeviceDiscovered();
 
             Display_print1(dispHandle, 4, 0, "Scan Response Addr: %s",
                     Util_convertBdAddr2Str(pEvent->deviceInfo.addr));
@@ -918,39 +911,39 @@ static void SimpleBLEPeripheralObserver_processRoleEvent(
         } else {
             deviceInfoCnt++;
 
-            Display_print2(dispHandle, 6, 0,
-                    "Advertising Addr: %s Advertising Type: %s",
-                    Util_convertBdAddr2Str(pEvent->deviceInfo.addr),
-                    AdvTypeStrings[pEvent->deviceInfo.eventType]);
-            Display_print1(dispHandle, 7, 0, "Advertising Data: %s",
-                    Util_convertBytes2Str(pEvent->deviceInfo.pEvtData,
-                            pEvent->deviceInfo.dataLen));
-        }
+			Display_print2(dispHandle, 6, 0,
+					"Advertising Addr: %s Advertising Type: %s",
+					Util_convertBdAddr2Str(pEvent->deviceInfo.addr),
+					AdvTypeStrings[pEvent->deviceInfo.eventType]);
+			Display_print1(dispHandle, 7, 0, "Advertising Data: %s",
+					Util_convertBytes2Str(pEvent->deviceInfo.pEvtData,
+							pEvent->deviceInfo.dataLen));
+		}
 
-        ICall_free(pEvent->deviceInfo.pEvtData);
-        ICall_free(pEvent);
-    }
-    break;
+		ICall_free(pEvent->deviceInfo.pEvtData);
+		ICall_free(pEvent);
+	}
+		break;
 
-    case GAP_DEVICE_DISCOVERY_EVENT: {
-        // discovery complete
-        scanningStarted = FALSE;
-        deviceInfoCnt = 0;
+	case GAP_DEVICE_DISCOVERY_EVENT: {
+		// discovery complete
+		scanningStarted = FALSE;
+		deviceInfoCnt = 0;
 
-        //Display_print0(dispHandle, 7, 0, "GAP_DEVICE_DISC_EVENT");
-        Display_print1(dispHandle, 5, 0, "Devices discovered: %d",
-                pEvent->discCmpl.numDevs);
-        Display_print0(dispHandle, 4, 0, "Scanning Off");
+		//Display_print0(dispHandle, 7, 0, "GAP_DEVICE_DISC_EVENT");
+		Display_print1(dispHandle, 5, 0, "Devices discovered: %d",
+				pEvent->discCmpl.numDevs);
+		Display_print0(dispHandle, 4, 0, "Scanning Off");
 
-        ICall_free(pEvent->discCmpl.pDevList);
-        ICall_free(pEvent);
+		ICall_free(pEvent->discCmpl.pDevList);
+		ICall_free(pEvent);
 
-    }
-    break;
+	}
+		break;
 
-    default:
-        break;
-    }
+	default:
+		break;
+	}
 }
 #endif
 
@@ -964,41 +957,41 @@ static void SimpleBLEPeripheralObserver_processRoleEvent(
  * @return  TRUE if safe to deallocate incoming message, FALSE otherwise.
  */
 static uint8_t SimpleBLEPeripheral_processStackMsg(ICall_Hdr *pMsg) {
-    uint8_t safeToDealloc = TRUE;
+	uint8_t safeToDealloc = TRUE;
 
-    switch (pMsg->event) {
+	switch (pMsg->event) {
 #ifdef PLUS_OBSERVER
-    case GAP_MSG_EVENT:
-        // Process GATT message
-        SimpleBLEPeripheralObserver_processRoleEvent(
-                (gapPeripheralObserverRoleEvent_t *) pMsg);
-        break;
+	case GAP_MSG_EVENT:
+		// Process GATT message
+		SimpleBLEPeripheralObserver_processRoleEvent(
+				(gapPeripheralObserverRoleEvent_t *) pMsg);
+		break;
 #endif
-    case GATT_MSG_EVENT:
-        // Process GATT message
-        safeToDealloc = SimpleBLEPeripheral_processGATTMsg(
-                (gattMsgEvent_t *) pMsg);
-        break;
+	case GATT_MSG_EVENT:
+		// Process GATT message
+		safeToDealloc = SimpleBLEPeripheral_processGATTMsg(
+				(gattMsgEvent_t *) pMsg);
+		break;
 
-    case HCI_GAP_EVENT_EVENT: {
-        // Process HCI message
-        switch (pMsg->status) {
-        case HCI_COMMAND_COMPLETE_EVENT_CODE:
-            // Process HCI Command Complete Event
-            break;
+	case HCI_GAP_EVENT_EVENT: {
+		// Process HCI message
+		switch (pMsg->status) {
+		case HCI_COMMAND_COMPLETE_EVENT_CODE:
+			// Process HCI Command Complete Event
+			break;
 
-        default:
-            break;
-        }
-    }
-    break;
+		default:
+			break;
+		}
+	}
+		break;
 
-    default:
-        // do nothing
-        break;
-    }
+	default:
+		// do nothing
+		break;
+	}
 
-    return (safeToDealloc);
+	return (safeToDealloc);
 }
 
 /*********************************************************************
@@ -1009,39 +1002,39 @@ static uint8_t SimpleBLEPeripheral_processStackMsg(ICall_Hdr *pMsg) {
  * @return  TRUE if safe to deallocate incoming message, FALSE otherwise.
  */
 static uint8_t SimpleBLEPeripheral_processGATTMsg(gattMsgEvent_t *pMsg) {
-    // See if GATT server was unable to transmit an ATT response
-    if (pMsg->hdr.status == blePending) {
-        // No HCI buffer was available. Let's try to retransmit the response
-        // on the next connection event.
-        if (HCI_EXT_ConnEventNoticeCmd(pMsg->connHandle, selfEntity,
-                SBP_CONN_EVT_END_EVT) == SUCCESS) {
-            // First free any pending response
-            SimpleBLEPeripheral_freeAttRsp(FAILURE);
+	// See if GATT server was unable to transmit an ATT response
+	if (pMsg->hdr.status == blePending) {
+		// No HCI buffer was available. Let's try to retransmit the response
+		// on the next connection event.
+		if (HCI_EXT_ConnEventNoticeCmd(pMsg->connHandle, selfEntity,
+		SBP_CONN_EVT_END_EVT) == SUCCESS) {
+			// First free any pending response
+			SimpleBLEPeripheral_freeAttRsp(FAILURE);
 
-            // Hold on to the response message for retransmission
-            pAttRsp = pMsg;
+			// Hold on to the response message for retransmission
+			pAttRsp = pMsg;
 
-            // Don't free the response message yet
-            return (FALSE);
-        }
-    } else if (pMsg->method == ATT_FLOW_CTRL_VIOLATED_EVENT) {
-        // ATT request-response or indication-confirmation flow control is
-        // violated. All subsequent ATT requests or indications will be dropped.
-        // The app is informed in case it wants to drop the connection.
+			// Don't free the response message yet
+			return (FALSE);
+		}
+	} else if (pMsg->method == ATT_FLOW_CTRL_VIOLATED_EVENT) {
+		// ATT request-response or indication-confirmation flow control is
+		// violated. All subsequent ATT requests or indications will be dropped.
+		// The app is informed in case it wants to drop the connection.
 
-        // Display the opcode of the message that caused the violation.
-        Display_print1(dispHandle, 5, 0, "FC Violated: %d",
-                pMsg->msg.flowCtrlEvt.opcode);
-    } else if (pMsg->method == ATT_MTU_UPDATED_EVENT) {
-        // MTU size updated
-        Display_print1(dispHandle, 5, 0, "MTU Size: $d", pMsg->msg.mtuEvt.MTU);
-    }
+		// Display the opcode of the message that caused the violation.
+		Display_print1(dispHandle, 5, 0, "FC Violated: %d",
+				pMsg->msg.flowCtrlEvt.opcode);
+	} else if (pMsg->method == ATT_MTU_UPDATED_EVENT) {
+		// MTU size updated
+		Display_print1(dispHandle, 5, 0, "MTU Size: $d", pMsg->msg.mtuEvt.MTU);
+	}
 
-    // Free message payload. Needed only for ATT Protocol messages
-    GATT_bm_free(&pMsg->msg, pMsg->method);
+	// Free message payload. Needed only for ATT Protocol messages
+	GATT_bm_free(&pMsg->msg, pMsg->method);
 
-    // It's safe to free the incoming message
-    return (TRUE);
+	// It's safe to free the incoming message
+	return (TRUE);
 }
 
 /*********************************************************************
@@ -1054,28 +1047,28 @@ static uint8_t SimpleBLEPeripheral_processGATTMsg(gattMsgEvent_t *pMsg) {
  * @return  none
  */
 static void SimpleBLEPeripheral_sendAttRsp(void) {
-    // See if there's a pending ATT Response to be transmitted
-    if (pAttRsp != NULL) {
-        uint8_t status;
+	// See if there's a pending ATT Response to be transmitted
+	if (pAttRsp != NULL) {
+		uint8_t status;
 
-        // Increment retransmission count
-        rspTxRetry++;
+		// Increment retransmission count
+		rspTxRetry++;
 
-        // Try to retransmit ATT response till either we're successful or
-        // the ATT Client times out (after 30s) and drops the connection.
-        status = GATT_SendRsp(pAttRsp->connHandle, pAttRsp->method,
-                &(pAttRsp->msg));
-        if ((status != blePending) && (status != MSG_BUFFER_NOT_AVAIL)) {
-            // Disable connection event end notice
-            HCI_EXT_ConnEventNoticeCmd(pAttRsp->connHandle, selfEntity, 0);
+		// Try to retransmit ATT response till either we're successful or
+		// the ATT Client times out (after 30s) and drops the connection.
+		status = GATT_SendRsp(pAttRsp->connHandle, pAttRsp->method,
+				&(pAttRsp->msg));
+		if ((status != blePending) && (status != MSG_BUFFER_NOT_AVAIL)) {
+			// Disable connection event end notice
+			HCI_EXT_ConnEventNoticeCmd(pAttRsp->connHandle, selfEntity, 0);
 
-            // We're done with the response message
-            SimpleBLEPeripheral_freeAttRsp(status);
-        } else {
-            // Continue retrying
-            Display_print1(dispHandle, 5, 0, "Rsp send retry: %d", rspTxRetry);
-        }
-    }
+			// We're done with the response message
+			SimpleBLEPeripheral_freeAttRsp(status);
+		} else {
+			// Continue retrying
+			Display_print1(dispHandle, 5, 0, "Rsp send retry: %d", rspTxRetry);
+		}
+	}
 }
 
 /*********************************************************************
@@ -1088,30 +1081,29 @@ static void SimpleBLEPeripheral_sendAttRsp(void) {
  * @return  none
  */
 static void SimpleBLEPeripheral_freeAttRsp(uint8_t status) {
-    // See if there's a pending ATT response message
-    if (pAttRsp != NULL) {
-        // See if the response was sent out successfully
-        if (status == SUCCESS) {
-            Display_print1(dispHandle, 5, 0, "Rsp sent retry: %d", rspTxRetry);
-        } else {
-            // Free response payload
-            GATT_bm_free(&pAttRsp->msg, pAttRsp->method);
+	// See if there's a pending ATT response message
+	if (pAttRsp != NULL) {
+		// See if the response was sent out successfully
+		if (status == SUCCESS) {
+			Display_print1(dispHandle, 5, 0, "Rsp sent retry: %d", rspTxRetry);
+		} else {
+			// Free response payload
+			GATT_bm_free(&pAttRsp->msg, pAttRsp->method);
 
-            Display_print1(dispHandle, 5, 0, "Rsp retry failed: %d",
-                    rspTxRetry);
-        }
+			Display_print1(dispHandle, 5, 0, "Rsp retry failed: %d",
+					rspTxRetry);
+		}
 
-        // Free response message
-        ICall_freeMsg(pAttRsp);
+		// Free response message
+		ICall_freeMsg(pAttRsp);
 
-        // Reset our globals
-        pAttRsp = NULL;
-        rspTxRetry = 0;
-    }
+		// Reset our globals
+		pAttRsp = NULL;
+		rspTxRetry = 0;
+	}
 }
 
 #ifdef PLUS_OBSERVER
-
 
 /*********************************************************************
  * @fn      SimpleBLECentral_handleKeys
@@ -1126,35 +1118,35 @@ static void SimpleBLEPeripheral_freeAttRsp(uint8_t status) {
  * @return  none
  */
 static void SimpleBLEPeripheral_handleKeys(uint8_t shift, uint8_t keys) {
-    (void) shift;  // Intentionally unreferenced parameter
-    if (release) {
-        if (keys & KEY_RIGHT) {
-            handleButtonClick(TRUE);
-        }
-        if (keys & KEY_LEFT) {
-            handleButtonClick(FALSE);
-        }
-    } else { //debug mode
-        if (keys & KEY_RIGHT) {
-            //			if (scanningStarted == TRUE) {
-            //				StopCentralMode();
-            //			}
-            //
-            //			else {  // in advertise
-            ChangeBLEName();
-            RecieveAdvertDataArr();
-            //			}
-        }
-        if (keys & KEY_LEFT) {
-            if (scanningStarted == FALSE) {
-                StartCentralMode();
-            } else {
-                MyBLE_showDevices();
-            }
-            return;
-        }
-        return;
-    }
+	(void) shift;  // Intentionally unreferenced parameter
+	if (release) {
+		if (keys & KEY_RIGHT) {
+			handleButtonClick(TRUE);
+		}
+		if (keys & KEY_LEFT) {
+			handleButtonClick(FALSE);
+		}
+	} else { //debug mode
+		if (keys & KEY_RIGHT) {
+			//			if (scanningStarted == TRUE) {
+			//				StopCentralMode();
+			//			}
+			//
+			//			else {  // in advertise
+			ChangeBLEName();
+			RecieveAdvertDataArr();
+			//			}
+		}
+		if (keys & KEY_LEFT) {
+			if (scanningStarted == FALSE) {
+				StartCentralMode();
+			} else {
+				MyBLE_showDevices();
+			}
+			return;
+		}
+		return;
+	}
 }
 #endif //#ifdef PLUS_OBSERVER
 
@@ -1168,52 +1160,52 @@ static void SimpleBLEPeripheral_handleKeys(uint8_t shift, uint8_t keys) {
  * @return  None.
  */
 static void SimpleBLEPeripheral_processAppMsg(sbpEvt_t *pMsg) {
-    switch (pMsg->hdr.event) {
-    case SBP_STATE_CHANGE_EVT:
-        SimpleBLEPeripheral_processStateChangeEvt(
-                (gaprole_States_t) pMsg->hdr.state);
-        break;
+	switch (pMsg->hdr.event) {
+	case SBP_STATE_CHANGE_EVT:
+		SimpleBLEPeripheral_processStateChangeEvt(
+				(gaprole_States_t) pMsg->hdr.state);
+		break;
 
-    case SBP_CHAR_CHANGE_EVT:
-        SimpleBLEPeripheral_processCharValueChangeEvt(pMsg->hdr.state);
-        break;
+	case SBP_CHAR_CHANGE_EVT:
+		SimpleBLEPeripheral_processCharValueChangeEvt(pMsg->hdr.state);
+		break;
 
-    case SBP_KEY_CHANGE_EVT:
-        SimpleBLEPeripheral_handleKeys(0, pMsg->hdr.state);
-        break;
+	case SBP_KEY_CHANGE_EVT:
+		SimpleBLEPeripheral_handleKeys(0, pMsg->hdr.state);
+		break;
 
-    case SBP_OBSERVER_STATE_CHANGE_EVT:
-        SimpleBLEPeripheral_processStackMsg((ICall_Hdr *) pMsg->pData);
+	case SBP_OBSERVER_STATE_CHANGE_EVT:
+		SimpleBLEPeripheral_processStackMsg((ICall_Hdr *) pMsg->pData);
 
-        break;
+		break;
 
-    case BLEChangeAdvertiseName: {
-        MyPrint("Process BLESearchAdvertise");
-        ChangeBLEName();
-    }
-    break;
+	case BLEChangeAdvertiseName: {
+		MyPrint("Process BLESearchAdvertise");
+		ChangeBLEName();
+	}
+		break;
 
-    case BLEShowDevices: {
-        MyPrint("Process BLEShowDevices");
-        MyBLE_showDevices();
-    }
-    break;
+	case BLEShowDevices: {
+		MyPrint("Process BLEShowDevices");
+		MyBLE_showDevices();
+	}
+		break;
 
-    case BLEStartObserving: {
-        MyPrint("Process BLEStartObserving");
-        StartCentralMode();
-    }
-    break;
+	case BLEStartObserving: {
+		MyPrint("Process BLEStartObserving");
+		StartCentralMode();
+	}
+		break;
 
-    case BLEError: {
-        MyPrint("Process BLEError");
-        //turn red led
-    }
-    break;
-    default:
-        MyPrint("UnProcessed App Event");
-        break;
-    }
+	case BLEError: {
+		MyPrint("Process BLEError");
+		//turn red led
+	}
+		break;
+	default:
+		MyPrint("UnProcessed App Event");
+		break;
+	}
 
 }
 
@@ -1228,7 +1220,7 @@ static void SimpleBLEPeripheral_processAppMsg(sbpEvt_t *pMsg) {
  * @return  none
  */
 void SimpleBLEPeripheral_keyChangeHandler(uint8 keys) {
-    SimpleBLEPeripheral_enqueueMsg(SBP_KEY_CHANGE_EVT, keys, NULL);
+	SimpleBLEPeripheral_enqueueMsg(SBP_KEY_CHANGE_EVT, keys, NULL);
 }
 
 /*********************************************************************
@@ -1241,55 +1233,55 @@ void SimpleBLEPeripheral_keyChangeHandler(uint8 keys) {
  * @return  TRUE if safe to deallocate event message, FALSE otherwise.
  */
 static void SimpleBLEPeripheral_ObserverStateChangeCB(
-        gapPeripheralObserverRoleEvent_t *pEvent) {
+		gapPeripheralObserverRoleEvent_t *pEvent) {
 
-    sbpEvt_t *pMsg;
+	sbpEvt_t *pMsg;
 
-    // Create dynamic pointer to message.
-    if ((pMsg = ICall_malloc(sizeof(sbpEvt_t)))) {
-        pMsg->hdr.event = SBP_OBSERVER_STATE_CHANGE_EVT;
-        pMsg->hdr.state = SUCCESS;
+	// Create dynamic pointer to message.
+	if ((pMsg = ICall_malloc(sizeof(sbpEvt_t)))) {
+		pMsg->hdr.event = SBP_OBSERVER_STATE_CHANGE_EVT;
+		pMsg->hdr.state = SUCCESS;
 
-        switch (pEvent->gap.opcode) {
-        case GAP_DEVICE_INFO_EVENT: {
-            gapDeviceInfoEvent_t *pDevInfoMsg;
+		switch (pEvent->gap.opcode) {
+		case GAP_DEVICE_INFO_EVENT: {
+			gapDeviceInfoEvent_t *pDevInfoMsg;
 
-            pDevInfoMsg = ICall_malloc(sizeof(gapDeviceInfoEvent_t));
-            memcpy(pDevInfoMsg, pEvent, sizeof(gapDeviceInfoEvent_t));
+			pDevInfoMsg = ICall_malloc(sizeof(gapDeviceInfoEvent_t));
+			memcpy(pDevInfoMsg, pEvent, sizeof(gapDeviceInfoEvent_t));
 
-            pDevInfoMsg->pEvtData = ICall_malloc(pEvent->deviceInfo.dataLen);
-            memcpy(pDevInfoMsg->pEvtData, pEvent->deviceInfo.pEvtData,
-                    pEvent->deviceInfo.dataLen);
+			pDevInfoMsg->pEvtData = ICall_malloc(pEvent->deviceInfo.dataLen);
+			memcpy(pDevInfoMsg->pEvtData, pEvent->deviceInfo.pEvtData,
+					pEvent->deviceInfo.dataLen);
 
-            pMsg->pData = (uint8 *) pDevInfoMsg;
-        }
-        break;
+			pMsg->pData = (uint8 *) pDevInfoMsg;
+		}
+			break;
 
-        case GAP_DEVICE_DISCOVERY_EVENT: {
-            gapDevDiscEvent_t *pDevDiscMsg;
+		case GAP_DEVICE_DISCOVERY_EVENT: {
+			gapDevDiscEvent_t *pDevDiscMsg;
 
-            pDevDiscMsg = ICall_malloc(sizeof(gapDevDiscEvent_t));
-            memcpy(pDevDiscMsg, pEvent, sizeof(gapDevDiscEvent_t));
+			pDevDiscMsg = ICall_malloc(sizeof(gapDevDiscEvent_t));
+			memcpy(pDevDiscMsg, pEvent, sizeof(gapDevDiscEvent_t));
 
-            pDevDiscMsg->pDevList = ICall_malloc(
-                    (pEvent->discCmpl.numDevs) * sizeof(gapDevRec_t));
-            memcpy(pDevDiscMsg->pDevList, pEvent->discCmpl.pDevList,
-                    (pEvent->discCmpl.numDevs) * sizeof(gapDevRec_t));
+			pDevDiscMsg->pDevList = ICall_malloc(
+					(pEvent->discCmpl.numDevs) * sizeof(gapDevRec_t));
+			memcpy(pDevDiscMsg->pDevList, pEvent->discCmpl.pDevList,
+					(pEvent->discCmpl.numDevs) * sizeof(gapDevRec_t));
 
-            pMsg->pData = (uint8 *) pDevDiscMsg;
-        }
-        break;
+			pMsg->pData = (uint8 *) pDevDiscMsg;
+		}
+			break;
 
-        default:
-            break;
-        }
+		default:
+			break;
+		}
 
-        // Enqueue the message.
-        Util_enqueueMsg(appMsgQueue, sem, (uint8*) pMsg);
-    }
+		// Enqueue the message.
+		Util_enqueueMsg(appMsgQueue, sem, (uint8*) pMsg);
+	}
 
-    // Free the stack message
-    ICall_freeMsg(pEvent);
+	// Free the stack message
+	ICall_freeMsg(pEvent);
 }
 
 #endif
@@ -1304,7 +1296,7 @@ static void SimpleBLEPeripheral_ObserverStateChangeCB(
  * @return  None.
  */
 static void SimpleBLEPeripheral_stateChangeCB(gaprole_States_t newState) {
-    SimpleBLEPeripheral_enqueueMsg(SBP_STATE_CHANGE_EVT, newState, NULL);
+	SimpleBLEPeripheral_enqueueMsg(SBP_STATE_CHANGE_EVT, newState, NULL);
 }
 
 /*********************************************************************
@@ -1318,159 +1310,159 @@ static void SimpleBLEPeripheral_stateChangeCB(gaprole_States_t newState) {
  */
 static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState) {
 #ifdef PLUS_BROADCASTER
-    static bool firstConnFlag = false;
+	static bool firstConnFlag = false;
 #endif // PLUS_BROADCASTER
 
-    switch (newState) {
-    case GAPROLE_STARTED: {
-        uint8_t ownAddress[B_ADDR_LEN];
-        uint8_t systemId[DEVINFO_SYSTEM_ID_LEN];
+	switch (newState) {
+	case GAPROLE_STARTED: {
+		uint8_t ownAddress[B_ADDR_LEN];
+		uint8_t systemId[DEVINFO_SYSTEM_ID_LEN];
 
-        GAPRole_GetParameter(GAPROLE_BD_ADDR, ownAddress);
+		GAPRole_GetParameter(GAPROLE_BD_ADDR, ownAddress);
 
-        // use 6 bytes of device address for 8 bytes of system ID value
-        systemId[0] = ownAddress[0];
-        systemId[1] = ownAddress[1];
-        systemId[2] = ownAddress[2];
+		// use 6 bytes of device address for 8 bytes of system ID value
+		systemId[0] = ownAddress[0];
+		systemId[1] = ownAddress[1];
+		systemId[2] = ownAddress[2];
 
-        // set middle bytes to zero
-        systemId[4] = 0x00;
-        systemId[3] = 0x00;
+		// set middle bytes to zero
+		systemId[4] = 0x00;
+		systemId[3] = 0x00;
 
-        // shift three bytes up
-        systemId[7] = ownAddress[5];
-        systemId[6] = ownAddress[4];
-        systemId[5] = ownAddress[3];
+		// shift three bytes up
+		systemId[7] = ownAddress[5];
+		systemId[6] = ownAddress[4];
+		systemId[5] = ownAddress[3];
 
-        DevInfo_SetParameter(DEVINFO_SYSTEM_ID, DEVINFO_SYSTEM_ID_LEN,
-                systemId);
+		DevInfo_SetParameter(DEVINFO_SYSTEM_ID, DEVINFO_SYSTEM_ID_LEN,
+				systemId);
 
-        // Display device address
-        Display_print0(dispHandle, 1, 0, Util_convertBdAddr2Str(ownAddress));
-        Display_print0(dispHandle, 2, 0, "Initialized");
-    }
-    break;
+		// Display device address
+		Display_print0(dispHandle, 1, 0, Util_convertBdAddr2Str(ownAddress));
+		Display_print0(dispHandle, 2, 0, "Initialized");
+	}
+		break;
 
-    case GAPROLE_ADVERTISING:
-        Display_print0(dispHandle, 2, 0, "Advertising");
-        break;
+	case GAPROLE_ADVERTISING:
+		Display_print0(dispHandle, 2, 0, "Advertising");
+		break;
 
 #ifdef PLUS_BROADCASTER
-        /* After a connection is dropped a device in PLUS_BROADCASTER will continue
-         * sending non-connectable advertisements and shall sending this change of
-         * state to the application.  These are then disabled here so that sending
-         * connectable advertisements can resume.
-         */
-    case GAPROLE_ADVERTISING_NONCONN:
-    {
-        uint8_t advertEnabled = FALSE;
+		/* After a connection is dropped a device in PLUS_BROADCASTER will continue
+		 * sending non-connectable advertisements and shall sending this change of
+		 * state to the application.  These are then disabled here so that sending
+		 * connectable advertisements can resume.
+		 */
+		case GAPROLE_ADVERTISING_NONCONN:
+		{
+			uint8_t advertEnabled = FALSE;
 
-        // Disable non-connectable advertising.
-        GAPRole_SetParameter(GAPROLE_ADV_NONCONN_ENABLED, sizeof(uint8_t),
-                &advertEnabled);
+			// Disable non-connectable advertising.
+			GAPRole_SetParameter(GAPROLE_ADV_NONCONN_ENABLED, sizeof(uint8_t),
+					&advertEnabled);
 
-        advertEnabled = TRUE;
+			advertEnabled = TRUE;
 
-        // Enabled connectable advertising.
-        GAPRole_SetParameter(GAPROLE_ADVERT_ENABLED, sizeof(uint8_t),
-                &advertEnabled);
+			// Enabled connectable advertising.
+			GAPRole_SetParameter(GAPROLE_ADVERT_ENABLED, sizeof(uint8_t),
+					&advertEnabled);
 
-        // Reset flag for next connection.
-        firstConnFlag = false;
+			// Reset flag for next connection.
+			firstConnFlag = false;
 
-        SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
-    }
-    break;
+			SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
+		}
+		break;
 #endif //PLUS_BROADCASTER
 
-    case GAPROLE_CONNECTED: {
-        linkDBInfo_t linkInfo;
-        uint8_t numActive = 0;
+	case GAPROLE_CONNECTED: {
+		linkDBInfo_t linkInfo;
+		uint8_t numActive = 0;
 
-        Util_startClock(&periodicClock);
+		Util_startClock(&periodicClock);
 
-        numActive = linkDB_NumActive();
+		numActive = linkDB_NumActive();
 
-        // Use numActive to determine the connection handle of the last
-        // connection
-        if (linkDB_GetInfo(numActive - 1, &linkInfo) == SUCCESS) {
-            Display_print1(dispHandle, 2, 0, "Num Conns: %d",
-                    (uint16_t )numActive);
-            Display_print0(dispHandle, 3, 0,
-                    Util_convertBdAddr2Str(linkInfo.addr));
-        } else {
-            uint8_t peerAddress[B_ADDR_LEN];
+		// Use numActive to determine the connection handle of the last
+		// connection
+		if (linkDB_GetInfo(numActive - 1, &linkInfo) == SUCCESS) {
+			Display_print1(dispHandle, 2, 0, "Num Conns: %d",
+					(uint16_t )numActive);
+			Display_print0(dispHandle, 3, 0,
+					Util_convertBdAddr2Str(linkInfo.addr));
+		} else {
+			uint8_t peerAddress[B_ADDR_LEN];
 
-            GAPRole_GetParameter(GAPROLE_CONN_BD_ADDR, peerAddress);
+			GAPRole_GetParameter(GAPROLE_CONN_BD_ADDR, peerAddress);
 
-            Display_print0(dispHandle, 2, 0, "Connected");
-            Display_print0(dispHandle, 3, 0,
-                    Util_convertBdAddr2Str(peerAddress));
-        }
+			Display_print0(dispHandle, 2, 0, "Connected");
+			Display_print0(dispHandle, 3, 0,
+					Util_convertBdAddr2Str(peerAddress));
+		}
 
 #ifdef PLUS_BROADCASTER
-        // Only turn advertising on for this state when we first connect
-        // otherwise, when we go from connected_advertising back to this state
-        // we will be turning advertising back on.
-        if (firstConnFlag == false)
-        {
-            uint8_t advertEnabled = FALSE; // Turn on Advertising
+		// Only turn advertising on for this state when we first connect
+		// otherwise, when we go from connected_advertising back to this state
+		// we will be turning advertising back on.
+		if (firstConnFlag == false)
+		{
+			uint8_t advertEnabled = FALSE; // Turn on Advertising
 
-            // Disable connectable advertising.
-            GAPRole_SetParameter(GAPROLE_ADVERT_ENABLED, sizeof(uint8_t),
-                    &advertEnabled);
+			// Disable connectable advertising.
+			GAPRole_SetParameter(GAPROLE_ADVERT_ENABLED, sizeof(uint8_t),
+					&advertEnabled);
 
-            // Set to true for non-connectabel advertising.
-            advertEnabled = TRUE;
+			// Set to true for non-connectabel advertising.
+			advertEnabled = TRUE;
 
-            // Enable non-connectable advertising.
-            GAPRole_SetParameter(GAPROLE_ADV_NONCONN_ENABLED, sizeof(uint8_t),
-                    &advertEnabled);
-            firstConnFlag = true;
-        }
+			// Enable non-connectable advertising.
+			GAPRole_SetParameter(GAPROLE_ADV_NONCONN_ENABLED, sizeof(uint8_t),
+					&advertEnabled);
+			firstConnFlag = true;
+		}
 #endif // PLUS_BROADCASTER
-    }
-    break;
+	}
+		break;
 
-    case GAPROLE_CONNECTED_ADV:
-        Display_print0(dispHandle, 2, 0, "Connected Advertising");
-        break;
+	case GAPROLE_CONNECTED_ADV:
+		Display_print0(dispHandle, 2, 0, "Connected Advertising");
+		break;
 
-    case GAPROLE_WAITING:
-        Util_stopClock(&periodicClock);
-        SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
+	case GAPROLE_WAITING:
+		Util_stopClock(&periodicClock);
+		SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
 
-        Display_print0(dispHandle, 2, 0, "Disconnected");
+		Display_print0(dispHandle, 2, 0, "Disconnected");
 
-        // Clear remaining lines
-        Display_clearLines(dispHandle, 3, 5);
-        break;
+		// Clear remaining lines
+		Display_clearLines(dispHandle, 3, 5);
+		break;
 
-    case GAPROLE_WAITING_AFTER_TIMEOUT:
-        SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
+	case GAPROLE_WAITING_AFTER_TIMEOUT:
+		SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
 
-        Display_print0(dispHandle, 2, 0, "Timed Out");
+		Display_print0(dispHandle, 2, 0, "Timed Out");
 
-        // Clear remaining lines
-        Display_clearLines(dispHandle, 3, 5);
+		// Clear remaining lines
+		Display_clearLines(dispHandle, 3, 5);
 
 #ifdef PLUS_BROADCASTER
-        // Reset flag for next connection.
-        firstConnFlag = false;
+		// Reset flag for next connection.
+		firstConnFlag = false;
 #endif //#ifdef (PLUS_BROADCASTER)
-        break;
+		break;
 
-    case GAPROLE_ERROR:
-        Display_print0(dispHandle, 2, 0, "Error");
-        break;
+	case GAPROLE_ERROR:
+		Display_print0(dispHandle, 2, 0, "Error");
+		break;
 
-    default:
-        Display_clearLine(dispHandle, 2);
-        break;
-    }
+	default:
+		Display_clearLine(dispHandle, 2);
+		break;
+	}
 
-    // Update the state
-    //gapProfileState = newState;
+	// Update the state
+	//gapProfileState = newState;
 }
 
 #ifndef FEATURE_OAD_ONCHIP
@@ -1485,7 +1477,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
  * @return  None.
  */
 static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID) {
-    SimpleBLEPeripheral_enqueueMsg(SBP_CHAR_CHANGE_EVT, paramID, NULL);
+	SimpleBLEPeripheral_enqueueMsg(SBP_CHAR_CHANGE_EVT, paramID, NULL);
 }
 #endif //!FEATURE_OAD_ONCHIP
 
@@ -1501,25 +1493,25 @@ static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID) {
  */
 static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID) {
 #ifndef FEATURE_OAD_ONCHIP
-    uint8_t newValue;
+	uint8_t newValue;
 
-    switch (paramID) {
-    case SIMPLEPROFILE_CHAR1:
-        SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR1, &newValue);
+	switch (paramID) {
+	case SIMPLEPROFILE_CHAR1:
+		SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR1, &newValue);
 
-        Display_print1(dispHandle, 4, 0, "Char 1: %d", (uint16_t )newValue);
-        break;
+		Display_print1(dispHandle, 4, 0, "Char 1: %d", (uint16_t )newValue);
+		break;
 
-    case SIMPLEPROFILE_CHAR3:
-        SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR3, &newValue);
+	case SIMPLEPROFILE_CHAR3:
+		SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR3, &newValue);
 
-        Display_print1(dispHandle, 4, 0, "Char 3: %d", (uint16_t )newValue);
-        break;
+		Display_print1(dispHandle, 4, 0, "Char 3: %d", (uint16_t )newValue);
+		break;
 
-    default:
-        // should not reach here!
-        break;
-    }
+	default:
+		// should not reach here!
+		break;
+	}
 #endif //!FEATURE_OAD_ONCHIP
 }
 
@@ -1538,17 +1530,17 @@ static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID) {
  */
 static void SimpleBLEPeripheral_performPeriodicTask(void) {
 #ifndef FEATURE_OAD_ONCHIP
-    uint8_t valueToCopy;
+	uint8_t valueToCopy;
 
-    // Call to retrieve the value of the third characteristic in the profile
-    if (SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR3, &valueToCopy) == SUCCESS) {
-        // Call to set that value of the fourth characteristic in the profile.
-        // Note that if notifications of the fourth characteristic have been
-        // enabled by a GATT client device, then a notification will be sent
-        // every time this function is called.
-        SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR4, sizeof(uint8_t),
-                &valueToCopy);
-    }
+	// Call to retrieve the value of the third characteristic in the profile
+	if (SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR3, &valueToCopy) == SUCCESS) {
+		// Call to set that value of the fourth characteristic in the profile.
+		// Note that if notifications of the fourth characteristic have been
+		// enabled by a GATT client device, then a notification will be sent
+		// every time this function is called.
+		SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR4, sizeof(uint8_t),
+				&valueToCopy);
+	}
 #endif //!FEATURE_OAD_ONCHIP
 }
 
@@ -1567,28 +1559,28 @@ static void SimpleBLEPeripheral_performPeriodicTask(void) {
  * @return  None.
  */
 void SimpleBLEPeripheral_processOadWriteCB(uint8_t event, uint16_t connHandle,
-        uint8_t *pData)
+		uint8_t *pData)
 {
-    oadTargetWrite_t *oadWriteEvt = ICall_malloc( sizeof(oadTargetWrite_t) +
-            sizeof(uint8_t) * OAD_PACKET_SIZE);
+	oadTargetWrite_t *oadWriteEvt = ICall_malloc( sizeof(oadTargetWrite_t) +
+			sizeof(uint8_t) * OAD_PACKET_SIZE);
 
-    if ( oadWriteEvt != NULL )
-    {
-        oadWriteEvt->event = event;
-        oadWriteEvt->connHandle = connHandle;
+	if ( oadWriteEvt != NULL )
+	{
+		oadWriteEvt->event = event;
+		oadWriteEvt->connHandle = connHandle;
 
-        oadWriteEvt->pData = (uint8_t *)(&oadWriteEvt->pData + 1);
-        memcpy(oadWriteEvt->pData, pData, OAD_PACKET_SIZE);
+		oadWriteEvt->pData = (uint8_t *)(&oadWriteEvt->pData + 1);
+		memcpy(oadWriteEvt->pData, pData, OAD_PACKET_SIZE);
 
-        Queue_enqueue(hOadQ, (Queue_Elem *)oadWriteEvt);
+		Queue_enqueue(hOadQ, (Queue_Elem *)oadWriteEvt);
 
-        // Post the application's semaphore.
-        Semaphore_post(sem);
-    }
-    else
-    {
-        // Fail silently.
-    }
+		// Post the application's semaphore.
+		Semaphore_post(sem);
+	}
+	else
+	{
+		// Fail silently.
+	}
 }
 #endif //FEATURE_OAD
 
@@ -1602,11 +1594,11 @@ void SimpleBLEPeripheral_processOadWriteCB(uint8_t event, uint16_t connHandle,
  * @return  None.
  */
 static void SimpleBLEPeripheral_clockHandler(UArg arg) {
-    // Store the event.
-    events |= arg;
+	// Store the event.
+	events |= arg;
 
-    // Wake up the application.
-    Semaphore_post(sem);
+	// Wake up the application.
+	Semaphore_post(sem);
 }
 
 /*********************************************************************
@@ -1620,112 +1612,112 @@ static void SimpleBLEPeripheral_clockHandler(UArg arg) {
  * @return  None.
  */
 static void SimpleBLEPeripheral_enqueueMsg(uint8_t event, uint8_t state,
-        uint8_t *pData) {
-    sbpEvt_t *pMsg;
+		uint8_t *pData) {
+	sbpEvt_t *pMsg;
 
-    // Create dynamic pointer to message.
-    if ((pMsg = ICall_malloc(sizeof(sbpEvt_t)))) {
-        pMsg->hdr.event = event;
-        pMsg->hdr.state = state;
+	// Create dynamic pointer to message.
+	if ((pMsg = ICall_malloc(sizeof(sbpEvt_t)))) {
+		pMsg->hdr.event = event;
+		pMsg->hdr.state = state;
 
-        // Enqueue the message.
-        Util_enqueueMsg(appMsgQueue, sem, (uint8*) pMsg);
-    }
+		// Enqueue the message.
+		Util_enqueueMsg(appMsgQueue, sem, (uint8*) pMsg);
+	}
 }
 
 //========base 64==============//
 // Global variable.
 // Note: To change the charset to a URL encoding, replace the '+' and '/' with '*' and '-'
 unsigned char charset[] = {
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" };
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" };
 
 unsigned char revchar(char ch) {
-    if (ch >= 'A' && ch <= 'Z')
-        ch -= 'A';
-    else if (ch >= 'a' && ch <= 'z')
-        ch = ch - 'a' + 26;
-    else if (ch >= '0' && ch <= '9')
-        ch = ch - '0' + 52;
-    else if (ch == '+')
-        ch = 62;
-    else if (ch == '/')
-        ch = 63;
-    return (ch);
+	if (ch >= 'A' && ch <= 'Z')
+		ch -= 'A';
+	else if (ch >= 'a' && ch <= 'z')
+		ch = ch - 'a' + 26;
+	else if (ch >= '0' && ch <= '9')
+		ch = ch - '0' + 52;
+	else if (ch == '+')
+		ch = 62;
+	else if (ch == '/')
+		ch = 63;
+	return (ch);
 }
 
 int base64_encode(unsigned char in[], unsigned char out[], int len,
-        int newline_flag) {
-    int idx, idx2, blks, left_over;
-    // Since 3 input bytes = 4 output bytes, figure out how many even sets of 3 input bytes
-    // there are and process those. Multiplying by the equivilent of 3/3 (int arithmetic)
-    // will reduce a number to the lowest multiple of 3.
-    blks = (len / 3) * 3;
-    for (idx = 0, idx2 = 0; idx < blks; idx += 3, idx2 += 4) {
-        out[idx2] = charset[in[idx] >> 2];
-        out[idx2 + 1] = charset[((in[idx] & 0x03) << 4) + (in[idx + 1] >> 4)];
-        out[idx2 + 2] =
-                charset[((in[idx + 1] & 0x0f) << 2) + (in[idx + 2] >> 6)];
-        out[idx2 + 3] = charset[in[idx + 2] & 0x3F];
-        // The offical standard requires insertion of a newline every 76 chars
-        if (!(idx2 % 77) && newline_flag) {
-            out[idx2 + 4] = '\n';
-            idx2++;
-        }
-    }
-    left_over = len % 3;
-    if (left_over == 1) {
-        out[idx2] = charset[in[idx] >> 2];
-        out[idx2 + 1] = charset[(in[idx] & 0x03) << 4];
-        out[idx2 + 2] = '=';
-        out[idx2 + 3] = '=';
-        idx2 += 4;
-    } else if (left_over == 2) {
-        out[idx2] = charset[in[idx] >> 2];
-        out[idx2 + 1] = charset[((in[idx] & 0x03) << 4) + (in[idx + 1] >> 4)];
-        out[idx2 + 2] = charset[(in[idx + 1] & 0x0F) << 2];
-        out[idx2 + 3] = '=';
-        idx2 += 4;
-    }
-    out[idx2] = '\0';
-    return (idx2);
+		int newline_flag) {
+	int idx, idx2, blks, left_over;
+	// Since 3 input bytes = 4 output bytes, figure out how many even sets of 3 input bytes
+	// there are and process those. Multiplying by the equivilent of 3/3 (int arithmetic)
+	// will reduce a number to the lowest multiple of 3.
+	blks = (len / 3) * 3;
+	for (idx = 0, idx2 = 0; idx < blks; idx += 3, idx2 += 4) {
+		out[idx2] = charset[in[idx] >> 2];
+		out[idx2 + 1] = charset[((in[idx] & 0x03) << 4) + (in[idx + 1] >> 4)];
+		out[idx2 + 2] =
+				charset[((in[idx + 1] & 0x0f) << 2) + (in[idx + 2] >> 6)];
+		out[idx2 + 3] = charset[in[idx + 2] & 0x3F];
+		// The offical standard requires insertion of a newline every 76 chars
+		if (!(idx2 % 77) && newline_flag) {
+			out[idx2 + 4] = '\n';
+			idx2++;
+		}
+	}
+	left_over = len % 3;
+	if (left_over == 1) {
+		out[idx2] = charset[in[idx] >> 2];
+		out[idx2 + 1] = charset[(in[idx] & 0x03) << 4];
+		out[idx2 + 2] = '=';
+		out[idx2 + 3] = '=';
+		idx2 += 4;
+	} else if (left_over == 2) {
+		out[idx2] = charset[in[idx] >> 2];
+		out[idx2 + 1] = charset[((in[idx] & 0x03) << 4) + (in[idx + 1] >> 4)];
+		out[idx2 + 2] = charset[(in[idx + 1] & 0x0F) << 2];
+		out[idx2 + 3] = '=';
+		idx2 += 4;
+	}
+	out[idx2] = '\0';
+	return (idx2);
 }
 
 /*
  ADD: Option to strip out newlines
  */
 int base64_decode(unsigned char in[], unsigned char out[], int len) {
-    //	unsigned char ch;
-    int idx, idx2, blks, left_over;
+	//	unsigned char ch;
+	int idx, idx2, blks, left_over;
 
-    if (in[len - 1] == '=')
-        len--;
-    if (in[len - 1] == '=')
-        len--;
+	if (in[len - 1] == '=')
+		len--;
+	if (in[len - 1] == '=')
+		len--;
 
-    blks = (len / 4) * 4;
-    for (idx = 0, idx2 = 0; idx2 < blks; idx += 3, idx2 += 4) {
-        out[idx] = (revchar(in[idx2]) << 2)
-				                + ((revchar(in[idx2 + 1]) & 0x30) >> 4);
-        out[idx + 1] = (revchar(in[idx2 + 1]) << 4)
-				                + (revchar(in[idx2 + 2]) >> 2);
-        out[idx + 2] = (revchar(in[idx2 + 2]) << 6) + revchar(in[idx2 + 3]);
-    }
-    left_over = len % 4;
-    if (left_over == 2) {
-        out[idx] = (revchar(in[idx2]) << 2)
-				                + ((revchar(in[idx2 + 1]) & 0x30) >> 4);
-        out[idx + 1] = (revchar(in[idx2 + 1]) << 4);
-        idx += 2;
-    } else if (left_over == 3) {
-        out[idx] = (revchar(in[idx2]) << 2)
-				                + ((revchar(in[idx2 + 1]) & 0x30) >> 4);
-        out[idx + 1] = (revchar(in[idx2 + 1]) << 4)
-				                + (revchar(in[idx2 + 2]) >> 2);
-        out[idx + 2] = revchar(in[idx2 + 2]) << 6;
-        idx += 3;
-    }
-    out[idx] = '\0';
-    return (idx);
+	blks = (len / 4) * 4;
+	for (idx = 0, idx2 = 0; idx2 < blks; idx += 3, idx2 += 4) {
+		out[idx] = (revchar(in[idx2]) << 2)
+				+ ((revchar(in[idx2 + 1]) & 0x30) >> 4);
+		out[idx + 1] = (revchar(in[idx2 + 1]) << 4)
+				+ (revchar(in[idx2 + 2]) >> 2);
+		out[idx + 2] = (revchar(in[idx2 + 2]) << 6) + revchar(in[idx2 + 3]);
+	}
+	left_over = len % 4;
+	if (left_over == 2) {
+		out[idx] = (revchar(in[idx2]) << 2)
+				+ ((revchar(in[idx2 + 1]) & 0x30) >> 4);
+		out[idx + 1] = (revchar(in[idx2 + 1]) << 4);
+		idx += 2;
+	} else if (left_over == 3) {
+		out[idx] = (revchar(in[idx2]) << 2)
+				+ ((revchar(in[idx2 + 1]) & 0x30) >> 4);
+		out[idx + 1] = (revchar(in[idx2 + 1]) << 4)
+				+ (revchar(in[idx2 + 2]) >> 2);
+		out[idx + 2] = revchar(in[idx2 + 2]) << 6;
+		idx += 3;
+	}
+	out[idx] = '\0';
+	return (idx);
 }
 
 //==============================MY BLE FUNCS================================
@@ -1755,22 +1747,22 @@ int base64_decode(unsigned char in[], unsigned char out[], int len) {
 //	}
 //}
 static void StartCentralMode() {
-    uint8 status;
+	uint8 status;
 
-    //Start scanning if not already scanning
-    if ((scanningStarted == FALSE)) {
-        status = GAPObserverRole_StartDiscovery(DEFAULT_DISCOVERY_MODE,
-                DEFAULT_DISCOVERY_ACTIVE_SCAN,
-                DEFAULT_DISCOVERY_WHITE_LIST);
+	//Start scanning if not already scanning
+	if ((scanningStarted == FALSE)) {
+		status = GAPObserverRole_StartDiscovery(DEFAULT_DISCOVERY_MODE,
+		DEFAULT_DISCOVERY_ACTIVE_SCAN,
+		DEFAULT_DISCOVERY_WHITE_LIST);
 
-        if (status == SUCCESS) {
-            scanningStarted = TRUE;
-            Display_print0(dispHandle, 4, 0, "Scanning On");
-        } else {
-            Display_print1(dispHandle, 4, 0, "Scanning failed: %d", status);
-        }
+		if (status == SUCCESS) {
+			scanningStarted = TRUE;
+			Display_print0(dispHandle, 4, 0, "Scanning On");
+		} else {
+			Display_print1(dispHandle, 4, 0, "Scanning failed: %d", status);
+		}
 
-    }
+	}
 }
 
 //static void StopCentralMode() {
@@ -1789,145 +1781,145 @@ static void StartCentralMode() {
 //
 //}
 void MyBLE_addDeviceInfo(uint8_t *pAddr, uint8_t addrType) {
-    uint8_t i;
+	uint8_t i;
 
-    // If result count not at max
-    if (scanRes < DEFAULT_MAX_SCAN_RES) {
-        // Check if device is already in scan results
-        for (i = 0; i < scanRes; i++) {
-            if (memcmp(pAddr, devList[i].addr, B_ADDR_LEN) == 0) {
-                return;
-            }
-        }
+	// If result count not at max
+	if (scanRes < DEFAULT_MAX_SCAN_RES) {
+		// Check if device is already in scan results
+		for (i = 0; i < scanRes; i++) {
+			if (memcmp(pAddr, devList[i].addr, B_ADDR_LEN) == 0) {
+				return;
+			}
+		}
 
-        // Add addr to scan result list
-        memcpy(devList[scanRes].addr, pAddr, B_ADDR_LEN);
-        devList[scanRes].addrType = addrType;
+		// Add addr to scan result list
+		memcpy(devList[scanRes].addr, pAddr, B_ADDR_LEN);
+		devList[scanRes].addrType = addrType;
 
-        // Increment scan result count
-        scanRes++;
-    }
+		// Increment scan result count
+		scanRes++;
+	}
 }
 
 static bool MyBLE_findLocalName(uint8_t *pEvtData, uint8_t dataLen) {
-    uint8_t adLen;
-    uint8_t adType;
-    uint8_t *pEnd;
+	uint8_t adLen;
+	uint8_t adType;
+	uint8_t *pEnd;
 
-    pEnd = pEvtData + dataLen - 1;
+	pEnd = pEvtData + dataLen - 1;
 
-    // While end of data not reached
-    while (pEvtData < pEnd) {
-        // Get length of next data item
-        adLen = *pEvtData++;
-        if (adLen > 0) {
-            adType = *pEvtData;
+	// While end of data not reached
+	while (pEvtData < pEnd) {
+		// Get length of next data item
+		adLen = *pEvtData++;
+		if (adLen > 0) {
+			adType = *pEvtData;
 
-            // If AD type is for local name
-            if ((adType == GAP_ADTYPE_LOCAL_NAME_SHORT)
-                    || (adType == GAP_ADTYPE_LOCAL_NAME_COMPLETE)) {
-                pEvtData++;
-                adLen--;
-                // For each local name in list
-                if (adLen >= 2 && pEvtData < pEnd) {
-                    return TRUE;
-                }
+			// If AD type is for local name
+			if ((adType == GAP_ADTYPE_LOCAL_NAME_SHORT)
+					|| (adType == GAP_ADTYPE_LOCAL_NAME_COMPLETE)) {
+				pEvtData++;
+				adLen--;
+				// For each local name in list
+				if (adLen >= 2 && pEvtData < pEnd) {
+					return TRUE;
+				}
 
-                // Handle possible erroneous extra byte in advertisement data
-                if (adLen == 1) {
-                    pEvtData++;
-                }
-            } else {
-                // Go to next item
-                pEvtData += adLen;
-            }
-        }
-    }
-    // No name found
-    return FALSE;
+				// Handle possible erroneous extra byte in advertisement data
+				if (adLen == 1) {
+					pEvtData++;
+				}
+			} else {
+				// Go to next item
+				pEvtData += adLen;
+			}
+		}
+	}
+	// No name found
+	return FALSE;
 }
 
 void MyBLE_showDevices() {
-    MyPrint("MyBLE_showDevices");
-    uint8_t i;
-    for (i = 0; i < scanRes; i++) {
-        Display_print0(dispHandle, ROW_TWO, 0,
-                Util_convertBdAddr2Str(devList[i].addr));
-        Display_print1(dispHandle, ROW_THREE, 0, "%s", devList[i].localName);
-    }
-    //Navigate through discovery results
-    //	if (!scanningStarted && scanRes > 0) {
-    //		if (scanIdx >= scanRes) {
-    //			//Display the scan option
-    ////			state = BLE_STATE_BROWSING;
-    //			scanIdx = 0;
-    //		} else {
-    //			//Display next device
-    ////			state = BLE_STATE_BROWSING;
-    //			scanIdx++;
-    //		}
-    //	}
+	MyPrint("MyBLE_showDevices");
+	uint8_t i;
+	for (i = 0; i < scanRes; i++) {
+		Display_print0(dispHandle, ROW_TWO, 0,
+				Util_convertBdAddr2Str(devList[i].addr));
+		Display_print1(dispHandle, ROW_THREE, 0, "%s", devList[i].localName);
+	}
+	//Navigate through discovery results
+	//	if (!scanningStarted && scanRes > 0) {
+	//		if (scanIdx >= scanRes) {
+	//			//Display the scan option
+	////			state = BLE_STATE_BROWSING;
+	//			scanIdx = 0;
+	//		} else {
+	//			//Display next device
+	////			state = BLE_STATE_BROWSING;
+	//			scanIdx++;
+	//		}
+	//	}
 }
 
 static void MyBLE_addDeviceName(uint8_t i, uint8_t *pEvtData, uint8_t dataLen) {
-    uint8_t scanRspLen;
-    uint8_t scanRspType;
-    uint8_t *pEnd;
+	uint8_t scanRspLen;
+	uint8_t scanRspType;
+	uint8_t *pEnd;
 
-    pEnd = pEvtData + dataLen - 1;
+	pEnd = pEvtData + dataLen - 1;
 
-    // While end of data not reached
-    while (pEvtData < pEnd) {
-        // Get length of next scan response item
-        scanRspLen = *pEvtData++;
-        if (scanRspLen > 0) {
-            scanRspType = *pEvtData;
+	// While end of data not reached
+	while (pEvtData < pEnd) {
+		// Get length of next scan response item
+		scanRspLen = *pEvtData++;
+		if (scanRspLen > 0) {
+			scanRspType = *pEvtData;
 
-            // If scan response type is for local name
-            if ((scanRspType == GAP_ADTYPE_LOCAL_NAME_SHORT)
-                    || (scanRspType == GAP_ADTYPE_LOCAL_NAME_COMPLETE)) {
-                //Set name length in the device struct.
-                devList[i].nameLength = scanRspLen - 1;
-                pEvtData++;
-                uint8_t j = 0;
+			// If scan response type is for local name
+			if ((scanRspType == GAP_ADTYPE_LOCAL_NAME_SHORT)
+					|| (scanRspType == GAP_ADTYPE_LOCAL_NAME_COMPLETE)) {
+				//Set name length in the device struct.
+				devList[i].nameLength = scanRspLen - 1;
+				pEvtData++;
+				uint8_t j = 0;
 
-                //Copy device name from the scan response data
-                while ((pEvtData < pEnd) && (j < scanRspLen - 1)) {
-                    devList[i].localName[j] = *pEvtData;
-                    pEvtData++;
-                    j++;
-                }
-            }
-        } else {
-            // Go to next scan response item
-            pEvtData += scanRspLen;
-        }
-    }
+				//Copy device name from the scan response data
+				while ((pEvtData < pEnd) && (j < scanRspLen - 1)) {
+					devList[i].localName[j] = *pEvtData;
+					pEvtData++;
+					j++;
+				}
+			}
+		} else {
+			// Go to next scan response item
+			pEvtData += scanRspLen;
+		}
+	}
 }
 
 //==============================MY FUNCS================================
 static void MyPrint(const char* str) {
-    //	System_printf(str);
-    //	System_printf("\n");
-    //	System_flush();
+	//	System_printf(str);
+	//	System_printf("\n");
+	//	System_flush();
 }
 
 void ChangeBLEName() {
-    //	advertData[sizeof(advertData) - 2] = lastanswer + '0';
-    ChangeAdvertDataArr();
+	//	advertData[sizeof(advertData) - 2] = lastanswer + '0';
+	ChangeAdvertDataArr();
 
-    // Initialize Advertisement data
-    //	Display_print1(dispHandle, 5, 0, "trying change device name changed to %s", advertData);
+	// Initialize Advertisement data
+	//	Display_print1(dispHandle, 5, 0, "trying change device name changed to %s", advertData);
 
-    GAPRole_SetParameter(GAPROLE_ADVERT_DATA, sizeof(advertData), advertData);
-    Display_print1(dispHandle, 5, 0, "device name changed to %s", advertData);
+	GAPRole_SetParameter(GAPROLE_ADVERT_DATA, sizeof(advertData), advertData);
+	Display_print1(dispHandle, 5, 0, "device name changed to %s", advertData);
 
-    //TODO get data from localData array and change to base64
-    //try this too:
-    //	GAPRole_SetParameter(GAPROLE_SCAN_RSP_DATA, sizeof(scanRspData),scanRspData);
-    //	scanRspData[3]='a';
-    //	attDeviceName[GAP_DEVICE_NAME_LEN - 2] = 'a';
-    //	GGS_SetParameter(GGS_DEVICE_NAME_ATT, GAP_DEVICE_NAME_LEN, attDeviceName);
+	//TODO get data from localData array and change to base64
+	//try this too:
+	//	GAPRole_SetParameter(GAPROLE_SCAN_RSP_DATA, sizeof(scanRspData),scanRspData);
+	//	scanRspData[3]='a';
+	//	attDeviceName[GAP_DEVICE_NAME_LEN - 2] = 'a';
+	//	GGS_SetParameter(GGS_DEVICE_NAME_ATT, GAP_DEVICE_NAME_LEN, attDeviceName);
 }
 
 //UInt32 GetTime() {
@@ -1976,85 +1968,80 @@ void ChangeBLEName() {
 //	waitingForAnswerPress = FALSE;
 //}
 
-
 static void ChangeAdvertDataArr() {
-    unsigned char data[MAX_GATEWAY_NAME];
-    LocalDataToBase64(data);
-    for (int i = 0; i < MAX_GATEWAY_NAME; ++i) {
-        advertData[i + 5] = data[i];
-    }
-    Display_print2(dispHandle, 5, 0, "device name from %s to base64 is %s",
-            localData, data);
+	unsigned char data[MAX_GATEWAY_NAME];
+	LocalDataToBase64(data);
+	for (int i = 0; i < MAX_GATEWAY_NAME; ++i) {
+		advertData[i + 5] = data[i];
+	}
+	Display_print2(dispHandle, 5, 0, "device name from %s to base64 is %s",
+			localData, data);
 }
 
 static void RecieveAdvertDataArr() {
-    unsigned char data[MAX_GATEWAY_NAME];
-    for (int i = 0; i < MAX_GATEWAY_NAME; ++i) {
-        data[i] = advertData[i + 5];
-    }
-    Base64ToLocalData(data);
-    Display_print2(dispHandle, 5, 0, "device name is %s and decoded is %s",
-            data, localData);
+	unsigned char data[MAX_GATEWAY_NAME];
+	for (int i = 0; i < MAX_GATEWAY_NAME; ++i) {
+		data[i] = advertData[i + 5];
+	}
+	Base64ToLocalData(data);
+	Display_print2(dispHandle, 5, 0, "device name is %s and decoded is %s",
+			data, localData);
 }
 
 static void LocalDataToBase64(unsigned char* data) {
-    base64_encode(localData, data, MAX_GATEWAY_BASE64_NAME, 0);
+	base64_encode(localData, data, MAX_GATEWAY_BASE64_NAME, 0);
 }
 
 static void Base64ToLocalData(unsigned char* data) {
-    base64_decode(data, localData, MAX_GATEWAY_NAME);
+	base64_decode(data, localData, MAX_GATEWAY_NAME);
 }
 
 // Lior handling methods
 static void gatewayHandleDeviceDiscovered(unsigned char* deviceName);
 static void clickerHandleDeviceDiscovered(unsigned char* deviceName);
 
-static void HandleNewDeviceDiscovered(){
-    if(IS_GATEWAY){
-        gatewayHandleDeviceDiscovered(localData);
-    }
-    else{
-        clickerHandleDeviceDiscovered(localData);
-    }
+static void HandleNewDeviceDiscovered() {
+	if (IS_GATEWAY) {
+		gatewayHandleDeviceDiscovered(localData);
+	} else {
+		clickerHandleDeviceDiscovered(localData);
+	}
 }
 
 static void handleGatewayButtonClick();
 static void handleClickerButtonClick(bool button);
 static bool isFirstTime = TRUE; // debug
-static void handleButtonClick(bool button){
-    if(button){
-        Display_print0(dispHandle, 4, 0, "clicked yes!!");
+static void handleButtonClick(bool button) {
+	if (button) {
+		Display_print0(dispHandle, 4, 0, "clicked yes!!");
 
-    }
-    else{
-        Display_print0(dispHandle, 4, 0, "clicked no!!");
+	} else {
+		Display_print0(dispHandle, 4, 0, "clicked no!!");
 
-    }
+	}
 
-    if(isFirstTime){
-        Display_print0(dispHandle, 4, 0, "DEBUG FIRST TIME CLICK - INIT() !");
+	if (isFirstTime) {
+		Display_print0(dispHandle, 4, 0, "DEBUG FIRST TIME CLICK - INIT() !");
 
-        isFirstTime = FALSE;
-        if(IS_GATEWAY){
-            StartCentralMode(); // need to scan right away
-        } else{
-            clickerOnStart();
-        }
+		isFirstTime = FALSE;
+		if (IS_GATEWAY) {
+			StartCentralMode(); // need to scan right away
+		} else {
+			clickerOnStart();
+		}
 
-        return;
+		return;
 
-    }
+	}
 
-
-    // Lior handle clicks
-    if(IS_GATEWAY){
-        handleGatewayButtonClick(); // don't care which button
-    } else{
-        handleClickerButtonClick(button);
-    }
+	// Lior handle clicks
+	if (IS_GATEWAY) {
+		handleGatewayButtonClick(); // don't care which button
+	} else {
+		handleClickerButtonClick(button);
+	}
 
 }
-
 
 //static void TurnOffLeds() {
 ////turn off all leds
@@ -2082,14 +2069,15 @@ static void handleButtonClick(bool button){
  *********************************************************************/
 
 // Lior's additions
-
 // util's function
-static void bytesCharsToBitsChars(unsigned char* bytes, unsigned char* bits, int numberOfBits);
-static void bitsCharsToBytesChars(unsigned char* bits, unsigned char* bytes, int numberOfBits);
-static int ucharsCompare(const unsigned char *first, const unsigned char *second, size_t n);
+static void bytesCharsToBitsChars(unsigned char* bytes, unsigned char* bits,
+		int numberOfBits);
+static void bitsCharsToBytesChars(unsigned char* bits, unsigned char* bytes,
+		int numberOfBits);
+static int ucharsCompare(const unsigned char *first,
+		const unsigned char *second, size_t n);
 static void ucharsCopy(unsigned char *dest, const unsigned char *src, size_t n);
 static void copyToLocalDataAndChangeName(unsigned char* array, int length);
-
 
 // Gateway functions
 static void advertiseQuestion(unsigned char question, unsigned char* answers);
@@ -2098,11 +2086,9 @@ static void writeResultsForQuestion(unsigned char question);
 static void handleNextHandles();
 static void updateNameForNewAnswer();
 
-
 // Gateway flags
 static bool gatewayWaitForNewQuestion = TRUE;
 static bool gatewayWaitForAnswers = FALSE;
-
 
 #define MAX_NUMBER_OF_CLICKERS 96
 #define CLICKER "CLK"
@@ -2127,7 +2113,8 @@ static const unsigned char MIN_HANDLE_CHAR = '0'; // ==ascii 48 , still have eno
 static unsigned char messagesCounterByClicker[MAX_NUMBER_OF_CLICKERS] = { 0 }; // valid counter is from '1' to '9'
 static unsigned char questionNumberByClicker[MAX_NUMBER_OF_CLICKERS] = { 0 }; // no obligation on question index
 static unsigned char answersByClicker[MAX_NUMBER_OF_CLICKERS] = { 0 }; // answers are 'U' for "Not Answered", 'Y' for Yes, 'N' for No
-static unsigned char macAdrresses[MAX_NUMBER_OF_CLICKERS][MAC_ADDRESS_SIZE + 1] = { 0 };
+static unsigned char macAdrresses[MAX_NUMBER_OF_CLICKERS][MAC_ADDRESS_SIZE + 1] =
+		{ 0 };
 
 static int lastMacIndex = -1;
 static int lastAssignedHandleIndex = -1;
@@ -2144,240 +2131,238 @@ static unsigned char tempMacAddress[MAC_ADDRESS_SIZE + 1];
 #define QUESTION 'Q'
 #define QUESTION_MESSAGE_LENGTH (PREFIX_SIZE + 1 +NUMBER_OF_CHARS_FOR_ALL_CLICKERS)
 
-
-static unsigned char tempDeviceNameForHandleOffering[OFFER_MESSAGE_LENGTH + 1] = { 'G',
-        'T', 'W', 'O' };
-static unsigned char tempDeviceNameForQuestion[QUESTION_MESSAGE_LENGTH + 1] = { 'G', 'T',
-        'W', 'Q' };
+static unsigned char tempDeviceNameForHandleOffering[OFFER_MESSAGE_LENGTH + 1] =
+		{ 'G', 'T', 'W', 'O' };
+static unsigned char tempDeviceNameForQuestion[QUESTION_MESSAGE_LENGTH + 1] = {
+		'G', 'T', 'W', 'Q' };
 
 static int questionCounter = 0;
 
-static void questionTimeElapsed(){
-    gatewayWaitForNewQuestion = TRUE;
-    gatewayWaitForAnswers = FALSE;
+static void questionTimeElapsed() {
+	gatewayWaitForNewQuestion = TRUE;
+	gatewayWaitForAnswers = FALSE;
 }
 
+static void handleGatewayButtonClick() {
+	if (gatewayWaitForNewQuestion) {
 
-static void handleGatewayButtonClick(){
-    if(gatewayWaitForNewQuestion){
+		gatewayWaitForNewQuestion = FALSE;
 
-        gatewayWaitForNewQuestion = FALSE;
+		questionCounter++;
 
-        questionCounter++;
+		advertiseQuestionFirstTime();
 
-        advertiseQuestionFirstTime();
+		gatewayWaitForAnswers = TRUE;
 
-        gatewayWaitForAnswers = TRUE;
+	} else {
+		Display_print1(dispHandle, 5, 0,
+				"Question '%d' time is elapsed by user click ! \n",
+				questionCounter);
 
-    } else{
-        Display_print1(dispHandle, 5, 0,
-                "Question '%d' time is elapsed by user click ! \n", questionCounter);
+		questionTimeElapsed();
 
-        questionTimeElapsed();
-
-    }
+	}
 }
 
+static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
+	for (int i = 0; i < sizeof(messageStart) - 1; i++) {
+		if (messageStart[i] != deviceName[i]) {
+            return; // not relevant
+}
 
 // Gateway code
-static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
-    for (int i = 0; i < sizeof(messageStart) - 1 /*null-terminate*/; i++) {
-        if (messageStart[i] != deviceName[i]) {
-            return; // not relevant
-        }
-    }
+	}
 
-    unsigned char handleAsChar = deviceName[HANDLE_INDEX];
+	unsigned char handleAsChar = deviceName[HANDLE_INDEX];
 
-    if (handleAsChar == NO_HANDLE) { // new clicker - try add to mac addresses
+	if (handleAsChar == NO_HANDLE) { // new clicker - try add to mac addresses
 
-        ucharsCopy(tempMacAddress, deviceName + PREFIX_SIZE, MAC_ADDRESS_SIZE);
-        tempMacAddress[MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
-        // search all MACs already allocated
+		ucharsCopy(tempMacAddress, deviceName + PREFIX_SIZE, MAC_ADDRESS_SIZE);
+		tempMacAddress[MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
+		// search all MACs already allocated
 
-        for (int i = 0; i <= lastMacIndex; i++) {
-            if (ucharsCompare(tempMacAddress, macAdrresses[i], MAC_ADDRESS_SIZE)
-                    == 0) {
-                Display_print1(dispHandle, 5, 0,
-                        "DEBUG: mac address '%s' already exist \n",
-                        tempMacAddress);
-                return; // already in the list
-            }
-        }
+		for (int i = 0; i <= lastMacIndex; i++) {
+			if (ucharsCompare(tempMacAddress, macAdrresses[i], MAC_ADDRESS_SIZE)
+					== 0) {
+				Display_print1(dispHandle, 5, 0,
+						"DEBUG: mac address '%s' already exist \n",
+						tempMacAddress);
+				return; // already in the list
+			}
+		}
 
-        if (lastAssignedHandleIndex >= MAX_NUMBER_OF_CLICKERS - 1) {
-            // ERROR!!!
-            Display_print1(dispHandle, 5, 0,
-                    "Reached max clickers index (%d), can't assign anymore",
-                    lastAssignedHandleIndex);
-            return;
-        }
+		if (lastAssignedHandleIndex >= MAX_NUMBER_OF_CLICKERS - 1) {
+			// ERROR!!!
+			Display_print1(dispHandle, 5, 0,
+					"Reached max clickers index (%d), can't assign anymore",
+					lastAssignedHandleIndex);
+			return;
+		}
 
-        // not in list - add it and increment counter
-        lastMacIndex++;
-        ucharsCopy(macAdrresses[lastMacIndex], tempMacAddress, MAC_ADDRESS_SIZE);
-        macAdrresses[lastMacIndex][MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
+		// not in list - add it and increment counter
+		lastMacIndex++;
+		ucharsCopy(macAdrresses[lastMacIndex], tempMacAddress,
+		MAC_ADDRESS_SIZE);
+		macAdrresses[lastMacIndex][MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
 
-        Display_print2(dispHandle, 5, 0,
-                "MAC was added by device name: '%s' at index %d \n", deviceName,
-                lastMacIndex);
+		Display_print2(dispHandle, 5, 0,
+				"MAC was added by device name: '%s' at index %d \n", deviceName,
+				lastMacIndex);
 
-        // treat it right away
-        handleNextHandles();
-    }
-    else {  // should be valid counter
-        if(!gatewayWaitForAnswers){
-            Display_print1(dispHandle, 5, 0,
-                    "Gateway got new answer, but not waiting for answers!!! device name: '%s' \n", deviceName);
-            return;
-        }
+		// treat it right away
+		handleNextHandles();
+	} else {  // should be valid counter
+		if (!gatewayWaitForAnswers) {
+			Display_print1(dispHandle, 5, 0,
+					"Gateway got new answer, but not waiting for answers!!! device name: '%s' \n",
+					deviceName);
+			return;
+		}
 
-        unsigned char lastHandleChar = MIN_HANDLE_CHAR + lastAssignedHandleIndex;
-        if (handleAsChar < MIN_HANDLE_CHAR || handleAsChar > lastHandleChar) {
-            // ERROR
-            Display_print4(dispHandle, 5, 0,
-                    "ERROR found in device name: '%s' , the given handle ('%c') is not between range ('%c'-'%c') !!! \n",
-                    deviceName, handleAsChar, MIN_HANDLE_CHAR, lastHandleChar);
-            return;
-        }
-        // find counter
-        unsigned char counter = deviceName[COUNTER_INDEX];
-        if (counter < MIN_COUNTER || counter > MAX_COUNTER) {
-            // ERROR
-            Display_print4(dispHandle, 5, 0,
-                    "ERROR found in device name: '%s' , the given counter ('%c') is not legal (not '%c'-'%c') !!! \n",
-                    deviceName, counter, MIN_COUNTER, MAX_COUNTER);
-            return;
-        }
+		unsigned char lastHandleChar = MIN_HANDLE_CHAR
+				+ lastAssignedHandleIndex;
+		if (handleAsChar < MIN_HANDLE_CHAR || handleAsChar > lastHandleChar) {
+			// ERROR
+			Display_print4(dispHandle, 5, 0,
+					"ERROR found in device name: '%s' , the given handle ('%c') is not between range ('%c'-'%c') !!! \n",
+					deviceName, handleAsChar, MIN_HANDLE_CHAR, lastHandleChar);
+			return;
+		}
+		// find counter
+		unsigned char counter = deviceName[COUNTER_INDEX];
+		if (counter < MIN_COUNTER || counter > MAX_COUNTER) {
+			// ERROR
+			Display_print4(dispHandle, 5, 0,
+					"ERROR found in device name: '%s' , the given counter ('%c') is not legal (not '%c'-'%c') !!! \n",
+					deviceName, counter, MIN_COUNTER, MAX_COUNTER);
+			return;
+		}
 
-        int handle = (int) (handleAsChar - MIN_HANDLE_CHAR); // make it integer
+		int handle = (int) (handleAsChar - MIN_HANDLE_CHAR); // make it integer
 
-        if (messagesCounterByClicker[handle] == counter) { // is same ?
-            Display_print2(dispHandle, 5, 0,
-                    "DEBUG: for device name: '%s' , the given counter ('%c') is already stored \n",
-                    deviceName, counter);
-            return;
-        }
+		if (messagesCounterByClicker[handle] == counter) { // is same ?
+			Display_print2(dispHandle, 5, 0,
+					"DEBUG: for device name: '%s' , the given counter ('%c') is already stored \n",
+					deviceName, counter);
+			return;
+		}
 
-        unsigned char myRequestedQuestion = '0' + questionCounter;
-        unsigned char question = deviceName[QUESTION_INDEX];
+		unsigned char myRequestedQuestion = '0' + questionCounter;
+		unsigned char question = deviceName[QUESTION_INDEX];
 
-        if(question == myRequestedQuestion){
+		if (question == myRequestedQuestion) {
 
-            // new - update
-            messagesCounterByClicker[handle] = counter;
-            questionNumberByClicker[handle] = question;
+			// new - update
+			messagesCounterByClicker[handle] = counter;
+			questionNumberByClicker[handle] = question;
 
-            unsigned char answer = deviceName[ANSWER_INDEX];
+			unsigned char answer = deviceName[ANSWER_INDEX];
 
-            if (answer != YES_ANS && answer != NO_ANS) {
-                answersByClicker[handle] = UN_ANSWERED;
-                // ERROR
-                Display_print4(dispHandle, 5, 0,
-                        "ERROR found in device name: '%s' , the answer given ('%c') is not legal (not '%c' nor '%c') !!! \n",
-                        deviceName, answer, YES_ANS, NO_ANS);
-                return;
-            }
+			if (answer != YES_ANS && answer != NO_ANS) {
+				answersByClicker[handle] = UN_ANSWERED;
+				// ERROR
+				Display_print4(dispHandle, 5, 0,
+						"ERROR found in device name: '%s' , the answer given ('%c') is not legal (not '%c' nor '%c') !!! \n",
+						deviceName, answer, YES_ANS, NO_ANS);
+				return;
+			}
 
-            answersByClicker[handle] = answer;
-            Display_print4(dispHandle, 5, 0,
-                    "Answer was added by device name: '%s', handle number %d question '%c' answer '%c' \n",
-                    deviceName, handle, question, answer);
+			answersByClicker[handle] = answer;
+			Display_print4(dispHandle, 5, 0,
+					"Answer was added by device name: '%s', handle number %d question '%c' answer '%c' \n",
+					deviceName, handle, question, answer);
 
-
-            updateNameForNewAnswer();
-        }
-    }
+			updateNameForNewAnswer();
+		}
+	}
 }
-
 
 static void handleNextHandles() {
 
-    for (int i = lastAssignedHandleIndex + 1; i <= lastMacIndex;
-            i++, lastAssignedHandleIndex++) {
-        ucharsCopy(tempDeviceNameForHandleOffering + PREFIX_SIZE, macAdrresses[i],
-                MAC_ADDRESS_SIZE);
-        tempDeviceNameForHandleOffering[OFFER_MESSAGE_LENGTH - 1] = i
-                + MIN_HANDLE_CHAR;
-        tempDeviceNameForHandleOffering[OFFER_MESSAGE_LENGTH] = '\0';
-        Display_print3(dispHandle, 5, 0,
-                "Next handle %d should be assigned to mac %s , full name should be %s \n",
-                i, macAdrresses[i], tempDeviceNameForHandleOffering);
+	for (int i = lastAssignedHandleIndex + 1; i <= lastMacIndex;
+			i++, lastAssignedHandleIndex++) {
+		ucharsCopy(tempDeviceNameForHandleOffering + PREFIX_SIZE,
+				macAdrresses[i],
+				MAC_ADDRESS_SIZE);
+		tempDeviceNameForHandleOffering[OFFER_MESSAGE_LENGTH - 1] = i
+				+ MIN_HANDLE_CHAR;
+		tempDeviceNameForHandleOffering[OFFER_MESSAGE_LENGTH] = '\0';
+		Display_print3(dispHandle, 5, 0,
+				"Next handle %d should be assigned to mac %s , full name should be %s \n",
+				i, macAdrresses[i], tempDeviceNameForHandleOffering);
 
-        copyToLocalDataAndChangeName(tempDeviceNameForHandleOffering, OFFER_MESSAGE_LENGTH);
-    }
+		copyToLocalDataAndChangeName(tempDeviceNameForHandleOffering,
+		OFFER_MESSAGE_LENGTH);
+	}
 }
-
 
 static void advertiseQuestion(unsigned char question, unsigned char* answers) {
-    tempDeviceNameForQuestion[PREFIX_SIZE] = question;
-    ucharsCopy(tempDeviceNameForQuestion + PREFIX_SIZE + 1, answers,
-            NUMBER_OF_CHARS_FOR_ALL_CLICKERS);
-    tempDeviceNameForQuestion[QUESTION_MESSAGE_LENGTH] = '\0';
-    Display_print3(dispHandle, 5, 0,
-            "Advertising question ('%c') and answers ('%s') , full name should be %s \n",
-            question, answers, tempDeviceNameForQuestion);
+	tempDeviceNameForQuestion[PREFIX_SIZE] = question;
+	ucharsCopy(tempDeviceNameForQuestion + PREFIX_SIZE + 1, answers,
+	NUMBER_OF_CHARS_FOR_ALL_CLICKERS);
+	tempDeviceNameForQuestion[QUESTION_MESSAGE_LENGTH] = '\0';
+	Display_print3(dispHandle, 5, 0,
+			"Advertising question ('%c') and answers ('%s') , full name should be %s \n",
+			question, answers, tempDeviceNameForQuestion);
 
-    copyToLocalDataAndChangeName(tempDeviceNameForQuestion, QUESTION_MESSAGE_LENGTH);
+	copyToLocalDataAndChangeName(tempDeviceNameForQuestion,
+	QUESTION_MESSAGE_LENGTH);
 }
-
 
 static void writeResultsForQuestion(unsigned char question) {
-    int numYes = 0;
-    int numNo = 0;
-    for (int i = 0; i <= lastAssignedHandleIndex; i++) {
-        unsigned char questionForClicker = questionNumberByClicker[i];
-        if (questionForClicker == question) {
-            unsigned char answer = answersByClicker[i];
-            if (answer == YES_ANS) {
-                numYes++;
-            } else if (answer == NO_ANS) {
-                numNo++;
-            }
-        }
-    }
+	int numYes = 0;
+	int numNo = 0;
+	for (int i = 0; i <= lastAssignedHandleIndex; i++) {
+		unsigned char questionForClicker = questionNumberByClicker[i];
+		if (questionForClicker == question) {
+			unsigned char answer = answersByClicker[i];
+			if (answer == YES_ANS) {
+				numYes++;
+			} else if (answer == NO_ANS) {
+				numNo++;
+			}
+		}
+	}
 
-    int notAnswered = lastAssignedHandleIndex + 1 - numYes - numNo;
+	int notAnswered = lastAssignedHandleIndex + 1 - numYes - numNo;
 
-    Display_print4(dispHandle, 5, 0,
-            "Results for question '%c': YES = %d , NO = %d , NOT ANSWERERD = %d \n",
-            question, numYes, numNo, notAnswered);
+	Display_print4(dispHandle, 5, 0,
+			"Results for question '%c': YES = %d , NO = %d , NOT ANSWERERD = %d \n",
+			question, numYes, numNo, notAnswered);
 }
 
+static void updateNameForNewAnswer() {
+	unsigned char question = '0' + questionCounter;
 
-static void updateNameForNewAnswer(){
-    unsigned char question = '0' + questionCounter;
+	// update the name
+	unsigned char answersBits[MAX_NUMBER_OF_CLICKERS] = { 0 };
+	for (int i = 0; i <= lastAssignedHandleIndex; i++) {
+		if (answersByClicker[i] == YES_ANS || answersByClicker[i] == NO_ANS) {
+			answersBits[i] = '1';
+		}
+	}
 
-    // update the name
-    unsigned char answersBits[MAX_NUMBER_OF_CLICKERS] = {0};
-    for (int i = 0; i <= lastAssignedHandleIndex; i++) {
-        if(answersByClicker[i] == YES_ANS || answersByClicker[i] == NO_ANS){
-            answersBits[i] = '1';
-        }
-    }
+	unsigned char currentAnswersInChars[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] =
+			{ 0 };
+	bitsCharsToBytesChars(answersBits, currentAnswersInChars,
+	MAX_NUMBER_OF_CLICKERS);
+	advertiseQuestion(question, currentAnswersInChars);
 
-    unsigned char currentAnswersInChars[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] = {0};
-    bitsCharsToBytesChars(answersBits, currentAnswersInChars, MAX_NUMBER_OF_CLICKERS);
-    advertiseQuestion(question, currentAnswersInChars);
-
-    writeResultsForQuestion(question);
+	writeResultsForQuestion(question);
 }
 
+static void advertiseQuestionFirstTime() {
+	unsigned char question = '0' + questionCounter;
+	// zeros the answers buffer
+	for (int i = 0; i <= lastAssignedHandleIndex; i++) {
+		answersByClicker[i] = UN_ANSWERED;
+	}
 
-static void advertiseQuestionFirstTime(){
-    unsigned char question = '0' + questionCounter;
-    // zeros the answers buffer
-    for (int i = 0; i <= lastAssignedHandleIndex; i++) {
-        answersByClicker[i] = UN_ANSWERED;
-    }
-
-
-    unsigned char currentAnswersInChars[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] = {0};
-    advertiseQuestion(question, currentAnswersInChars);
+	unsigned char currentAnswersInChars[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] =
+			{ 0 };
+	advertiseQuestion(question, currentAnswersInChars);
 
 }
-
-
 
 //static void gatewayFlow() {
 //	while(TRUE){
@@ -2392,8 +2377,6 @@ static void advertiseQuestionFirstTime(){
 //	}
 //}
 
-
-
 /****************************************************************
  ************************* clicker code *************************
  ****************************************************************/
@@ -2402,10 +2385,9 @@ static void advertiseQuestionFirstTime(){
 static void readMyMac();
 static void requestForHandle();
 static void answerToQuestion(unsigned char handle, unsigned char counter,
-        unsigned char question, unsigned char answer);
+		unsigned char question, unsigned char answer);
 static bool validateQuestionApproved();
 static void advanceCounter();
-
 
 // clicker flags
 
@@ -2417,181 +2399,179 @@ static bool clickerWaitForValidationOnAnswer = FALSE;
 static unsigned char lastQuestionRecievedFromGateway = '\0';
 static unsigned char lastQuestionAnswered = '\0';
 
-static unsigned char lastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS + 1] = {0};
+static unsigned char lastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS + 1] = { 0 };
 static unsigned char lastHandle = '\0';
 static int lastHandleIndex = -1;
 static unsigned char myMac[MAC_ADDRESS_SIZE + 1];
 static unsigned char lastCounter = MIN_COUNTER;
 
-static void clickerHandleDeviceDiscovered(unsigned char* deviceName){
+static void clickerHandleDeviceDiscovered(unsigned char* deviceName) {
 
-    unsigned char command = deviceName[GATEWAY_COMMAND];
-    if (command == OFFER_HANDLE) {
+	unsigned char command = deviceName[GATEWAY_COMMAND];
+	if (command == OFFER_HANDLE) {
 
-        for (int i = 0; i < PREFIX_SIZE; i++) {
-            if (tempDeviceNameForHandleOffering[i] != deviceName[i]) {
-                Display_print1(dispHandle, 5, 0,
-                        "DEBUG: in name: '%s' , prefix for OFFER HANDLE is not as requested !!! \n",
-                        deviceName);
-                return;
-            }
-        }
+		for (int i = 0; i < PREFIX_SIZE; i++) {
+			if (tempDeviceNameForHandleOffering[i] != deviceName[i]) {
+				Display_print1(dispHandle, 5, 0,
+						"DEBUG: in name: '%s' , prefix for OFFER HANDLE is not as requested !!! \n",
+						deviceName);
+				return;
+			}
+		}
 
+		if (!clickerWaitForHandleOffering) {
+			Display_print1(dispHandle, 5, 0,
+					"DEBUG: in name: '%s' , OFFER HANDLE requested, but not expected for me ! \n",
+					deviceName);
+			return;
+		}
 
-        if(!clickerWaitForHandleOffering){
-            Display_print1(dispHandle, 5, 0,
-                    "DEBUG: in name: '%s' , OFFER HANDLE requested, but not expected for me ! \n",
-                    deviceName);
-            return;
-        }
+		ucharsCopy(tempMacAddress, deviceName + PREFIX_SIZE, MAC_ADDRESS_SIZE);
+		tempMacAddress[MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
+		if (ucharsCompare(tempMacAddress, myMac, MAC_ADDRESS_SIZE) == 0) {
+			// my mac - get handle
+			lastHandle = deviceName[OFFER_MESSAGE_LENGTH - 1];
+			lastHandleIndex = lastHandle - MIN_HANDLE_CHAR;
+			Display_print4(dispHandle, 5, 0,
+					"Handle '%c', index %d is assigned to mac '%s' by device name '%s'! \n",
+					lastHandle, lastHandleIndex, myMac, deviceName);
 
+			clickerWaitForHandleOffering = FALSE;
+			clickerWaitForNewQuestion = TRUE;
+			return;
+		}
 
-        ucharsCopy(tempMacAddress, deviceName + PREFIX_SIZE, MAC_ADDRESS_SIZE);
-        tempMacAddress[MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
-        if (ucharsCompare(tempMacAddress, myMac, MAC_ADDRESS_SIZE) == 0) {
-            // my mac - get handle
-            lastHandle = deviceName[OFFER_MESSAGE_LENGTH - 1];
-            lastHandleIndex = lastHandle - MIN_HANDLE_CHAR;
-            Display_print4(dispHandle, 5, 0,
-                    "Handle '%c', index %d is assigned to mac '%s' by device name '%s'! \n",
-                    lastHandle, lastHandleIndex, myMac, deviceName);
+	} else if (command == QUESTION) {
 
-            clickerWaitForHandleOffering = FALSE;
-            clickerWaitForNewQuestion = TRUE;
-            return;
-        }
+		for (int i = 0; i < PREFIX_SIZE; i++) {
+			if (tempDeviceNameForQuestion[i] != deviceName[i]) {
+				Display_print1(dispHandle, 5, 0,
+						"DEBUG: in name: '%s' , prefix for QUESTION MESSAGE is not as requested !!! \n",
+						deviceName);
+				return;
+			}
+		}
 
-    } else if (command == QUESTION) {
+		if (!clickerWaitForNewQuestion && !clickerWaitForValidationOnAnswer) {
+			Display_print1(dispHandle, 5, 0,
+					"DEBUG: in name: '%s' , QUESTION MESSAGE requested, but not expected for me ! \n",
+					deviceName);
+			return;
+		}
 
-        for (int i = 0; i < PREFIX_SIZE; i++) {
-            if (tempDeviceNameForQuestion[i] != deviceName[i]) {
-                Display_print1(dispHandle, 5, 0,
-                        "DEBUG: in name: '%s' , prefix for QUESTION MESSAGE is not as requested !!! \n",
-                        deviceName);
-                return;
-            }
-        }
+		// update question and numbers
+		unsigned char question = deviceName[PREFIX_SIZE];
 
-        if(!clickerWaitForNewQuestion && !clickerWaitForValidationOnAnswer){
-            Display_print1(dispHandle, 5, 0, "DEBUG: in name: '%s' , QUESTION MESSAGE requested, but not expected for me ! \n",
-                    deviceName);
-            return;
-        }
+		if (clickerWaitForNewQuestion) {
+			if (lastQuestionRecievedFromGateway == question) {
+				Display_print1(dispHandle, 5, 0,
+						"DEBUG: waiting for new question, but got the same as last time '%c' \n",
+						question);
+				return;
+			} else {
+				clickerWaitForNewQuestion = FALSE;
+				lastQuestionRecievedFromGateway = question;
+				clickerWaitForUserAnswer = TRUE;
+				return;
+			}
+		} else if (clickerWaitForValidationOnAnswer) {
+			if (lastQuestionAnswered != question) {
+				Display_print2(dispHandle, 5, 0,
+						"ERROR: user waisted question since this question is '%c' and user answered '%c' \n",
+						question, lastQuestionAnswered);
+				return;
+			}
+			ucharsCopy(lastAnswers, deviceName + 1 + PREFIX_SIZE,
+			NUMBER_OF_CHARS_FOR_ALL_CLICKERS);
+			lastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] = '\0'; // add null-terminate
+			Display_print3(dispHandle, 5, 0,
+					"last question '%c' and answers '%s' by device name '%s'! \n",
+					question, lastAnswers, deviceName);
 
-        // update question and numbers
-        unsigned char question = deviceName[PREFIX_SIZE];
+			// see if i'm approved
+			bool approved = validateQuestionApproved();
+			if (approved) {
+				clickerWaitForValidationOnAnswer = FALSE;
+				clickerWaitForNewQuestion = TRUE;
+			}
+		}
 
-        if(clickerWaitForNewQuestion){
-            if(lastQuestionRecievedFromGateway == question){
-                Display_print1(dispHandle, 5, 0, "DEBUG: waiting for new question, but got the same as last time '%c' \n",
-                        question);
-                return;
-            }else{
-                clickerWaitForNewQuestion = FALSE;
-                lastQuestionRecievedFromGateway = question;
-                clickerWaitForUserAnswer = TRUE;
-                return;
-            }
-        } else if(clickerWaitForValidationOnAnswer){
-            if(lastQuestionAnswered != question){
-                Display_print2(dispHandle, 5, 0, "ERROR: user waisted question since this question is '%c' and user answered '%c' \n",
-                        question, lastQuestionAnswered);
-                return;
-            }
-            ucharsCopy(lastAnswers, deviceName + 1 + PREFIX_SIZE,
-                    NUMBER_OF_CHARS_FOR_ALL_CLICKERS);
-            lastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] = '\0'; // add null-terminate
-            Display_print3(dispHandle, 5, 0,
-                    "last question '%c' and answers '%s' by device name '%s'! \n",
-                    question, lastAnswers, deviceName);
-
-            // see if i'm approved
-            bool approved = validateQuestionApproved();
-            if(approved){
-                clickerWaitForValidationOnAnswer = FALSE;
-                clickerWaitForNewQuestion = TRUE;
-            }
-        }
-
-    } else {
-        return; // not relevant - other unrecognized device
-    }
+	} else {
+		return; // not relevant - other unrecognized device
+	}
 }
 
 static unsigned char tempAnswerForQuestion[MIN_MESSAGE + 1] = { CLICKER };
 
 static void answerToQuestion(unsigned char handle, unsigned char counter,
-        unsigned char question, unsigned char answer) {
-    tempAnswerForQuestion[HANDLE_INDEX] = handle;
-    tempAnswerForQuestion[COUNTER_INDEX] = counter;
-    tempAnswerForQuestion[QUESTION_INDEX] = question;
-    tempAnswerForQuestion[ANSWER_INDEX] = answer;
-    tempAnswerForQuestion[MIN_MESSAGE] = '\0'; // add null-terminate
-    Display_print5(dispHandle, 5, 0,
-            "answer to question %c' with answer '%c' by handle '%c' and counter '%c'. device name is '%s'! \n",
-            question, answer, handle, counter, tempAnswerForQuestion);
+		unsigned char question, unsigned char answer) {
+	tempAnswerForQuestion[HANDLE_INDEX] = handle;
+	tempAnswerForQuestion[COUNTER_INDEX] = counter;
+	tempAnswerForQuestion[QUESTION_INDEX] = question;
+	tempAnswerForQuestion[ANSWER_INDEX] = answer;
+	tempAnswerForQuestion[MIN_MESSAGE] = '\0'; // add null-terminate
+	Display_print5(dispHandle, 5, 0,
+			"answer to question %c' with answer '%c' by handle '%c' and counter '%c'. device name is '%s'! \n",
+			question, answer, handle, counter, tempAnswerForQuestion);
 
-    copyToLocalDataAndChangeName(tempAnswerForQuestion, MIN_MESSAGE);
+	copyToLocalDataAndChangeName(tempAnswerForQuestion, MIN_MESSAGE);
 }
 
-static unsigned char tempRequestHandle[PREFIX_SIZE + MAC_ADDRESS_SIZE + 1] = { CLICKER };
+static unsigned char tempRequestHandle[PREFIX_SIZE + MAC_ADDRESS_SIZE + 1] = {
+CLICKER };
 
 static void requestForHandle() {
-    tempRequestHandle[HANDLE_INDEX] = NO_HANDLE;
-    ucharsCopy(tempRequestHandle + PREFIX_SIZE, myMac, MAC_ADDRESS_SIZE);
-    tempRequestHandle[PREFIX_SIZE + MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
-    Display_print2(dispHandle, 5, 0,
-            "Request for handle by mac '%s'. device name is '%s'! \n", myMac,
-            tempRequestHandle);
+	tempRequestHandle[HANDLE_INDEX] = NO_HANDLE;
+	ucharsCopy(tempRequestHandle + PREFIX_SIZE, myMac, MAC_ADDRESS_SIZE);
+	tempRequestHandle[PREFIX_SIZE + MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
+	Display_print2(dispHandle, 5, 0,
+			"Request for handle by mac '%s'. device name is '%s'! \n", myMac,
+			tempRequestHandle);
 
-    copyToLocalDataAndChangeName(tempRequestHandle, PREFIX_SIZE + MAC_ADDRESS_SIZE);
+	copyToLocalDataAndChangeName(tempRequestHandle,
+	PREFIX_SIZE + MAC_ADDRESS_SIZE);
 }
 
+static void clickerOnStart() {
+	readMyMac();
+	requestForHandle();
 
-static void clickerOnStart(){
-    readMyMac();
-    requestForHandle();
-
-    clickerWaitForHandleOffering = TRUE;
+	clickerWaitForHandleOffering = TRUE;
 }
 
-static void handleClickerButtonClick(bool button){
-    if(ON_DEBUG && clickerWaitForHandleOffering){
-        // approve
-        unsigned char gatewayResponse[18] = "GTWO";
-        gatewayResponse[17] = '\0';
-        gatewayResponse[16] = '0'; // handle
-        ucharsCopy(gatewayResponse + 4, myMac, 12);
-        clickerHandleDeviceDiscovered(gatewayResponse);
-    }
-    else if(ON_DEBUG && clickerWaitForNewQuestion){
-        // send some question data
-        clickerHandleDeviceDiscovered("GTWQ1dddddddd");
-    }
-    else if(clickerWaitForUserAnswer){
-        clickerWaitForUserAnswer = FALSE;
-        unsigned char answer = button ? YES_ANS : NO_ANS;
-        answerToQuestion(lastHandle, lastCounter, lastQuestionRecievedFromGateway, answer);
+static void handleClickerButtonClick(bool button) {
+	if (ON_DEBUG && clickerWaitForHandleOffering) {
+		// approve
+		unsigned char gatewayResponse[18] = "GTWO";
+		gatewayResponse[17] = '\0';
+		gatewayResponse[16] = '0'; // handle
+		ucharsCopy(gatewayResponse + 4, myMac, 12);
+		clickerHandleDeviceDiscovered(gatewayResponse);
+	} else if (ON_DEBUG && clickerWaitForNewQuestion) {
+		// send some question data
+		clickerHandleDeviceDiscovered("GTWQ1dddddddd");
+	} else if (clickerWaitForUserAnswer) {
+		clickerWaitForUserAnswer = FALSE;
+		unsigned char answer = button ? YES_ANS : NO_ANS;
+		answerToQuestion(lastHandle, lastCounter,
+				lastQuestionRecievedFromGateway, answer);
 
-        lastQuestionAnswered = lastQuestionRecievedFromGateway;
-        advanceCounter();
+		lastQuestionAnswered = lastQuestionRecievedFromGateway;
+		advanceCounter();
 
-        clickerWaitForValidationOnAnswer = TRUE;
-    }
-    else if(ON_DEBUG && clickerWaitForValidationOnAnswer){
-        // send some question data
-        unsigned char approveQuestion[14] = "GTWQ1dddddddd"; // start as question data
-        approveQuestion[13] = '\0';
-        approveQuestion[5] = (char)128;
-        clickerHandleDeviceDiscovered(approveQuestion);
-    }else{
-        Display_print0(dispHandle, 5, 0,
-                "DEBUG: user clicked, but not waiting for click ! \n");
-    }
-
+		clickerWaitForValidationOnAnswer = TRUE;
+	} else if (ON_DEBUG && clickerWaitForValidationOnAnswer) {
+		// send some question data
+		unsigned char approveQuestion[14] = "GTWQ1dddddddd"; // start as question data
+		approveQuestion[13] = '\0';
+		approveQuestion[5] = (char) 128;
+		clickerHandleDeviceDiscovered(approveQuestion);
+	} else {
+		Display_print0(dispHandle, 5, 0,
+				"DEBUG: user clicked, but not waiting for click ! \n");
+	}
 
 }
-
 
 // internal flash
 //#include "driverlib/flash.h"
@@ -2600,68 +2580,68 @@ static void handleClickerButtonClick(bool button){
 
 // mac is 6 bytes
 static void readMyMac() {
-    uint32_t bleAddrlsb;
+	uint32_t bleAddrlsb;
 
-    uint32_t bleAddrmsb;
+	uint32_t bleAddrmsb;
 
-    bleAddrlsb = HWREG(FCFG1_BASE + FCFG1_O_MAC_BLE_0);
-    bleAddrmsb = HWREG(FCFG1_BASE + FCFG1_O_MAC_BLE_1);
+	bleAddrlsb = HWREG(FCFG1_BASE + FCFG1_O_MAC_BLE_0);
+	bleAddrmsb = HWREG(FCFG1_BASE + FCFG1_O_MAC_BLE_1);
 
-    Display_print2(dispHandle, 5, 0, "my mac is '%x','%x'. \n", bleAddrmsb,
-            bleAddrlsb);
+	Display_print2(dispHandle, 5, 0, "my mac is '%x','%x'. \n", bleAddrmsb,
+			bleAddrlsb);
 
-    unsigned char tempAddress[9];
-    sprintf((char*)tempAddress, "%x", bleAddrmsb);
-    ucharsCopy(myMac, tempAddress + 4, 4); // msb is only 2 bytes of data
-    sprintf((char*)tempAddress, "%x", bleAddrlsb);
-    ucharsCopy(myMac + 4, tempAddress, 8);
+	unsigned char tempAddress[9];
+	sprintf((char*) tempAddress, "%x", bleAddrmsb);
+	ucharsCopy(myMac, tempAddress + 4, 4); // msb is only 2 bytes of data
+	sprintf((char*) tempAddress, "%x", bleAddrlsb);
+	ucharsCopy(myMac + 4, tempAddress, 8);
 
-    myMac[MAC_ADDRESS_SIZE] = '\0';
-    Display_print1(dispHandle, 5, 0, "my mac address as chars is '%s'\n",
-            myMac);
+	myMac[MAC_ADDRESS_SIZE] = '\0';
+	Display_print1(dispHandle, 5, 0, "my mac address as chars is '%s'\n",
+			myMac);
 
 }
 
-
 static void advanceCounter() {
-    lastCounter++;
-    if(lastCounter > MAX_COUNTER){
-        lastCounter = MIN_COUNTER;
-    }
+	lastCounter++;
+	if (lastCounter > MAX_COUNTER) {
+		lastCounter = MIN_COUNTER;
+	}
 }
 
 #define WAIT_APPROVE_QUESTION_TIME_SEC 30
 #define WAIT_APPROVE_QUESTION_SLEEP_TICKS 100000
 
-static unsigned char tempLastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS + 1] = {0};
-static unsigned char lastAnswersInBits[MAX_NUMBER_OF_CLICKERS+1] = {0};
+static unsigned char tempLastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS + 1] =
+		{ 0 };
+static unsigned char lastAnswersInBits[MAX_NUMBER_OF_CLICKERS + 1] = { 0 };
 
-static bool validateQuestionApproved(){
-    //// already did this violation - need to make it stop waiting...
-    //	if(lastQuestionRecievedFromGateway != lastQuestionAnswered){
-    //		Display_print2(dispHandle, 5, 0,
-    //				"DEBUG: last question was from gateway is '%c' and my last question is '%c' ! \n",
-    //				lastQuestionRecievedFromGateway, lastQuestionAnswered);
-    //		return FALSE;
-    //	}
+static bool validateQuestionApproved() {
+	//// already did this violation - need to make it stop waiting...
+	//	if(lastQuestionRecievedFromGateway != lastQuestionAnswered){
+	//		Display_print2(dispHandle, 5, 0,
+	//				"DEBUG: last question was from gateway is '%c' and my last question is '%c' ! \n",
+	//				lastQuestionRecievedFromGateway, lastQuestionAnswered);
+	//		return FALSE;
+	//	}
 
-    // copy so if it changes in the middle we have the old one
-    ucharsCopy(tempLastAnswers, lastAnswers, NUMBER_OF_CHARS_FOR_ALL_CLICKERS);
-    tempLastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] = '\0';
+	// copy so if it changes in the middle we have the old one
+	ucharsCopy(tempLastAnswers, lastAnswers, NUMBER_OF_CHARS_FOR_ALL_CLICKERS);
+	tempLastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] = '\0';
 
-    bytesCharsToBitsChars(tempLastAnswers, lastAnswersInBits, MAX_NUMBER_OF_CLICKERS);
-    lastAnswersInBits[MAX_NUMBER_OF_CLICKERS] = '\0';
+	bytesCharsToBitsChars(tempLastAnswers, lastAnswersInBits,
+	MAX_NUMBER_OF_CLICKERS);
+	lastAnswersInBits[MAX_NUMBER_OF_CLICKERS] = '\0';
 
-    if(lastAnswersInBits[lastHandleIndex] == '1'){
-        Display_print3(dispHandle, 5, 0,
-                "Question '%c' was approved answer by gateway for handle '%c', index %d ! \n",
-                lastQuestionAnswered, lastHandle,lastHandleIndex);
-        return TRUE;
-    }
+	if (lastAnswersInBits[lastHandleIndex] == '1') {
+		Display_print3(dispHandle, 5, 0,
+				"Question '%c' was approved answer by gateway for handle '%c', index %d ! \n",
+				lastQuestionAnswered, lastHandle, lastHandleIndex);
+		return TRUE;
+	}
 
-    return FALSE;
+	return FALSE;
 }
-
 
 // clicker flow
 //static void clickerFlow() {
@@ -2694,194 +2674,192 @@ static bool validateQuestionApproved(){
 
 // Lior's utli functions
 
-static void copyArrayToLocalData(unsigned char* array, int length){
-    int i = 0;
-    for( ; i < length ; i++){
-        localData[i] = array[i];
-    }
+static void copyArrayToLocalData(unsigned char* array, int length) {
+	int i = 0;
+	for (; i < length; i++) {
+		localData[i] = array[i];
+	}
 
-    for( ; i < MAX_GATEWAY_BASE64_NAME ; i++){
-        localData[i] = 0;
-    }
+	for (; i < MAX_GATEWAY_BASE64_NAME; i++) {
+		localData[i] = 0;
+	}
 
 }
 
-static void copyToLocalDataAndChangeName(unsigned char* array, int length){
-    copyArrayToLocalData(array, length);
+static void copyToLocalDataAndChangeName(unsigned char* array, int length) {
+	copyArrayToLocalData(array, length);
 
-    ChangeBLEName();
+	ChangeBLEName();
 
-    StartCentralMode();
+	StartCentralMode();
 }
 
-
-static void ucharsCopy(unsigned char *dest, const unsigned char *src, size_t n){
-    for(int i = 0; i < n ; i++){
-        dest[i] = src[i];
-    }
+static void ucharsCopy(unsigned char *dest, const unsigned char *src, size_t n) {
+	for (int i = 0; i < n; i++) {
+		dest[i] = src[i];
+	}
 }
 
-static int ucharsCompare(const unsigned char *first, const unsigned char *second, size_t n){
-    for(int i = 0; i < n ; i++){
-        if(first[i] != second[i]){
-            return 1;
-        }
-    }
-    return 0;
+static int ucharsCompare(const unsigned char *first,
+		const unsigned char *second, size_t n) {
+	for (int i = 0; i < n; i++) {
+		if (first[i] != second[i]) {
+			return 1;
+		}
+	}
+	return 0;
 }
-
 
 // bits/numberOfBits is full power of 8
 // byte 0 correspond to leftmost 8 bits
 static void bitsCharsToBytesChars(unsigned char* bits, unsigned char* bytes,
-        int numberOfBits) {
-    int bitsIndex = 0;
-    int bytesIndex = 0;
-    while (numberOfBits > 0) {
-        unsigned char val = 0;
-        for (int i = 0; i < 8; i++, bitsIndex++, numberOfBits--) {
-            val |= (bits[bitsIndex] == '1') << (7 - i);
-        }
-        bytes[bytesIndex] = val;
-        bytesIndex++;
-    }
+		int numberOfBits) {
+	int bitsIndex = 0;
+	int bytesIndex = 0;
+	while (numberOfBits > 0) {
+		unsigned char val = 0;
+		for (int i = 0; i < 8; i++, bitsIndex++, numberOfBits--) {
+			val |= (bits[bitsIndex] == '1') << (7 - i);
+		}
+		bytes[bytesIndex] = val;
+		bytesIndex++;
+	}
 }
 
 // bits/numberOfBits is full power of 8
 // byte 0 correspond to leftmost 8 bits
 static void bytesCharsToBitsChars(unsigned char* bytes, unsigned char* bits,
-        int numberOfBits) {
-    int bytesIndex = 0;
-    int bitsIndex = 0;
-    while (numberOfBits > 0) {
-        unsigned char b = bytes[bytesIndex];
-        bytesIndex++;
-        for (int i = 7; i >= 0; --i, bitsIndex++, numberOfBits--) {
-            bits[bitsIndex] = (b & (1 << i)) ? '1' : '0';
-        }
-    }
+		int numberOfBits) {
+	int bytesIndex = 0;
+	int bitsIndex = 0;
+	while (numberOfBits > 0) {
+		unsigned char b = bytes[bytesIndex];
+		bytesIndex++;
+		for (int i = 7; i >= 0; --i, bitsIndex++, numberOfBits--) {
+			bits[bitsIndex] = (b & (1 << i)) ? '1' : '0';
+		}
+	}
 }
 
 // end of: Lior's functions
 
 //comments:
 //static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
-    // Initialize application
+// Initialize application
 //    SimpleBLEPeripheral_init();
 
-    //Ran test
-    //	Display_print1(dispHandle, 5, 0, "local char is %d", localData[1]);
-    //	Display_print1(dispHandle, 5, 0, "local2 char is %d", localData2[1]);
-    //
-    //	unsigned char data[MAX_GATEWAY_NAME];
-    //
-    //	base64_encode(localData, data, MAX_GATEWAY_NAME, 0);
-    //
-    //	Display_print2(dispHandle, 5, 0, "device name from %s to base64 is %s",
-    //			localData, data);
-    //
-    //	base64_decode(data, localData2, MAX_GATEWAY_NAME);
-    //
-    //	Display_print2(dispHandle, 5, 0, "device name from base64  %s to %s", data,
-    //			localData2);
+//Ran test
+//	Display_print1(dispHandle, 5, 0, "local char is %d", localData[1]);
+//	Display_print1(dispHandle, 5, 0, "local2 char is %d", localData2[1]);
+//
+//	unsigned char data[MAX_GATEWAY_NAME];
+//
+//	base64_encode(localData, data, MAX_GATEWAY_NAME, 0);
+//
+//	Display_print2(dispHandle, 5, 0, "device name from %s to base64 is %s",
+//			localData, data);
+//
+//	base64_decode(data, localData2, MAX_GATEWAY_NAME);
+//
+//	Display_print2(dispHandle, 5, 0, "device name from base64  %s to %s", data,
+//			localData2);
 
-    ////	 Lior's Test
-    //	isWaitingForAnswers = TRUE; // for testing
-    //	unsigned char *myMac = readMyMac();
-    //
-    //	requestForHandle();
-    //
-    //	// test device discovery
-    //	unsigned char testNew[17] = { 'C', 'L', 'K', 0xff };
-    //	testNew[16] = '\0';
-    //	ucharsCopy(testNew + 4, myMac, 12);
-    //	gatewayHandleDeviceDiscovered(testNew);
-    //	handleNextHandles();
-    //	unsigned char gatewayResponse[18] = "GTWO";
-    //	gatewayResponse[17] = '\0';
-    //	gatewayResponse[16] = '0'; // handle
-    //	ucharsCopy(gatewayResponse + 4, myMac, 12);
-    //	clickerHandleDeviceDiscovered(gatewayResponse);
-    //
-    //	// ignore: mac already exist
-    //	gatewayHandleDeviceDiscovered(testNew);
-    //
-    //	// test bits to bytes and bytes to bits
-    //	unsigned char bits[17] = "0110010001000001";
-    //	unsigned char bytes[3] = { 0 };
-    //	bytes[2] = '\0';
-    //	bitsCharsToBytesChars(bits, bytes, 16);
-    //	Display_print4(dispHandle, 5, 0,
-    //			"bits %s -> to bytes HEX %x,%x , string '%s' \n", bits, bytes[0],
-    //			bytes[1], bytes);
-    //	unsigned char re_bits[17] = { 0 };
-    //	re_bits[16] = '\0';
-    //	bytesCharsToBitsChars(bytes, re_bits, 16);
-    //	Display_print4(dispHandle, 5, 0,
-    //			"bytes HEX %x,%x , string '%s' -> to re_bits %s \n", bytes[0],
-    //			bytes[1], bytes, re_bits);
-    //
-    //	Display_print1(dispHandle, 5, 0,
-    //			"comparing bits before and after is:  %s \n", ((ucharsCompare(bits, re_bits, 16) == 0) ? "good" : "BBBBBAAAAADDDDD !!!!! "));
-    //
-    //	advertiseQuestion('1', "dddddddd");
-    //
-    //	clickerHandleDeviceDiscovered("GTWQ1dddddddd");
-    //
-    //	writeResultsForQuestion('1'); // before answer
-    //
-    //	answerToQuestion('0', '1', '1', 'Y');
-    //
-    //	unsigned char ansYes1[8] = { 'C', 'L', 'K', '0' /*handle*/, '1' /*count*/, '1' /*q*/,
-    //			'Y' /*a*/, '\0' };
-    //	gatewayHandleDeviceDiscovered(ansYes1);
-    //
-    //	unsigned char approveQuestion[14] = "GTWQ1dddddddd";
-    //	approveQuestion[13] = '\0';
-    //	approveQuestion[5] = (char)128;
-    //	clickerHandleDeviceDiscovered(approveQuestion);
-    //
-    //	bool approved = validateQuestionApproved('1');
-    //	if(!approved){
-    //		Display_print0(dispHandle, 5, 0,
-    //					   "ERROR: Question was not approved by gateway \n !!!");
-    //	}
-    //	else{
-    //		Display_print0(dispHandle, 5, 0,
-    //					   "Success in approving question 1 answer ! \n");
-    //	}
-    //
-    //	writeResultsForQuestion('1'); // after answer
-    //
-    //	unsigned char temp[8];
-    //	temp[7] = '\0';
-    //
-    //	// error: handle not given
-    //	ucharsCopy(temp, ansYes1, 7);
-    //	temp[3] = '1';
-    //	gatewayHandleDeviceDiscovered(temp);
-    //
-    //	// error: wrong counter
-    //	ucharsCopy(temp, ansYes1, 7);
-    //	temp[4] = '0';
-    //	gatewayHandleDeviceDiscovered(temp);
-    //
-    //	// ignore: same counter, although message is different - it's client fault
-    //	ucharsCopy(temp, ansYes1, 7);
-    //	temp[6] = 'N';
-    //	gatewayHandleDeviceDiscovered(temp);
-    //
-    //	// error: wrong answer
-    //	ucharsCopy(temp, ansYes1, 7);
-    //	temp[4] = '2'; // next counter
-    //	temp[6] = 'G';
-    //	gatewayHandleDeviceDiscovered(temp);
-    //
-    //	writeResultsForQuestion('2'); // non answered
-    //
-    //	isWaitingForAnswers = FALSE; // for testing
-    //	// end of: Lior's Test
-
+////	 Lior's Test
+//	isWaitingForAnswers = TRUE; // for testing
+//	unsigned char *myMac = readMyMac();
+//
+//	requestForHandle();
+//
+//	// test device discovery
+//	unsigned char testNew[17] = { 'C', 'L', 'K', 0xff };
+//	testNew[16] = '\0';
+//	ucharsCopy(testNew + 4, myMac, 12);
+//	gatewayHandleDeviceDiscovered(testNew);
+//	handleNextHandles();
+//	unsigned char gatewayResponse[18] = "GTWO";
+//	gatewayResponse[17] = '\0';
+//	gatewayResponse[16] = '0'; // handle
+//	ucharsCopy(gatewayResponse + 4, myMac, 12);
+//	clickerHandleDeviceDiscovered(gatewayResponse);
+//
+//	// ignore: mac already exist
+//	gatewayHandleDeviceDiscovered(testNew);
+//
+//	// test bits to bytes and bytes to bits
+//	unsigned char bits[17] = "0110010001000001";
+//	unsigned char bytes[3] = { 0 };
+//	bytes[2] = '\0';
+//	bitsCharsToBytesChars(bits, bytes, 16);
+//	Display_print4(dispHandle, 5, 0,
+//			"bits %s -> to bytes HEX %x,%x , string '%s' \n", bits, bytes[0],
+//			bytes[1], bytes);
+//	unsigned char re_bits[17] = { 0 };
+//	re_bits[16] = '\0';
+//	bytesCharsToBitsChars(bytes, re_bits, 16);
+//	Display_print4(dispHandle, 5, 0,
+//			"bytes HEX %x,%x , string '%s' -> to re_bits %s \n", bytes[0],
+//			bytes[1], bytes, re_bits);
+//
+//	Display_print1(dispHandle, 5, 0,
+//			"comparing bits before and after is:  %s \n", ((ucharsCompare(bits, re_bits, 16) == 0) ? "good" : "BBBBBAAAAADDDDD !!!!! "));
+//
+//	advertiseQuestion('1', "dddddddd");
+//
+//	clickerHandleDeviceDiscovered("GTWQ1dddddddd");
+//
+//	writeResultsForQuestion('1'); // before answer
+//
+//	answerToQuestion('0', '1', '1', 'Y');
+//
+//	unsigned char ansYes1[8] = { 'C', 'L', 'K', '0' /*handle*/, '1' /*count*/, '1' /*q*/,
+//			'Y' /*a*/, '\0' };
+//	gatewayHandleDeviceDiscovered(ansYes1);
+//
+//	unsigned char approveQuestion[14] = "GTWQ1dddddddd";
+//	approveQuestion[13] = '\0';
+//	approveQuestion[5] = (char)128;
+//	clickerHandleDeviceDiscovered(approveQuestion);
+//
+//	bool approved = validateQuestionApproved('1');
+//	if(!approved){
+//		Display_print0(dispHandle, 5, 0,
+//					   "ERROR: Question was not approved by gateway \n !!!");
+//	}
+//	else{
+//		Display_print0(dispHandle, 5, 0,
+//					   "Success in approving question 1 answer ! \n");
+//	}
+//
+//	writeResultsForQuestion('1'); // after answer
+//
+//	unsigned char temp[8];
+//	temp[7] = '\0';
+//
+//	// error: handle not given
+//	ucharsCopy(temp, ansYes1, 7);
+//	temp[3] = '1';
+//	gatewayHandleDeviceDiscovered(temp);
+//
+//	// error: wrong counter
+//	ucharsCopy(temp, ansYes1, 7);
+//	temp[4] = '0';
+//	gatewayHandleDeviceDiscovered(temp);
+//
+//	// ignore: same counter, although message is different - it's client fault
+//	ucharsCopy(temp, ansYes1, 7);
+//	temp[6] = 'N';
+//	gatewayHandleDeviceDiscovered(temp);
+//
+//	// error: wrong answer
+//	ucharsCopy(temp, ansYes1, 7);
+//	temp[4] = '2'; // next counter
+//	temp[6] = 'G';
+//	gatewayHandleDeviceDiscovered(temp);
+//
+//	writeResultsForQuestion('2'); // non answered
+//
+//	isWaitingForAnswers = FALSE; // for testing
+//	// end of: Lior's Test
 
 //static void ClickerProjectFlow_taskFxn(UArg a0, UArg a1) {
 //	Display_print0(dispHandle, 5, 0, "ClickerProjectFlow_taskFxn started \n");
@@ -2896,7 +2874,6 @@ static void bytesCharsToBitsChars(unsigned char* bytes, unsigned char* bits,
 //
 //
 //}
-
 
 /*********************************************************************
  * PUBLIC FUNCTIONS
@@ -2917,4 +2894,3 @@ static void bytesCharsToBitsChars(unsigned char* bytes, unsigned char* bits,
 //	answersReachedSemphore = Semaphore_create(0, NULL, NULL);
 //
 //}
-

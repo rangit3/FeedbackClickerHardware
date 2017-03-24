@@ -304,11 +304,11 @@ static uint8_t advertData[] = {
 
 };
 
-static uint8_t localData[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, }; //18 bytes-MAX_GATEWAY_BASE64_NAME
+static uint8_t localMyNameData[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, }; //18 bytes-MAX_GATEWAY_BASE64_NAME
 
-//static uint8_t localData2[] = { '1', '*', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-//		0, 0, 0, }; //18 bytes-MAX_GATEWAY_BASE64_NAME
+static uint8_t localDiscoveredData[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, }; //18 bytes-MAX_GATEWAY_BASE64_NAME
 
 //
 //// GAP - Advertisement data (max size = 31 bytes, though this is
@@ -462,11 +462,13 @@ static void ChangeBLEName();
 //static void HandleNewQuestion();
 static void RecieveAdvertDataArr();
 static void ChangeAdvertDataArr();
-static void LocalDataToBase64(unsigned char* data);
-static void Base64ToLocalData(unsigned char* data);
+static void LocalMyNameDataToBase64(unsigned char* data);
+static void Base64ToLocalMyNameData(unsigned char* data);
+static void Base64ToLocalDiscoveredData(unsigned char* data);
 static void HandleNewDeviceDiscovered();
 static void handleButtonClick(bool button);
 
+static bool IsClickerName(unsigned char* deviceName);
 
 //static void GenerateNewName(UInt32 state);
 //static void TurnOffLeds();
@@ -889,6 +891,13 @@ static void SimpleBLEPeripheralObserver_processRoleEvent(
 	case GAP_DEVICE_INFO_EVENT: {
 		//Print scan response data otherwise advertising data
 		if (pEvent->deviceInfo.eventType == GAP_ADRPT_SCAN_RSP) {
+			Display_print1(dispHandle, 4, 0, "Scan Response Addr: %s",
+					Util_convertBdAddr2Str(pEvent->deviceInfo.addr));
+			Display_print1(dispHandle, 5, 0, "Scan Response Data: %s",
+					Util_convertBytes2Str(pEvent->deviceInfo.pEvtData,
+							pEvent->deviceInfo.dataLen));
+		} else {
+			deviceInfoCnt++;
 
 			if (MyBLE_findLocalName(pEvent->deviceInfo.pEvtData,
 					pEvent->deviceInfo.dataLen)) {
@@ -900,16 +909,9 @@ static void SimpleBLEPeripheralObserver_processRoleEvent(
 			Display_print1(dispHandle, 5, 0, "name found is %s",
 					devList[scanRes - 1].localName);
 
-			Base64ToLocalData((unsigned char*) devList[scanRes - 1].localName);
+			Base64ToLocalDiscoveredData((unsigned char*) devList[scanRes - 1].localName);
 			HandleNewDeviceDiscovered();
-
-            Display_print1(dispHandle, 4, 0, "Scan Response Addr: %s",
-                    Util_convertBdAddr2Str(pEvent->deviceInfo.addr));
-            Display_print1(dispHandle, 5, 0, "Scan Response Data: %s",
-                    Util_convertBytes2Str(pEvent->deviceInfo.pEvtData,
-                            pEvent->deviceInfo.dataLen));
-        } else {
-            deviceInfoCnt++;
+			scanRes = scanRes - 1;
 
 			Display_print2(dispHandle, 6, 0,
 					"Advertising Addr: %s Advertising Type: %s",
@@ -1970,12 +1972,12 @@ void ChangeBLEName() {
 
 static void ChangeAdvertDataArr() {
 	unsigned char data[MAX_GATEWAY_NAME];
-	LocalDataToBase64(data);
+	LocalMyNameDataToBase64(data);
 	for (int i = 0; i < MAX_GATEWAY_NAME; ++i) {
 		advertData[i + 5] = data[i];
 	}
 	Display_print2(dispHandle, 5, 0, "device name from %s to base64 is %s",
-			localData, data);
+			localMyNameData, data);
 }
 
 static void RecieveAdvertDataArr() {
@@ -1983,17 +1985,21 @@ static void RecieveAdvertDataArr() {
 	for (int i = 0; i < MAX_GATEWAY_NAME; ++i) {
 		data[i] = advertData[i + 5];
 	}
-	Base64ToLocalData(data);
+	Base64ToLocalMyNameData(data);
 	Display_print2(dispHandle, 5, 0, "device name is %s and decoded is %s",
-			data, localData);
+			data, localMyNameData);
 }
 
-static void LocalDataToBase64(unsigned char* data) {
-	base64_encode(localData, data, MAX_GATEWAY_BASE64_NAME, 0);
+static void LocalMyNameDataToBase64(unsigned char* data) {
+	base64_encode(localMyNameData, data, MAX_GATEWAY_BASE64_NAME, 0);
 }
 
-static void Base64ToLocalData(unsigned char* data) {
-	base64_decode(data, localData, MAX_GATEWAY_NAME);
+static void Base64ToLocalMyNameData(unsigned char* data) {
+	base64_decode(data, localMyNameData, MAX_GATEWAY_NAME);
+}
+
+static void Base64ToLocalDiscoveredData(unsigned char* data) {
+	base64_decode(data, localDiscoveredData, MAX_GATEWAY_NAME);
 }
 
 // Lior handling methods
@@ -2002,9 +2008,9 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName);
 
 static void HandleNewDeviceDiscovered() {
 	if (IS_GATEWAY) {
-		gatewayHandleDeviceDiscovered(localData);
+		gatewayHandleDeviceDiscovered(localDiscoveredData);
 	} else {
-		clickerHandleDeviceDiscovered(localData);
+		clickerHandleDeviceDiscovered(localDiscoveredData);
 	}
 }
 
@@ -2077,7 +2083,7 @@ static void bitsCharsToBytesChars(unsigned char* bits, unsigned char* bytes,
 static int ucharsCompare(const unsigned char *first,
 		const unsigned char *second, size_t n);
 static void ucharsCopy(unsigned char *dest, const unsigned char *src, size_t n);
-static void copyToLocalDataAndChangeName(unsigned char* array, int length);
+static void processNameChange(unsigned char* array, int length);
 
 // Gateway functions
 static void advertiseQuestion(unsigned char question, unsigned char* answers);
@@ -2164,13 +2170,19 @@ static void handleGatewayButtonClick() {
 	}
 }
 
-static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
+static bool IsClickerName(unsigned char* deviceName) {
 	for (int i = 0; i < sizeof(messageStart) - 1; i++) {
 		if (messageStart[i] != deviceName[i]) {
-            return; // not relevant
+			return FALSE;
+		}
+	}
+	return TRUE;
 }
 
 // Gateway code
+static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
+	if (!IsClickerName(deviceName)) {
+		return;
 	}
 
 	unsigned char handleAsChar = deviceName[HANDLE_INDEX];
@@ -2291,7 +2303,7 @@ static void handleNextHandles() {
 				"Next handle %d should be assigned to mac %s , full name should be %s \n",
 				i, macAdrresses[i], tempDeviceNameForHandleOffering);
 
-		copyToLocalDataAndChangeName(tempDeviceNameForHandleOffering,
+		processNameChange(tempDeviceNameForHandleOffering,
 		OFFER_MESSAGE_LENGTH);
 	}
 }
@@ -2305,7 +2317,7 @@ static void advertiseQuestion(unsigned char question, unsigned char* answers) {
 			"Advertising question ('%c') and answers ('%s') , full name should be %s \n",
 			question, answers, tempDeviceNameForQuestion);
 
-	copyToLocalDataAndChangeName(tempDeviceNameForQuestion,
+	processNameChange(tempDeviceNameForQuestion,
 	QUESTION_MESSAGE_LENGTH);
 }
 
@@ -2514,7 +2526,7 @@ static void answerToQuestion(unsigned char handle, unsigned char counter,
 			"answer to question %c' with answer '%c' by handle '%c' and counter '%c'. device name is '%s'! \n",
 			question, answer, handle, counter, tempAnswerForQuestion);
 
-	copyToLocalDataAndChangeName(tempAnswerForQuestion, MIN_MESSAGE);
+	processNameChange(tempAnswerForQuestion, MIN_MESSAGE);
 }
 
 static unsigned char tempRequestHandle[PREFIX_SIZE + MAC_ADDRESS_SIZE + 1] = {
@@ -2528,7 +2540,7 @@ static void requestForHandle() {
 			"Request for handle by mac '%s'. device name is '%s'! \n", myMac,
 			tempRequestHandle);
 
-	copyToLocalDataAndChangeName(tempRequestHandle,
+	processNameChange(tempRequestHandle,
 	PREFIX_SIZE + MAC_ADDRESS_SIZE);
 }
 
@@ -2674,20 +2686,20 @@ static bool validateQuestionApproved() {
 
 // Lior's utli functions
 
-static void copyArrayToLocalData(unsigned char* array, int length) {
+static void copyArrayToLocalMyNameData(unsigned char* array, int length) {
 	int i = 0;
 	for (; i < length; i++) {
-		localData[i] = array[i];
+		localMyNameData[i] = array[i];
 	}
 
 	for (; i < MAX_GATEWAY_BASE64_NAME; i++) {
-		localData[i] = 0;
+		localMyNameData[i] = 0;
 	}
 
 }
 
-static void copyToLocalDataAndChangeName(unsigned char* array, int length) {
-	copyArrayToLocalData(array, length);
+static void processNameChange(unsigned char* array, int length) {
+	copyArrayToLocalMyNameData(array, length);
 
 	ChangeBLEName();
 

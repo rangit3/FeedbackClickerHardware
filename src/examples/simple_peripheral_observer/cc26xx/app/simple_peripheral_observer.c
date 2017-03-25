@@ -2010,13 +2010,22 @@ static void Base64ToLocalDiscoveredData(unsigned char* data) {
 static void gatewayHandleDeviceDiscovered(unsigned char* deviceName);
 static void clickerHandleDeviceDiscovered(unsigned char* deviceName);
 
+static int ucharsCompare(const unsigned char *first, const unsigned char *second, size_t n);
+static void ucharsCopy(unsigned char *dest, const unsigned char *src, size_t n);
+
 static void HandleNewDeviceDiscovered() {
-    Display_print1(dispHandle, 5, 0, "%s handle device discovered \n", NAME());
+    unsigned char tempDeviceData[MAX_GATEWAY_BASE64_NAME + 1] = {0};
+    ucharsCopy(tempDeviceData, localDiscoveredData, MAX_GATEWAY_BASE64_NAME);
+    tempDeviceData[MAX_GATEWAY_BASE64_NAME] = '\0';
+
+    Display_print2(dispHandle, 5, 0, "<<<%s handle device discovered: device='%s' START", NAME(),tempDeviceData);
+
 	if (IS_GATEWAY) {
-		gatewayHandleDeviceDiscovered(localDiscoveredData);
+		gatewayHandleDeviceDiscovered(tempDeviceData);
 	} else {
-		clickerHandleDeviceDiscovered(localDiscoveredData);
+		clickerHandleDeviceDiscovered(tempDeviceData);
 	}
+    Display_print1(dispHandle, 5, 0, "<<<%s handle device discovered END>>>", NAME());
 }
 
 static void handleGatewayButtonClick();
@@ -2032,12 +2041,13 @@ static void handleButtonClick(bool button) {
 	}
 
 	if (isFirstTime) {
-		Display_print1(dispHandle, 4, 0, "%s DEBUG FIRST TIME CLICK - INIT() !", NAME());
+        isFirstTime = FALSE;
 
-		isFirstTime = FALSE;
-		if (IS_GATEWAY) {
-			StartCentralMode(); // need to scan right away
-		} else {
+	    Display_print1(dispHandle, 4, 0, "%s DEBUG FIRST TIME CLICK - INIT() !", NAME());
+
+		StartCentralMode(); // need to scan right away
+
+		if (!IS_GATEWAY) {
 			clickerOnStart();
 		}
 
@@ -2046,11 +2056,14 @@ static void handleButtonClick(bool button) {
 	}
 
 	// Lior handle clicks
+    Display_print1(dispHandle, 4, 0, "$$$$$ %s Handle Click start", NAME());
 	if (IS_GATEWAY) {
 		handleGatewayButtonClick(); // don't care which button
 	} else {
 		handleClickerButtonClick(button);
 	}
+    Display_print1(dispHandle, 4, 0, "%s Handle Click end $$$$$", NAME());
+
 
 }
 
@@ -2085,9 +2098,6 @@ static void bytesCharsToBitsChars(unsigned char* bytes, unsigned char* bits,
 		int numberOfBits);
 static void bitsCharsToBytesChars(unsigned char* bits, unsigned char* bytes,
 		int numberOfBits);
-static int ucharsCompare(const unsigned char *first,
-		const unsigned char *second, size_t n);
-static void ucharsCopy(unsigned char *dest, const unsigned char *src, size_t n);
 static void processNameChange(unsigned char* array, int length);
 
 // Gateway functions
@@ -2155,8 +2165,6 @@ static void questionTimeElapsed() {
 }
 
 static void handleGatewayButtonClick() {
-    Display_print0(dispHandle, 5, 0, "GATEWAY handling click ! \n");
-
 	if (gatewayWaitForNewQuestion) {
 
 		gatewayWaitForNewQuestion = FALSE;
@@ -2168,14 +2176,11 @@ static void handleGatewayButtonClick() {
 		gatewayWaitForAnswers = TRUE;
 
 	} else {
-//		Display_print1(dispHandle, 5, 0,
-//				"Question '%d' time is elapsed by user click ! \n",
-//				questionCounter);
-//
-//		questionTimeElapsed();
+		Display_print1(dispHandle, 5, 0,
+				"Question '%d' time is elapsed by user click !",
+				questionCounter);
 
-	          Display_print0(dispHandle, 5, 0, "DEBUG GATEWAY DOING CENTRAL MODE ! \n");
-	    StartCentralMode();
+		questionTimeElapsed();
 	}
 }
 
@@ -2191,6 +2196,9 @@ static bool IsClickerName(unsigned char* deviceName) {
 // Gateway code
 static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
 	if (!IsClickerName(deviceName)) {
+
+        Display_print0(dispHandle, 5, 0,
+                "Gateway ignore the device name since not relevant");
 		return;
 	}
 
@@ -2206,7 +2214,7 @@ static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
 			if (ucharsCompare(tempMacAddress, macAdrresses[i], MAC_ADDRESS_SIZE)
 					== 0) {
 				Display_print1(dispHandle, 5, 0,
-						"DEBUG: mac address '%s' already exist \n",
+						"DEBUG: mac address '%s' already exist...",
 						tempMacAddress);
 				return; // already in the list
 			}
@@ -2227,7 +2235,7 @@ static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
 		macAdrresses[lastMacIndex][MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
 
 		Display_print2(dispHandle, 5, 0,
-				"MAC was added by device name: '%s' at index %d \n", deviceName,
+				"MAC was added by device name: '%s' at index %d !", deviceName,
 				lastMacIndex);
 
 		// treat it right away
@@ -2235,7 +2243,7 @@ static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
 	} else {  // should be valid counter
 		if (!gatewayWaitForAnswers) {
 			Display_print1(dispHandle, 5, 0,
-					"Gateway got new answer, but not waiting for answers!!! device name: '%s' \n",
+					"Gateway got new answer, but not waiting for answers!!! device name: '%s'",
 					deviceName);
 			return;
 		}
@@ -2245,7 +2253,7 @@ static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
 		if (handleAsChar < MIN_HANDLE_CHAR || handleAsChar > lastHandleChar) {
 			// ERROR
 			Display_print4(dispHandle, 5, 0,
-					"ERROR found in device name: '%s' , the given handle ('%c') is not between range ('%c'-'%c') !!! \n",
+					"ERROR found in device name: '%s' , the given handle ('%c') is not between range ('%c'-'%c') !!!",
 					deviceName, handleAsChar, MIN_HANDLE_CHAR, lastHandleChar);
 			return;
 		}
@@ -2254,7 +2262,7 @@ static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
 		if (counter < MIN_COUNTER || counter > MAX_COUNTER) {
 			// ERROR
 			Display_print4(dispHandle, 5, 0,
-					"ERROR found in device name: '%s' , the given counter ('%c') is not legal (not '%c'-'%c') !!! \n",
+					"ERROR found in device name: '%s' , the given counter ('%c') is not legal (not '%c'-'%c') !!!",
 					deviceName, counter, MIN_COUNTER, MAX_COUNTER);
 			return;
 		}
@@ -2263,7 +2271,7 @@ static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
 
 		if (messagesCounterByClicker[handle] == counter) { // is same ?
 			Display_print2(dispHandle, 5, 0,
-					"DEBUG: for device name: '%s' , the given counter ('%c') is already stored \n",
+					"DEBUG: for device name: '%s' , the given counter ('%c') is already stored...",
 					deviceName, counter);
 			return;
 		}
@@ -2283,17 +2291,18 @@ static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
 				answersByClicker[handle] = UN_ANSWERED;
 				// ERROR
 				Display_print4(dispHandle, 5, 0,
-						"ERROR found in device name: '%s' , the answer given ('%c') is not legal (not '%c' nor '%c') !!! \n",
+						"ERROR found in device name: '%s' , the answer given ('%c') is not legal (not '%c' nor '%c') !!!",
 						deviceName, answer, YES_ANS, NO_ANS);
 				return;
 			}
 
 			answersByClicker[handle] = answer;
-			Display_print4(dispHandle, 5, 0,
-					"Answer was added by device name: '%s', handle number %d question '%c' answer '%c' \n",
-					deviceName, handle, question, answer);
 
 			updateNameForNewAnswer();
+
+            Display_print4(dispHandle, 5, 0,
+                    "Answer was added by device name: '%s', handle number %d question '%c' answer '%c' !",
+                    deviceName, handle, question, answer);
 		}
 	}
 }
@@ -2309,7 +2318,7 @@ static void handleNextHandles() {
 				+ MIN_HANDLE_CHAR;
 		tempDeviceNameForHandleOffering[OFFER_MESSAGE_LENGTH] = '\0';
 		Display_print3(dispHandle, 5, 0,
-				"Next handle %d should be assigned to mac %s , full name should be %s \n",
+				"Next handle %d should be assigned to mac %s , full name should be %s",
 				i, macAdrresses[i], tempDeviceNameForHandleOffering);
 
 		processNameChange(tempDeviceNameForHandleOffering,
@@ -2323,7 +2332,7 @@ static void advertiseQuestion(unsigned char question, unsigned char* answers) {
 	NUMBER_OF_CHARS_FOR_ALL_CLICKERS);
 	tempDeviceNameForQuestion[QUESTION_MESSAGE_LENGTH] = '\0';
 	Display_print3(dispHandle, 5, 0,
-			"Advertising question ('%c') and answers ('%s') , full name should be %s \n",
+			"Advertising question ('%c') and answers ('%s') , full name should be %s",
 			question, answers, tempDeviceNameForQuestion);
 
 	processNameChange(tempDeviceNameForQuestion,
@@ -2348,7 +2357,7 @@ static void writeResultsForQuestion(unsigned char question) {
 	int notAnswered = lastAssignedHandleIndex + 1 - numYes - numNo;
 
 	Display_print4(dispHandle, 5, 0,
-			"Results for question '%c': YES = %d , NO = %d , NOT ANSWERERD = %d \n",
+			"Results for question '%c': YES = %d , NO = %d , NOT ANSWERERD = %d",
 			question, numYes, numNo, notAnswered);
 }
 
@@ -2434,7 +2443,7 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName) {
 		for (int i = 0; i < PREFIX_SIZE; i++) {
 			if (tempDeviceNameForHandleOffering[i] != deviceName[i]) {
 				Display_print1(dispHandle, 5, 0,
-						"DEBUG: in name: '%s' , prefix for OFFER HANDLE is not as requested !!! \n",
+						"DEBUG: in name: '%s' , prefix for OFFER HANDLE is not as requested !!!",
 						deviceName);
 				return;
 			}
@@ -2442,7 +2451,7 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName) {
 
 		if (!clickerWaitForHandleOffering) {
 			Display_print1(dispHandle, 5, 0,
-					"DEBUG: in name: '%s' , OFFER HANDLE requested, but not expected for me ! \n",
+					"DEBUG: in name: '%s' , OFFER HANDLE requested, but not expected for me !",
 					deviceName);
 			return;
 		}
@@ -2454,7 +2463,7 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName) {
 			lastHandle = deviceName[OFFER_MESSAGE_LENGTH - 1];
 			lastHandleIndex = lastHandle - MIN_HANDLE_CHAR;
 			Display_print4(dispHandle, 5, 0,
-					"Handle '%c', index %d is assigned to mac '%s' by device name '%s'! \n",
+					"Handle '%c', index %d is assigned to mac '%s' by device name '%s'!",
 					lastHandle, lastHandleIndex, myMac, deviceName);
 
 			clickerWaitForHandleOffering = FALSE;
@@ -2467,7 +2476,7 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName) {
 		for (int i = 0; i < PREFIX_SIZE; i++) {
 			if (tempDeviceNameForQuestion[i] != deviceName[i]) {
 				Display_print1(dispHandle, 5, 0,
-						"DEBUG: in name: '%s' , prefix for QUESTION MESSAGE is not as requested !!! \n",
+						"DEBUG: in name: '%s' , prefix for QUESTION MESSAGE is not as requested !!!",
 						deviceName);
 				return;
 			}
@@ -2475,7 +2484,7 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName) {
 
 		if (!clickerWaitForNewQuestion && !clickerWaitForValidationOnAnswer) {
 			Display_print1(dispHandle, 5, 0,
-					"DEBUG: in name: '%s' , QUESTION MESSAGE requested, but not expected for me ! \n",
+					"DEBUG: in name: '%s' , QUESTION MESSAGE requested, but not expected for me !",
 					deviceName);
 			return;
 		}
@@ -2486,28 +2495,31 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName) {
 		if (clickerWaitForNewQuestion) {
 			if (lastQuestionRecievedFromGateway == question) {
 				Display_print1(dispHandle, 5, 0,
-						"DEBUG: waiting for new question, but got the same as last time '%c' \n",
+						"DEBUG: waiting for new question, but got the same as last time '%c'",
 						question);
 				return;
 			} else {
 				clickerWaitForNewQuestion = FALSE;
 				lastQuestionRecievedFromGateway = question;
 				clickerWaitForUserAnswer = TRUE;
+				Display_print1(dispHandle, 5, 0, "GOT NEW Question from cliker: '%c'",
+				                        question);
 				return;
 			}
 		} else if (clickerWaitForValidationOnAnswer) {
 			if (lastQuestionAnswered != question) {
+			    // on waisted question we need to get a new question
+                clickerWaitForValidationOnAnswer = FALSE;
+                clickerWaitForNewQuestion = TRUE;
+
 				Display_print2(dispHandle, 5, 0,
-						"ERROR: user waisted question since this question is '%c' and user answered '%c' \n",
+						"ERROR: user waisted question since this question is '%c' and user answered '%c'",
 						question, lastQuestionAnswered);
 				return;
 			}
 			ucharsCopy(lastAnswers, deviceName + 1 + PREFIX_SIZE,
 			NUMBER_OF_CHARS_FOR_ALL_CLICKERS);
 			lastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] = '\0'; // add null-terminate
-			Display_print3(dispHandle, 5, 0,
-					"last question '%c' and answers '%s' by device name '%s'! \n",
-					question, lastAnswers, deviceName);
 
 			// see if i'm approved
 			bool approved = validateQuestionApproved();
@@ -2515,10 +2527,16 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName) {
 				clickerWaitForValidationOnAnswer = FALSE;
 				clickerWaitForNewQuestion = TRUE;
 			}
+
+            Display_print4(dispHandle, 5, 0,
+                    "last question '%c' and answers '%s' by device name '%s', approved = '%s'!",
+                    question, lastAnswers, deviceName, approved);
 		}
 
 	} else {
-		return; // not relevant - other unrecognized device
+        Display_print0(dispHandle, 5, 0,
+                "Clicker ignore the device name since not relevant");
+        return;
 	}
 }
 
@@ -2561,40 +2579,38 @@ static void clickerOnStart() {
 }
 
 static void handleClickerButtonClick(bool button) {
-    Display_print0(dispHandle, 5, 0, "CLICKER handling click ! \n");
+//	if (ON_DEBUG && clickerWaitForHandleOffering) {
+//		// approve
+//		unsigned char gatewayResponse[18] = "GTWO";
+//		gatewayResponse[17] = '\0';
+//		gatewayResponse[16] = '0'; // handle
+//		ucharsCopy(gatewayResponse + 4, myMac, 12);
+//		clickerHandleDeviceDiscovered(gatewayResponse);
+//	} else if (ON_DEBUG && clickerWaitForNewQuestion) {
+//		// send some question data
+//		clickerHandleDeviceDiscovered("GTWQ1dddddddd");
+//	} else
+	    if (clickerWaitForUserAnswer) {
+	        clickerWaitForUserAnswer = FALSE;
+	        unsigned char answer = button ? YES_ANS : NO_ANS;
+	        answerToQuestion(lastHandle, lastCounter,
+	                lastQuestionRecievedFromGateway, answer);
 
-	if (ON_DEBUG && clickerWaitForHandleOffering) {
-		// approve
-		unsigned char gatewayResponse[18] = "GTWO";
-		gatewayResponse[17] = '\0';
-		gatewayResponse[16] = '0'; // handle
-		ucharsCopy(gatewayResponse + 4, myMac, 12);
-		clickerHandleDeviceDiscovered(gatewayResponse);
-	} else if (ON_DEBUG && clickerWaitForNewQuestion) {
-		// send some question data
-		clickerHandleDeviceDiscovered("GTWQ1dddddddd");
-	} else if (clickerWaitForUserAnswer) {
-		clickerWaitForUserAnswer = FALSE;
-		unsigned char answer = button ? YES_ANS : NO_ANS;
-		answerToQuestion(lastHandle, lastCounter,
-				lastQuestionRecievedFromGateway, answer);
+	        lastQuestionAnswered = lastQuestionRecievedFromGateway;
+	        advanceCounter();
 
-		lastQuestionAnswered = lastQuestionRecievedFromGateway;
-		advanceCounter();
+	        clickerWaitForValidationOnAnswer = TRUE;
 
-		clickerWaitForValidationOnAnswer = TRUE;
-	} else if (ON_DEBUG && clickerWaitForValidationOnAnswer) {
-		// send some question data
-		unsigned char approveQuestion[14] = "GTWQ1dddddddd"; // start as question data
-		approveQuestion[13] = '\0';
-		approveQuestion[5] = (char) 128;
-		clickerHandleDeviceDiscovered(approveQuestion);
+//	} else if (ON_DEBUG && clickerWaitForValidationOnAnswer) {
+//		// send some question data
+//		unsigned char approveQuestion[14] = "GTWQ1dddddddd"; // start as question data
+//		approveQuestion[13] = '\0';
+//		approveQuestion[5] = (char) 128;
+//		clickerHandleDeviceDiscovered(approveQuestion);
+
 	} else {
-//		Display_print0(dispHandle, 5, 0,
-//				"DEBUG: user clicked, but not waiting for click - doing central ! \n");
-
-        Display_print0(dispHandle, 5, 0, "DEBUG CLICKER DOING CENTRAL MODE ! \n");
-        StartCentralMode();
+		Display_print0(dispHandle, 5, 0,
+				"DEBUG: user clicked, but not waiting for click - doing central ! \n");
 	}
 
 }
@@ -2661,7 +2677,7 @@ static bool validateQuestionApproved() {
 
 	if (lastAnswersInBits[lastHandleIndex] == '1') {
 		Display_print3(dispHandle, 5, 0,
-				"Question '%c' was approved answer by gateway for handle '%c', index %d ! \n",
+				"ACK RECEIVED: Question '%c' was approved answer by gateway for handle '%c', index %d !!! \n",
 				lastQuestionAnswered, lastHandle, lastHandleIndex);
 		return TRUE;
 	}

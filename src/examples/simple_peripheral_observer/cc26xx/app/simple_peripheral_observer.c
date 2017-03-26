@@ -2521,9 +2521,10 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName) {
 				clickerWaitForNewQuestion = TRUE;
 			}
 
+			char* approvedStr = approved ? "YES !!!" : "no...";
             Display_print3(dispHandle, 5, 0,
-                    "last question '%c' and answers '%s', approved = '%s'!",
-                    question, lastAnswers, approved);
+                    "last question '%c' and answers '%s', approved = %s",
+                    question, lastAnswers, approvedStr);
 		}
 
 	} else {
@@ -2542,9 +2543,9 @@ static void answerToQuestion(unsigned char handle, unsigned char counter,
 	tempAnswerForQuestion[QUESTION_INDEX] = question;
 	tempAnswerForQuestion[ANSWER_INDEX] = answer;
 	tempAnswerForQuestion[MIN_MESSAGE] = '\0'; // add null-terminate
-	Display_print5(dispHandle, 5, 0,
-			"answer to question %c' with answer '%c' by handle '%c' and counter '%c'. device name is '%s'! \n",
-			question, answer, handle, counter, tempAnswerForQuestion);
+	Display_print4(dispHandle, 5, 0,
+			"AM answering to question %c' with answer '%c' by handle '%c' and counter '%c'",
+			question, answer, handle, counter);
 
 	processNameChange(tempAnswerForQuestion, MIN_MESSAGE);
 }
@@ -2556,9 +2557,8 @@ static void requestForHandle() {
 	tempRequestHandle[HANDLE_INDEX] = NO_HANDLE;
 	ucharsCopy(tempRequestHandle + PREFIX_SIZE, myMac, MAC_ADDRESS_SIZE);
 	tempRequestHandle[PREFIX_SIZE + MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
-	Display_print2(dispHandle, 5, 0,
-			"Request for handle by mac '%s'. device name is '%s'! \n", myMac,
-			tempRequestHandle);
+	Display_print1(dispHandle, 5, 0,
+			"AM Requesting for handle by mac '%s'", myMac);
 
 	processNameChange(tempRequestHandle,
 	PREFIX_SIZE + MAC_ADDRESS_SIZE);
@@ -2603,7 +2603,7 @@ static void handleClickerButtonClick(bool button) {
 
 	} else {
 		Display_print0(dispHandle, 5, 0,
-				"DEBUG: user clicked, but not waiting for click - doing central ! \n");
+				"DEBUG: user clicked, but not waiting for click...");
 	}
 
 }
@@ -2622,8 +2622,8 @@ static void readMyMac() {
 	bleAddrlsb = HWREG(FCFG1_BASE + FCFG1_O_MAC_BLE_0);
 	bleAddrmsb = HWREG(FCFG1_BASE + FCFG1_O_MAC_BLE_1);
 
-	Display_print2(dispHandle, 5, 0, "my mac is '%x','%x'. \n", bleAddrmsb,
-			bleAddrlsb);
+//	Display_print2(dispHandle, 5, 0, "my mac is '%x','%x'. \n", bleAddrmsb,
+//			bleAddrlsb);
 
 	unsigned char tempAddress[9];
 	sprintf((char*) tempAddress, "%x", bleAddrmsb);
@@ -2632,7 +2632,7 @@ static void readMyMac() {
 	ucharsCopy(myMac + 4, tempAddress, 8);
 
 	myMac[MAC_ADDRESS_SIZE] = '\0';
-	Display_print1(dispHandle, 5, 0, "my mac address as chars is '%s'\n",
+	Display_print1(dispHandle, 5, 0, "my mac address as chars is '%s'",
 			myMac);
 
 }
@@ -2670,7 +2670,7 @@ static bool validateQuestionApproved() {
 
 	if (lastAnswersInBits[lastHandleIndex] == '1') {
 		Display_print3(dispHandle, 5, 0,
-				"ACK RECEIVED: Question '%c' was approved answer by gateway for handle '%c', index %d !!! \n",
+				"ACK RECEIVED: Question '%c' was approved answer by gateway for handle '%c', index %d !!!",
 				lastQuestionAnswered, lastHandle, lastHandleIndex);
 		return TRUE;
 	}

@@ -910,20 +910,23 @@ static void SimpleBLEPeripheralObserver_processRoleEvent(
 				MyBLE_addDeviceName(scanRes - 1, pEvent->deviceInfo.pEvtData,
 						pEvent->deviceInfo.dataLen);
 			}
-			Display_print2(dispHandle, 5, 0, "%s name found is %s", NAME(),
-					devList[scanRes - 1].localName);
-
+			if(ON_DEBUG){
+			    Display_print2(dispHandle, 5, 0, "%s name found is %s", NAME(),
+			            devList[scanRes - 1].localName);
+			}
 			Base64ToLocalDiscoveredData((unsigned char*) devList[scanRes - 1].localName);
 			HandleNewDeviceDiscovered();
 			scanRes = scanRes - 1;
 
-			Display_print2(dispHandle, 6, 0,
-					"Advertising Addr: %s Advertising Type: %s",
-					Util_convertBdAddr2Str(pEvent->deviceInfo.addr),
-					AdvTypeStrings[pEvent->deviceInfo.eventType]);
-			Display_print1(dispHandle, 7, 0, "Advertising Data: %s",
-					Util_convertBytes2Str(pEvent->deviceInfo.pEvtData,
-							pEvent->deviceInfo.dataLen));
+			if(ON_DEBUG){
+			    Display_print2(dispHandle, 6, 0,
+			            "Advertising Addr: %s Advertising Type: %s",
+			            Util_convertBdAddr2Str(pEvent->deviceInfo.addr),
+			            AdvTypeStrings[pEvent->deviceInfo.eventType]);
+			    Display_print1(dispHandle, 7, 0, "Advertising Data: %s",
+			            Util_convertBytes2Str(pEvent->deviceInfo.pEvtData,
+			                    pEvent->deviceInfo.dataLen));
+			}
 		}
 
 		ICall_free(pEvent->deviceInfo.pEvtData);
@@ -2014,16 +2017,13 @@ static int ucharsCompare(const unsigned char *first, const unsigned char *second
 static void ucharsCopy(unsigned char *dest, const unsigned char *src, size_t n);
 
 static void HandleNewDeviceDiscovered() {
-    unsigned char tempDeviceData[MAX_GATEWAY_BASE64_NAME + 1] = {0};
-    ucharsCopy(tempDeviceData, localDiscoveredData, MAX_GATEWAY_BASE64_NAME);
-    tempDeviceData[MAX_GATEWAY_BASE64_NAME] = '\0';
 
-    Display_print2(dispHandle, 5, 0, "<<<%s handle device discovered: device='%s' START", NAME(),tempDeviceData);
+    Display_print1(dispHandle, 5, 0, "<<<%s handle device discovered: START", NAME());
 
 	if (IS_GATEWAY) {
-		gatewayHandleDeviceDiscovered(tempDeviceData);
+		gatewayHandleDeviceDiscovered(localDiscoveredData);
 	} else {
-		clickerHandleDeviceDiscovered(tempDeviceData);
+		clickerHandleDeviceDiscovered(localDiscoveredData);
 	}
     Display_print1(dispHandle, 5, 0, "<<<%s handle device discovered END>>>", NAME());
 }
@@ -2234,17 +2234,14 @@ static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
 		MAC_ADDRESS_SIZE);
 		macAdrresses[lastMacIndex][MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
 
-		Display_print2(dispHandle, 5, 0,
-				"MAC was added by device name: '%s' at index %d !", deviceName,
-				lastMacIndex);
+		Display_print1(dispHandle, 5, 0, "MAC was added at index %d !!!", lastMacIndex);
 
 		// treat it right away
 		handleNextHandles();
 	} else {  // should be valid counter
 		if (!gatewayWaitForAnswers) {
-			Display_print1(dispHandle, 5, 0,
-					"Gateway got new answer, but not waiting for answers!!! device name: '%s'",
-					deviceName);
+			Display_print0(dispHandle, 5, 0,
+					"Gateway got new answer, but not waiting for answers!!!");
 			return;
 		}
 
@@ -2252,27 +2249,27 @@ static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
 				+ lastAssignedHandleIndex;
 		if (handleAsChar < MIN_HANDLE_CHAR || handleAsChar > lastHandleChar) {
 			// ERROR
-			Display_print4(dispHandle, 5, 0,
-					"ERROR found in device name: '%s' , the given handle ('%c') is not between range ('%c'-'%c') !!!",
-					deviceName, handleAsChar, MIN_HANDLE_CHAR, lastHandleChar);
+			Display_print3(dispHandle, 5, 0,
+					"ERROR found: the given handle ('%c') is not between range ('%c'-'%c') !!!",
+					handleAsChar, MIN_HANDLE_CHAR, lastHandleChar);
 			return;
 		}
 		// find counter
 		unsigned char counter = deviceName[COUNTER_INDEX];
 		if (counter < MIN_COUNTER || counter > MAX_COUNTER) {
 			// ERROR
-			Display_print4(dispHandle, 5, 0,
-					"ERROR found in device name: '%s' , the given counter ('%c') is not legal (not '%c'-'%c') !!!",
-					deviceName, counter, MIN_COUNTER, MAX_COUNTER);
+			Display_print3(dispHandle, 5, 0,
+					"ERROR found: the given counter ('%c') is not legal (not '%c'-'%c') !!!",
+					counter, MIN_COUNTER, MAX_COUNTER);
 			return;
 		}
 
 		int handle = (int) (handleAsChar - MIN_HANDLE_CHAR); // make it integer
 
 		if (messagesCounterByClicker[handle] == counter) { // is same ?
-			Display_print2(dispHandle, 5, 0,
-					"DEBUG: for device name: '%s' , the given counter ('%c') is already stored...",
-					deviceName, counter);
+			Display_print1(dispHandle, 5, 0,
+					"DEBUG: the given counter ('%c') is already stored...",
+					counter);
 			return;
 		}
 
@@ -2290,9 +2287,9 @@ static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
 			if (answer != YES_ANS && answer != NO_ANS) {
 				answersByClicker[handle] = UN_ANSWERED;
 				// ERROR
-				Display_print4(dispHandle, 5, 0,
-						"ERROR found in device name: '%s' , the answer given ('%c') is not legal (not '%c' nor '%c') !!!",
-						deviceName, answer, YES_ANS, NO_ANS);
+				Display_print3(dispHandle, 5, 0,
+						"ERROR found: the answer given ('%c') is not legal (not '%c' nor '%c') !!!",
+						answer, YES_ANS, NO_ANS);
 				return;
 			}
 
@@ -2300,9 +2297,9 @@ static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
 
 			updateNameForNewAnswer();
 
-            Display_print4(dispHandle, 5, 0,
-                    "Answer was added by device name: '%s', handle number %d question '%c' answer '%c' !",
-                    deviceName, handle, question, answer);
+            Display_print3(dispHandle, 5, 0,
+                    "Answer was added by handle number %d question '%c' answer '%c' !!!",
+                    handle, question, answer);
 		}
 	}
 }
@@ -2442,17 +2439,15 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName) {
 
 		for (int i = 0; i < PREFIX_SIZE; i++) {
 			if (tempDeviceNameForHandleOffering[i] != deviceName[i]) {
-				Display_print1(dispHandle, 5, 0,
-						"DEBUG: in name: '%s' , prefix for OFFER HANDLE is not as requested !!!",
-						deviceName);
+				Display_print0(dispHandle, 5, 0,
+						"DEBUG: prefix for OFFER HANDLE is not as requested !!!");
 				return;
 			}
 		}
 
 		if (!clickerWaitForHandleOffering) {
-			Display_print1(dispHandle, 5, 0,
-					"DEBUG: in name: '%s' , OFFER HANDLE requested, but not expected for me !",
-					deviceName);
+			Display_print0(dispHandle, 5, 0,
+					"DEBUG: OFFER HANDLE requested, but not expected for me !");
 			return;
 		}
 
@@ -2462,9 +2457,9 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName) {
 			// my mac - get handle
 			lastHandle = deviceName[OFFER_MESSAGE_LENGTH - 1];
 			lastHandleIndex = lastHandle - MIN_HANDLE_CHAR;
-			Display_print4(dispHandle, 5, 0,
-					"Handle '%c', index %d is assigned to mac '%s' by device name '%s'!",
-					lastHandle, lastHandleIndex, myMac, deviceName);
+			Display_print3(dispHandle, 5, 0,
+					"APPROVED: Handle '%c', index %d is assigned to mac '%s' !!!",
+					lastHandle, lastHandleIndex, myMac);
 
 			clickerWaitForHandleOffering = FALSE;
 			clickerWaitForNewQuestion = TRUE;
@@ -2475,17 +2470,15 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName) {
 
 		for (int i = 0; i < PREFIX_SIZE; i++) {
 			if (tempDeviceNameForQuestion[i] != deviceName[i]) {
-				Display_print1(dispHandle, 5, 0,
-						"DEBUG: in name: '%s' , prefix for QUESTION MESSAGE is not as requested !!!",
-						deviceName);
+				Display_print0(dispHandle, 5, 0,
+						"DEBUG: prefix for QUESTION MESSAGE is not as requested !!!");
 				return;
 			}
 		}
 
 		if (!clickerWaitForNewQuestion && !clickerWaitForValidationOnAnswer) {
-			Display_print1(dispHandle, 5, 0,
-					"DEBUG: in name: '%s' , QUESTION MESSAGE requested, but not expected for me !",
-					deviceName);
+			Display_print0(dispHandle, 5, 0,
+					"DEBUG: QUESTION MESSAGE requested, but not expected for me !");
 			return;
 		}
 
@@ -2528,9 +2521,9 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName) {
 				clickerWaitForNewQuestion = TRUE;
 			}
 
-            Display_print4(dispHandle, 5, 0,
-                    "last question '%c' and answers '%s' by device name '%s', approved = '%s'!",
-                    question, lastAnswers, deviceName, approved);
+            Display_print3(dispHandle, 5, 0,
+                    "last question '%c' and answers '%s', approved = '%s'!",
+                    question, lastAnswers, approved);
 		}
 
 	} else {

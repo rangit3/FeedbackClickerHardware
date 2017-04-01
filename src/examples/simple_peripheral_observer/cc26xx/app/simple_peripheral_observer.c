@@ -2126,17 +2126,18 @@ static bool gatewayWaitForNewQuestion = TRUE;
 static bool gatewayWaitForAnswers = FALSE;
 
 #define MAX_NUMBER_OF_CLICKERS 96
-#define CLICKER "CLK"
-static const unsigned char messageStart[] = CLICKER;
-#define PREFIX_SIZE 4 // CLK (3) + handle (1)
-#define MIN_MESSAGE 7 // PREFIX_SIZE +  counter (1) + question number (1) + answer (1)
+
+// CLK (3) + handle (1)
+#define PREFIX_SIZE 4
+// PREFIX_SIZE +  counter (1) + question number (1) + answer (1)
+#define MIN_MESSAGE 7
 #define HANDLE_INDEX 3
 #define COUNTER_INDEX 4
 #define QUESTION_INDEX 5
 #define ANSWER_INDEX 6
 
 #define MAC_ADDRESS_SIZE 12
-static unsigned char UN_ANSWERED = 'YU';
+static unsigned char UN_ANSWERED = 'U';
 static unsigned char YES_ANS = 'Y';
 static unsigned char NO_ANS = 'N';
 static unsigned char MIN_COUNTER = '1';
@@ -2159,13 +2160,13 @@ static int lastAssignedHandleIndex = -1;
 static unsigned char tempMacAddress[MAC_ADDRESS_SIZE + 1];
 
 // prefix size is the same : 3+command
-#define OFFER_HANDLE 'O'
+static unsigned char OFFER_HANDLE = 'O';
 #define GATEWAY_COMMAND 3
 #define OFFER_MESSAGE_LENGTH (PREFIX_SIZE + MAC_ADDRESS_SIZE + 1/*handle*/)
 
 // 2^8 > 200
 #define NUMBER_OF_CHARS_FOR_ALL_CLICKERS 12
-#define QUESTION 'Q'
+static unsigned char QUESTION = 'Q';
 #define QUESTION_MESSAGE_LENGTH (PREFIX_SIZE + 1 +NUMBER_OF_CHARS_FOR_ALL_CLICKERS)
 
 static unsigned char tempDeviceNameForHandleOffering[OFFER_MESSAGE_LENGTH + 1] =
@@ -2201,12 +2202,9 @@ static void handleGatewayButtonClick() {
 }
 
 static bool IsClickerName() {
-	for (int i = 0; i < sizeof(messageStart) - 1; i++) {
-		if (messageStart[i] != localDiscoveredData[i]) {
-			return FALSE;
-		}
-	}
-	return TRUE;
+    return localDiscoveredData[0] == 'C' &&
+           localDiscoveredData[1] == 'L' &&
+           localDiscoveredData[2] == 'K';
 }
 
 // Gateway code
@@ -2385,8 +2383,10 @@ static void updateNameForNewAnswer() {
 		}
 	}
 
-	unsigned char currentAnswersInChars[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] =
+	unsigned char currentAnswersInChars[NUMBER_OF_CHARS_FOR_ALL_CLICKERS+1] =
 			{ 0 };
+	currentAnswersInChars[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] = '\0';
+
 	bitsCharsToBytesChars(answersBits, currentAnswersInChars,
 	MAX_NUMBER_OF_CLICKERS);
 	advertiseQuestion(question, currentAnswersInChars);
@@ -2401,8 +2401,9 @@ static void advertiseQuestionFirstTime() {
 		answersByClicker[i] = UN_ANSWERED;
 	}
 
-	unsigned char currentAnswersInChars[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] =
+	unsigned char currentAnswersInChars[NUMBER_OF_CHARS_FOR_ALL_CLICKERS+1] =
 			{ 0 };
+	currentAnswersInChars[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] = '\0';
 	advertiseQuestion(question, currentAnswersInChars);
 
 }
@@ -2550,7 +2551,7 @@ static void clickerHandleDeviceDiscovered() {
 	}
 }
 
-static unsigned char tempAnswerForQuestion[MIN_MESSAGE + 1] = { CLICKER };
+static unsigned char tempAnswerForQuestion[MIN_MESSAGE + 1] = { 'C','L','K' };
 
 static void answerToQuestion(unsigned char handle, unsigned char counter,
 		unsigned char question, unsigned char answer) {
@@ -2567,7 +2568,7 @@ static void answerToQuestion(unsigned char handle, unsigned char counter,
 }
 
 static unsigned char tempRequestHandle[PREFIX_SIZE + MAC_ADDRESS_SIZE + 1] = {
-CLICKER };
+'C','L','K' };
 
 static void requestForHandle() {
 	tempRequestHandle[HANDLE_INDEX] = NO_HANDLE;

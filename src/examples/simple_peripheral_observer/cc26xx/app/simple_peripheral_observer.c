@@ -2162,9 +2162,8 @@ static unsigned char tempMacAddress[MAC_ADDRESS_SIZE + 1];
 // prefix size is the same : 3+command
 static unsigned char OFFER_HANDLE = 'O';
 #define GATEWAY_COMMAND 3
-#define OFFER_MESSAGE_LENGTH (PREFIX_SIZE + MAC_ADDRESS_SIZE + 1/*handle*/)
+#define OFFER_MESSAGE_LENGTH (PREFIX_SIZE + MAC_ADDRESS_SIZE + 1)
 
-// 2^8 > 200
 #define NUMBER_OF_CHARS_FOR_ALL_CLICKERS 12
 static unsigned char QUESTION = 'Q';
 #define QUESTION_MESSAGE_LENGTH (PREFIX_SIZE + 1 +NUMBER_OF_CHARS_FOR_ALL_CLICKERS)
@@ -2661,8 +2660,6 @@ static void advanceCounter() {
 	}
 }
 
-#define WAIT_APPROVE_QUESTION_TIME_SEC 30
-#define WAIT_APPROVE_QUESTION_SLEEP_TICKS 100000
 
 static unsigned char tempLastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS + 1] =
 		{ 0 };

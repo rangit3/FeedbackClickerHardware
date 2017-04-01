@@ -300,15 +300,14 @@ static uint8_t advertData[] = {
 		MAX_GATEWAY_NAME + 1,
 		GAP_ADTYPE_LOCAL_NAME_COMPLETE, 'P', 'r', 'o', 'j', 'e', 'c', 't', ' ',
 		'Z', 'e', 'r', 'o', 'P', 'r', 'o', '=', '+', '/', 't', ' ', 'Z', 'e',
-		'r', 'o',
-
+		'r', 'o'
 };
 
 static uint8_t localMyNameData[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, }; //18 bytes-MAX_GATEWAY_BASE64_NAME
+		0, 0, 0, 0}; //18 bytes-MAX_GATEWAY_BASE64_NAME
 
 static uint8_t localDiscoveredData[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, }; //18 bytes-MAX_GATEWAY_BASE64_NAME
+		0, 0, 0, 0, 0}; //18 bytes-MAX_GATEWAY_BASE64_NAME
 
 //
 //// GAP - Advertisement data (max size = 31 bytes, though this is
@@ -382,7 +381,7 @@ const char *AdvTypeStrings[] = { "Connectable undirected",
 //============MY Vars==================
 static bool release = TRUE;
 
-#define ON_DEBUG FALSE
+static bool ON_DEBUG=TRUE;
 
 //static bool release = TRUE;
 
@@ -472,7 +471,7 @@ static void Base64ToLocalDiscoveredData(unsigned char* data);
 static void HandleNewDeviceDiscovered();
 static void handleButtonClick(bool button);
 
-static bool IsClickerName(unsigned char* deviceName);
+static bool IsClickerName();
 
 //static void GenerateNewName(UInt32 state);
 //static void TurnOffLeds();
@@ -911,21 +910,29 @@ static void SimpleBLEPeripheralObserver_processRoleEvent(
 						pEvent->deviceInfo.dataLen);
 			}
 			if(ON_DEBUG){
-			    Display_print2(dispHandle, 5, 0, "%s name found is %s", NAME(),
-			            devList[scanRes - 1].localName);
+				char * name=devList[scanRes - 1].localName;
+			    Display_print2(dispHandle, 5, 0, "me %s and name found is %s", NAME(),
+			    		name );
 			}
 			Base64ToLocalDiscoveredData((unsigned char*) devList[scanRes - 1].localName);
+			if(ON_DEBUG){
+				Display_print1(dispHandle, 5, 0, "LAST CHARS ARE %u", localDiscoveredData[14]);
+				Display_print1(dispHandle, 5, 0, "LAST CHARS ARE %u", localDiscoveredData[15]);
+				Display_print1(dispHandle, 5, 0, "LAST CHARS ARE %u", localDiscoveredData[16]);
+				Display_print1(dispHandle, 5, 0, "LAST CHARS ARE %u", localDiscoveredData[17]);
+
+			}
 			HandleNewDeviceDiscovered();
 			scanRes = scanRes - 1;
 
 			if(ON_DEBUG){
-			    Display_print2(dispHandle, 6, 0,
-			            "Advertising Addr: %s Advertising Type: %s",
-			            Util_convertBdAddr2Str(pEvent->deviceInfo.addr),
-			            AdvTypeStrings[pEvent->deviceInfo.eventType]);
-			    Display_print1(dispHandle, 7, 0, "Advertising Data: %s",
-			            Util_convertBytes2Str(pEvent->deviceInfo.pEvtData,
-			                    pEvent->deviceInfo.dataLen));
+//			    Display_print2(dispHandle, 6, 0,
+//			            "Advertising Addr: %s Advertising Type: %s",
+//			            Util_convertBdAddr2Str(pEvent->deviceInfo.addr),
+//			            AdvTypeStrings[pEvent->deviceInfo.eventType]);
+//			    Display_print1(dispHandle, 7, 0, "Advertising Data: %s",
+//			            Util_convertBytes2Str(pEvent->deviceInfo.pEvtData,
+//			                    pEvent->deviceInfo.dataLen));
 			}
 		}
 
@@ -1130,6 +1137,7 @@ static void SimpleBLEPeripheral_freeAttRsp(uint8_t status) {
 static void SimpleBLEPeripheral_handleKeys(uint8_t shift, uint8_t keys) {
 	(void) shift;  // Intentionally unreferenced parameter
 	if (release) {
+//		StartCentralMode();
 		if (keys & KEY_RIGHT) {
 			handleButtonClick(TRUE);
 		}
@@ -2002,16 +2010,22 @@ static void LocalMyNameDataToBase64(unsigned char* data) {
 }
 
 static void Base64ToLocalMyNameData(unsigned char* data) {
+	for (int i = 0; i < MAX_GATEWAY_BASE64_NAME; ++i) {
+		localMyNameData[i] = 0;
+	}
 	base64_decode(data, localMyNameData, MAX_GATEWAY_NAME);
 }
 
 static void Base64ToLocalDiscoveredData(unsigned char* data) {
+	for (int i = 0; i < MAX_GATEWAY_BASE64_NAME; ++i) {
+		localDiscoveredData[i] = 0;
+	}
 	base64_decode(data, localDiscoveredData, MAX_GATEWAY_NAME);
 }
 
 // Lior handling methods
-static void gatewayHandleDeviceDiscovered(unsigned char* deviceName);
-static void clickerHandleDeviceDiscovered(unsigned char* deviceName);
+static void gatewayHandleDeviceDiscovered();
+static void clickerHandleDeviceDiscovered();
 
 static int ucharsCompare(const unsigned char *first, const unsigned char *second, size_t n);
 static void ucharsCopy(unsigned char *dest, const unsigned char *src, size_t n);
@@ -2021,9 +2035,9 @@ static void HandleNewDeviceDiscovered() {
     Display_print1(dispHandle, 5, 0, "<<<%s handle device discovered: START", NAME());
 
 	if (IS_GATEWAY) {
-		gatewayHandleDeviceDiscovered(localDiscoveredData);
+		gatewayHandleDeviceDiscovered();
 	} else {
-		clickerHandleDeviceDiscovered(localDiscoveredData);
+		clickerHandleDeviceDiscovered();
 	}
     Display_print1(dispHandle, 5, 0, "<<<%s handle device discovered END>>>", NAME());
 }
@@ -2122,11 +2136,13 @@ static const unsigned char messageStart[] = CLICKER;
 #define ANSWER_INDEX 6
 
 #define MAC_ADDRESS_SIZE 12
-#define UN_ANSWERED 'U'
-#define YES_ANS 'Y'
-#define NO_ANS 'N'
-#define MIN_COUNTER '1'
-#define MAX_COUNTER '9'
+static unsigned char UN_ANSWERED = 'YU';
+static unsigned char YES_ANS = 'Y';
+static unsigned char NO_ANS = 'N';
+static unsigned char MIN_COUNTER = '1';
+static unsigned char MAX_COUNTER = '9';
+//#define MIN_COUNTER '1'
+//#define MAX_COUNTER '9'
 
 static const unsigned char NO_HANDLE = CHAR_MAX;
 static const unsigned char MIN_HANDLE_CHAR = '0'; // ==ascii 48 , still have enough for 200 clickers
@@ -2184,9 +2200,9 @@ static void handleGatewayButtonClick() {
 	}
 }
 
-static bool IsClickerName(unsigned char* deviceName) {
+static bool IsClickerName() {
 	for (int i = 0; i < sizeof(messageStart) - 1; i++) {
-		if (messageStart[i] != deviceName[i]) {
+		if (messageStart[i] != localDiscoveredData[i]) {
 			return FALSE;
 		}
 	}
@@ -2194,19 +2210,19 @@ static bool IsClickerName(unsigned char* deviceName) {
 }
 
 // Gateway code
-static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
-	if (!IsClickerName(deviceName)) {
+static void gatewayHandleDeviceDiscovered() {
+	if (!IsClickerName()) {
 
         Display_print0(dispHandle, 5, 0,
                 "Gateway ignore the device name since not relevant");
 		return;
 	}
 
-	unsigned char handleAsChar = deviceName[HANDLE_INDEX];
+	unsigned char handleAsChar = localDiscoveredData[HANDLE_INDEX];
 
 	if (handleAsChar == NO_HANDLE) { // new clicker - try add to mac addresses
 
-		ucharsCopy(tempMacAddress, deviceName + PREFIX_SIZE, MAC_ADDRESS_SIZE);
+		ucharsCopy(tempMacAddress, localDiscoveredData + PREFIX_SIZE, MAC_ADDRESS_SIZE);
 		tempMacAddress[MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
 		// search all MACs already allocated
 
@@ -2250,16 +2266,16 @@ static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
 		if (handleAsChar < MIN_HANDLE_CHAR || handleAsChar > lastHandleChar) {
 			// ERROR
 			Display_print3(dispHandle, 5, 0,
-					"ERROR found: the given handle ('%c') is not between range ('%c'-'%c') !!!",
+					"ERROR found: the given handle ('%u') is not between range ('%u'-'%u') !!!",
 					handleAsChar, MIN_HANDLE_CHAR, lastHandleChar);
 			return;
 		}
 		// find counter
-		unsigned char counter = deviceName[COUNTER_INDEX];
+		unsigned char counter = localDiscoveredData[COUNTER_INDEX];
 		if (counter < MIN_COUNTER || counter > MAX_COUNTER) {
 			// ERROR
 			Display_print3(dispHandle, 5, 0,
-					"ERROR found: the given counter ('%c') is not legal (not '%c'-'%c') !!!",
+					"ERROR found: the given counter ('%u') is not legal (not '%u'-'%u') !!!",
 					counter, MIN_COUNTER, MAX_COUNTER);
 			return;
 		}
@@ -2268,13 +2284,13 @@ static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
 
 		if (messagesCounterByClicker[handle] == counter) { // is same ?
 			Display_print1(dispHandle, 5, 0,
-					"DEBUG: the given counter ('%c') is already stored...",
+					"DEBUG: the given counter ('%u') is already stored...",
 					counter);
 			return;
 		}
 
-		unsigned char myRequestedQuestion = '0' + questionCounter;
-		unsigned char question = deviceName[QUESTION_INDEX];
+		unsigned char myRequestedQuestion =  (unsigned char)questionCounter;
+		unsigned char question = localDiscoveredData[QUESTION_INDEX];
 
 		if (question == myRequestedQuestion) {
 
@@ -2282,13 +2298,13 @@ static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
 			messagesCounterByClicker[handle] = counter;
 			questionNumberByClicker[handle] = question;
 
-			unsigned char answer = deviceName[ANSWER_INDEX];
+			unsigned char answer = localDiscoveredData[ANSWER_INDEX];
 
 			if (answer != YES_ANS && answer != NO_ANS) {
 				answersByClicker[handle] = UN_ANSWERED;
 				// ERROR
 				Display_print3(dispHandle, 5, 0,
-						"ERROR found: the answer given ('%c') is not legal (not '%c' nor '%c') !!!",
+						"ERROR found: the answer given ('%u') is not legal (not '%c' nor '%c') !!!",
 						answer, YES_ANS, NO_ANS);
 				return;
 			}
@@ -2298,7 +2314,7 @@ static void gatewayHandleDeviceDiscovered(unsigned char* deviceName) {
 			updateNameForNewAnswer();
 
             Display_print3(dispHandle, 5, 0,
-                    "Answer was added by handle number %d question '%c' answer '%c' !!!",
+                    "Answer was added by handle number %d question '%u' answer '%c' !!!",
                     handle, question, answer);
 		}
 	}
@@ -2329,7 +2345,7 @@ static void advertiseQuestion(unsigned char question, unsigned char* answers) {
 	NUMBER_OF_CHARS_FOR_ALL_CLICKERS);
 	tempDeviceNameForQuestion[QUESTION_MESSAGE_LENGTH] = '\0';
 	Display_print3(dispHandle, 5, 0,
-			"Advertising question ('%c') and answers ('%s') , full name should be %s",
+			"Advertising question ('%u') and answers ('%s') , full name should be %s",
 			question, answers, tempDeviceNameForQuestion);
 
 	processNameChange(tempDeviceNameForQuestion,
@@ -2354,12 +2370,12 @@ static void writeResultsForQuestion(unsigned char question) {
 	int notAnswered = lastAssignedHandleIndex + 1 - numYes - numNo;
 
 	Display_print4(dispHandle, 5, 0,
-			"Results for question '%c': YES = %d , NO = %d , NOT ANSWERERD = %d",
+			"Results for question '%u': YES = %d , NO = %d , NOT ANSWERERD = %d",
 			question, numYes, numNo, notAnswered);
 }
 
 static void updateNameForNewAnswer() {
-	unsigned char question = '0' + questionCounter;
+	unsigned char question = (unsigned char)questionCounter;
 
 	// update the name
 	unsigned char answersBits[MAX_NUMBER_OF_CLICKERS] = { 0 };
@@ -2379,7 +2395,7 @@ static void updateNameForNewAnswer() {
 }
 
 static void advertiseQuestionFirstTime() {
-	unsigned char question = '0' + questionCounter;
+	unsigned char question = (unsigned char)questionCounter;
 	// zeros the answers buffer
 	for (int i = 0; i <= lastAssignedHandleIndex; i++) {
 		answersByClicker[i] = UN_ANSWERED;
@@ -2430,15 +2446,15 @@ static unsigned char lastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS + 1] = { 0 };
 static unsigned char lastHandle = '\0';
 static int lastHandleIndex = -1;
 static unsigned char myMac[MAC_ADDRESS_SIZE + 1];
-static unsigned char lastCounter = MIN_COUNTER;
+static unsigned char lastCounter = '1';
 
-static void clickerHandleDeviceDiscovered(unsigned char* deviceName) {
+static void clickerHandleDeviceDiscovered() {
 
-	unsigned char command = deviceName[GATEWAY_COMMAND];
+	unsigned char command = localDiscoveredData[GATEWAY_COMMAND];
 	if (command == OFFER_HANDLE) {
 
 		for (int i = 0; i < PREFIX_SIZE; i++) {
-			if (tempDeviceNameForHandleOffering[i] != deviceName[i]) {
+			if (tempDeviceNameForHandleOffering[i] != localDiscoveredData[i]) {
 				Display_print0(dispHandle, 5, 0,
 						"DEBUG: prefix for OFFER HANDLE is not as requested !!!");
 				return;
@@ -2451,14 +2467,14 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName) {
 			return;
 		}
 
-		ucharsCopy(tempMacAddress, deviceName + PREFIX_SIZE, MAC_ADDRESS_SIZE);
+		ucharsCopy(tempMacAddress, localDiscoveredData + PREFIX_SIZE, MAC_ADDRESS_SIZE);
 		tempMacAddress[MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
 		if (ucharsCompare(tempMacAddress, myMac, MAC_ADDRESS_SIZE) == 0) {
 			// my mac - get handle
-			lastHandle = deviceName[OFFER_MESSAGE_LENGTH - 1];
+			lastHandle = localDiscoveredData[OFFER_MESSAGE_LENGTH - 1];
 			lastHandleIndex = lastHandle - MIN_HANDLE_CHAR;
 			Display_print3(dispHandle, 5, 0,
-					"APPROVED: Handle '%c', index %d is assigned to mac '%s' !!!",
+					"APPROVED: Handle '%u', index %d is assigned to mac '%s' !!!",
 					lastHandle, lastHandleIndex, myMac);
 
 			clickerWaitForHandleOffering = FALSE;
@@ -2469,7 +2485,7 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName) {
 	} else if (command == QUESTION) {
 
 		for (int i = 0; i < PREFIX_SIZE; i++) {
-			if (tempDeviceNameForQuestion[i] != deviceName[i]) {
+			if (tempDeviceNameForQuestion[i] != localDiscoveredData[i]) {
 				Display_print0(dispHandle, 5, 0,
 						"DEBUG: prefix for QUESTION MESSAGE is not as requested !!!");
 				return;
@@ -2483,19 +2499,19 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName) {
 		}
 
 		// update question and numbers
-		unsigned char question = deviceName[PREFIX_SIZE];
+		unsigned char question = localDiscoveredData[PREFIX_SIZE];
 
 		if (clickerWaitForNewQuestion) {
 			if (lastQuestionRecievedFromGateway == question) {
 				Display_print1(dispHandle, 5, 0,
-						"DEBUG: waiting for new question, but got the same as last time '%c'",
+						"DEBUG: waiting for new question, but got the same as last time '%u'",
 						question);
 				return;
 			} else {
 				clickerWaitForNewQuestion = FALSE;
 				lastQuestionRecievedFromGateway = question;
 				clickerWaitForUserAnswer = TRUE;
-				Display_print1(dispHandle, 5, 0, "GOT NEW Question from cliker: '%c'",
+				Display_print1(dispHandle, 5, 0, "GOT NEW Question from cliker: '%u'",
 				                        question);
 				return;
 			}
@@ -2506,11 +2522,11 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName) {
                 clickerWaitForNewQuestion = TRUE;
 
 				Display_print2(dispHandle, 5, 0,
-						"ERROR: user waisted question since this question is '%c' and user answered '%c'",
+						"ERROR: user waisted question since this question is '%u' and user answered '%u'",
 						question, lastQuestionAnswered);
 				return;
 			}
-			ucharsCopy(lastAnswers, deviceName + 1 + PREFIX_SIZE,
+			ucharsCopy(lastAnswers, localDiscoveredData + 1 + PREFIX_SIZE,
 			NUMBER_OF_CHARS_FOR_ALL_CLICKERS);
 			lastAnswers[NUMBER_OF_CHARS_FOR_ALL_CLICKERS] = '\0'; // add null-terminate
 
@@ -2523,7 +2539,7 @@ static void clickerHandleDeviceDiscovered(unsigned char* deviceName) {
 
 			char* approvedStr = approved ? "YES !!!" : "no...";
             Display_print3(dispHandle, 5, 0,
-                    "last question '%c' and answers '%s', approved = %s",
+                    "last question '%u' and answers '%s', approved = %s",
                     question, lastAnswers, approvedStr);
 		}
 
@@ -2544,7 +2560,7 @@ static void answerToQuestion(unsigned char handle, unsigned char counter,
 	tempAnswerForQuestion[ANSWER_INDEX] = answer;
 	tempAnswerForQuestion[MIN_MESSAGE] = '\0'; // add null-terminate
 	Display_print4(dispHandle, 5, 0,
-			"AM answering to question %c' with answer '%c' by handle '%c' and counter '%c'",
+			"AM answering to question %u' with answer '%u' by handle '%u' and counter '%u'",
 			question, answer, handle, counter);
 
 	processNameChange(tempAnswerForQuestion, MIN_MESSAGE);
@@ -2670,7 +2686,7 @@ static bool validateQuestionApproved() {
 
 	if (lastAnswersInBits[lastHandleIndex] == '1') {
 		Display_print3(dispHandle, 5, 0,
-				"ACK RECEIVED: Question '%c' was approved answer by gateway for handle '%c', index %d !!!",
+				"ACK RECEIVED: Question '%u' was approved answer by gateway for handle '%u', index %d !!!",
 				lastQuestionAnswered, lastHandle, lastHandleIndex);
 		return TRUE;
 	}

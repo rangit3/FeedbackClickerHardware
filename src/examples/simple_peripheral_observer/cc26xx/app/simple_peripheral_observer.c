@@ -1171,11 +1171,9 @@ static void SimpleBLEPeripheral_handleKeys(uint8_t shift, uint8_t keys) {
 	if (release) {
 //		StartCentralMode();
 		if (keys & KEY_RIGHT) {
-//			TurnOnLed(REDLED);
 			handleButtonClick(TRUE);
 		}
 		if (keys & KEY_LEFT) {
-//			TurnOffLed(REDLED);
 			handleButtonClick(FALSE);
 		}
 	} else { //debug mode
@@ -2110,6 +2108,9 @@ static void handleButtonClick(bool button) {
 	if (isFirstTime) {
 		isFirstTime = FALSE;
 
+		TurnOffLed(REDLED);
+		TurnOffLed(GREENLED);
+
 		Display_print1(dispHandle, 4, 0, "%s DEBUG FIRST TIME CLICK - INIT() !",
 				NAME());
 
@@ -2546,6 +2547,8 @@ static void clickerHandleDeviceDiscovered() {
 
 			clickerWaitForHandleOffering = FALSE;
 			clickerWaitForNewQuestion = TRUE;
+
+			TurnOnLed(GREENLED);
 			return;
 		}
 
@@ -2591,6 +2594,7 @@ static void clickerHandleDeviceDiscovered() {
 				Display_print2(dispHandle, 5, 0,
 						"ERROR: user waisted question since this question is '%u' and user answered '%u'",
 						question, lastQuestionAnswered);
+				TurnOnLed(REDLED);
 				return;
 			}
 			ucharsCopy(lastAnswers, localDiscoveredData + 1 + PREFIX_SIZE,
@@ -2600,6 +2604,7 @@ static void clickerHandleDeviceDiscovered() {
 			// see if i'm approved
 			bool approved = validateQuestionApproved();
 			if (approved) {
+			    TurnOnLed(GREENLED);
 				clickerWaitForValidationOnAnswer = FALSE;
 				clickerWaitForNewQuestion = TRUE;
 			}
@@ -2667,6 +2672,10 @@ static void handleClickerButtonClick(bool button) {
 //		clickerHandleDeviceDiscovered("GTWQ1dddddddd");
 //	} else
 	if (clickerWaitForUserAnswer) {
+	    // reset all leds
+	    TurnOffLed(REDLED);
+	    TurnOffLed(GREENLED);
+
 		clickerWaitForUserAnswer = FALSE;
 		unsigned char answer = button ? YES_ANS : NO_ANS;
 		answerToQuestion(lastHandle, lastCounter,

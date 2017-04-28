@@ -221,3 +221,4 @@ project_zero_stack_cc2650/TOOLS/ccs_linker_defines.cmd
 project_zero_app_cc2650launchxl/TOOLS/src/.exclude
 *.bcfg
 
+pinInterrupthw2/.xdchelp

@@ -371,6 +371,24 @@ typedef struct {
 static devRecInfo_t devList[DEFAULT_MAX_SCAN_RES];
 static bool scanningStarted = FALSE;
 static uint8_t deviceInfoCnt = 0;
+
+static PIN_Handle buttonPinHandle;
+static PIN_Handle ledPinHandle;
+
+/* Global memory storage for a PIN_Config table */
+static PIN_State buttonPinState;
+static PIN_State ledPinState;
+
+/*
+ * Initial LED pin configuration table
+ *   - LEDs Board_LED0 is on.
+ *   - LEDs Board_LED1 is off.
+ */
+PIN_Config ledPinTable[] = {
+Board_LED0 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MAX,
+Board_LED1 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,
+PIN_TERMINATE };
+
 #endif
 
 const char *AdvTypeStrings[] = { "Connectable undirected",
@@ -473,8 +491,8 @@ static void handleButtonClick(bool button);
 static bool IsClickerName();
 
 //static void GenerateNewName(UInt32 state);
-//static void TurnOffLeds();
-//static void TurnOnLed(UInt32 led);
+static void TurnOnLed(bool led);
+static void TurnOffLed(bool led);
 //static void HandleError();
 //static bool IsNewQuestion();
 //static bool MyHandleHasProblem();
@@ -578,6 +596,12 @@ static void SimpleBLEPeripheral_init(void) {
 #endif
 
 	dispHandle = Display_open(Display_Type_UART, NULL); //ZH change to UART for LP UART support
+
+	/* Open LED pins */
+	ledPinHandle = PIN_open(&ledPinState, ledPinTable);
+	if (!ledPinHandle) {
+		Display_print0(dispHandle, 5, 0, "coudln't open leds");
+	}
 
 #ifdef PLUS_OBSERVER
 	//Setup GAP Observer params
@@ -733,20 +757,21 @@ static void SimpleBLEPeripheral_init(void) {
 	GATT_RegisterForMsgs(selfEntity);
 
 	HCI_LE_ReadMaxDataLenCmd();
-
+	if (ON_DEBUG) {
 #if defined FEATURE_OAD
 #if defined (HAL_IMAGE_A)
-	Display_print0(dispHandle, 0, 0, "BLE Peripheral A");
+		Display_print0(dispHandle, 0, 0, "BLE Peripheral A");
 #else
-	Display_print0(dispHandle, 0, 0, "BLE Peripheral B");
+		Display_print0(dispHandle, 0, 0, "BLE Peripheral B");
 #endif // HAL_IMAGE_A
 #else
 #ifdef PLUS_OBSERVER
-	Display_print0(dispHandle, 0, 0, "BLE Peripheral Observer");
+		Display_print0(dispHandle, 0, 0, "BLE Peripheral Observer");
 #else
-	Display_print0(dispHandle, 0, 0, "BLE Peripheral");
+		Display_print0(dispHandle, 0, 0, "BLE Peripheral");
 #endif
 #endif // FEATURE_OAD
+	}
 }
 
 static void clickerOnStart();
@@ -893,11 +918,11 @@ static void SimpleBLEPeripheralObserver_processRoleEvent(
 	case GAP_DEVICE_INFO_EVENT: {
 		//Print scan response data otherwise advertising data
 		if (pEvent->deviceInfo.eventType == GAP_ADRPT_SCAN_RSP) {
-			Display_print1(dispHandle, 4, 0, "Scan Response Addr: %s",
-					Util_convertBdAddr2Str(pEvent->deviceInfo.addr));
-			Display_print1(dispHandle, 5, 0, "Scan Response Data: %s",
-					Util_convertBytes2Str(pEvent->deviceInfo.pEvtData,
-							pEvent->deviceInfo.dataLen));
+//			Display_print1(dispHandle, 4, 0, "Scan Response Addr: %s",
+//					Util_convertBdAddr2Str(pEvent->deviceInfo.addr));
+//			Display_print1(dispHandle, 5, 0, "Scan Response Data: %s",
+//					Util_convertBytes2Str(pEvent->deviceInfo.pEvtData,
+//							pEvent->deviceInfo.dataLen));
 		} else {
 			deviceInfoCnt++;
 
@@ -951,9 +976,12 @@ static void SimpleBLEPeripheralObserver_processRoleEvent(
 		deviceInfoCnt = 0;
 
 		//Display_print0(dispHandle, 7, 0, "GAP_DEVICE_DISC_EVENT");
-		Display_print1(dispHandle, 5, 0, "Devices discovered: %d",
-				pEvent->discCmpl.numDevs);
-		Display_print0(dispHandle, 4, 0, "Scanning Off");
+
+		if (ON_DEBUG) {
+			Display_print1(dispHandle, 5, 0, "Devices discovered: %d",
+					pEvent->discCmpl.numDevs);
+			Display_print0(dispHandle, 4, 0, "Scanning Off");
+		}
 
 		ICall_free(pEvent->discCmpl.pDevList);
 		ICall_free(pEvent);
@@ -1143,9 +1171,11 @@ static void SimpleBLEPeripheral_handleKeys(uint8_t shift, uint8_t keys) {
 	if (release) {
 //		StartCentralMode();
 		if (keys & KEY_RIGHT) {
+//			TurnOnLed(REDLED);
 			handleButtonClick(TRUE);
 		}
 		if (keys & KEY_LEFT) {
+//			TurnOffLed(REDLED);
 			handleButtonClick(FALSE);
 		}
 	} else { //debug mode
@@ -1365,7 +1395,9 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 		break;
 
 	case GAPROLE_ADVERTISING:
-		Display_print0(dispHandle, 2, 0, "Advertising");
+		if (ON_DEBUG) {
+			Display_print0(dispHandle, 2, 0, "Advertising");
+		}
 		break;
 
 #ifdef PLUS_BROADCASTER
@@ -1446,15 +1478,17 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 		break;
 
 	case GAPROLE_CONNECTED_ADV:
-		Display_print0(dispHandle, 2, 0, "Connected Advertising");
+		if (ON_DEBUG) {
+			Display_print0(dispHandle, 2, 0, "Connected Advertising");
+		}
 		break;
 
 	case GAPROLE_WAITING:
 		Util_stopClock(&periodicClock);
 		SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
-
-		Display_print0(dispHandle, 2, 0, "Disconnected");
-
+		if (ON_DEBUG) {
+			Display_print0(dispHandle, 2, 0, "Disconnected");
+		}
 		// Clear remaining lines
 		Display_clearLines(dispHandle, 3, 5);
 		break;
@@ -1474,7 +1508,9 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 		break;
 
 	case GAPROLE_ERROR:
-		Display_print0(dispHandle, 2, 0, "Error");
+		if (ON_DEBUG) {
+			Display_print0(dispHandle, 2, 0, "Error");
+		}
 		break;
 
 	default:
@@ -1778,9 +1814,13 @@ static void StartCentralMode() {
 
 		if (status == SUCCESS) {
 			scanningStarted = TRUE;
-			Display_print0(dispHandle, 4, 0, "Scanning On");
+			if (ON_DEBUG) {
+				Display_print0(dispHandle, 4, 0, "Scanning On");
+			}
 		} else {
-			Display_print1(dispHandle, 4, 0, "Scanning failed: %d", status);
+			if (ON_DEBUG) {
+				Display_print1(dispHandle, 4, 0, "Scanning failed: %d", status);
+			}
 		}
 
 	}
@@ -1933,8 +1973,10 @@ void ChangeBLEName() {
 	//	Display_print1(dispHandle, 5, 0, "trying change device name changed to %s", advertData);
 
 	GAPRole_SetParameter(GAPROLE_ADVERT_DATA, sizeof(advertData), advertData);
-	Display_print1(dispHandle, 5, 0, "device name changed to %s", advertData);
-
+	if (ON_DEBUG) {
+		Display_print1(dispHandle, 5, 0, "device name changed to %s",
+				advertData);
+	}
 	//TODO get data from localData array and change to base64
 	//try this too:
 	//	GAPRole_SetParameter(GAPROLE_SCAN_RSP_DATA, sizeof(scanRspData),scanRspData);
@@ -1995,8 +2037,10 @@ static void ChangeAdvertDataArr() {
 	for (int i = 0; i < MAX_GATEWAY_NAME; ++i) {
 		advertData[i + 5] = data[i];
 	}
-	Display_print2(dispHandle, 5, 0, "device name from %s to base64 is %s",
-			localMyNameData, data);
+	if (ON_DEBUG) {
+		Display_print2(dispHandle, 5, 0, "device name from %s to base64 is %s",
+				localMyNameData, data);
+	}
 }
 
 static void RecieveAdvertDataArr() {
@@ -2005,8 +2049,10 @@ static void RecieveAdvertDataArr() {
 		data[i] = advertData[i + 5];
 	}
 	Base64ToLocalMyNameData(data);
-	Display_print2(dispHandle, 5, 0, "device name is %s and decoded is %s",
-			data, localMyNameData);
+	if (ON_DEBUG) {
+		Display_print2(dispHandle, 5, 0, "device name is %s and decoded is %s",
+				data, localMyNameData);
+	}
 }
 
 static void LocalMyNameDataToBase64(unsigned char* data) {
@@ -2088,13 +2134,25 @@ static void handleButtonClick(bool button) {
 
 }
 
-//static void TurnOffLeds() {
-////turn off all leds
-//}
-//
-//static void TurnOnLed(UInt32 led) {
-////turn on led for 2 seconds
-//}
+static void TurnOnLed(bool led) {
+	uint32_t on = 1;
+	if (led) {
+		PIN_setOutputValue(ledPinHandle, Board_LED0, on);
+	} else {
+		PIN_setOutputValue(ledPinHandle, Board_LED1, on);
+	}
+}
+
+static void TurnOffLed(bool led) {
+	uint32_t off = 0;
+
+	if (led) {
+		PIN_setOutputValue(ledPinHandle, Board_LED0, off);
+	} else {
+		PIN_setOutputValue(ledPinHandle, Board_LED1, off);
+	}
+}
+
 //
 //static void HandleError() {
 //	Display_print0(dispHandle, 4, 0, "ERROR");
@@ -2226,7 +2284,7 @@ static void gatewayHandleDeviceDiscovered() {
 	if (handleAsChar == NO_HANDLE) { // new clicker - try add to mac addresses
 
 		ucharsCopy(tempMacAddress, localDiscoveredData + PREFIX_SIZE,
-				MAC_ADDRESS_SIZE);
+		MAC_ADDRESS_SIZE);
 		tempMacAddress[MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
 		// search all MACs already allocated
 
@@ -2476,7 +2534,7 @@ static void clickerHandleDeviceDiscovered() {
 		}
 
 		ucharsCopy(tempMacAddress, localDiscoveredData + PREFIX_SIZE,
-				MAC_ADDRESS_SIZE);
+		MAC_ADDRESS_SIZE);
 		tempMacAddress[MAC_ADDRESS_SIZE] = '\0'; // add null-terminate
 		if (ucharsCompare(tempMacAddress, myMac, MAC_ADDRESS_SIZE) == 0) {
 			// my mac - get handle

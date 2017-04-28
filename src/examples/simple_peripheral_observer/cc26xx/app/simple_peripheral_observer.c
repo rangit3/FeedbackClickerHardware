@@ -240,10 +240,6 @@ static ICall_Semaphore sem;
 // Clock instances for internal periodic events.
 static Clock_Struct periodicClock;
 
-
-// Lior: clock for central mode.
-static Clock_Struct centralModeClock;
-
 //// Lior create semaphore for gateway wait for question
 //#define QUESTION_REQUEST_TIMEOUT INT32_MAX
 //static Semaphore_Handle questionRequestedSemaphore;
@@ -391,7 +387,7 @@ static bool ON_DEBUG=TRUE;
 
 //static bool IS_CLICKER = TRUE;
 
-static bool IS_GATEWAY = FALSE;
+static bool IS_GATEWAY = TRUE;
 
 static char* NAME(){
    char* name = IS_GATEWAY ? "GATEWAY" : "CLICKER";
@@ -431,7 +427,6 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID);
 static void SimpleBLEPeripheral_performPeriodicTask(void);
 static void SimpleBLEPeripheral_clockHandler(UArg arg);
-
 void SimpleBLEPeripheral_keyChangeHandler(uint8 keysPressed);
 static void SimpleBLEPeripheral_ObserverStateChangeCB(
 		gapPeripheralObserverRoleEvent_t *pEvent);
@@ -448,14 +443,7 @@ static void SimpleBLEPeripheral_enqueueMsg(uint8_t event, uint8_t state,
 
 //===============MY BLE FUNCS====================
 //static void StartAdvertiseMode();
-
 static void StartCentralMode();
-
-//static void SimpleBLEPeripheral_Central_Mode_clockHandler(UArg arg){
-//    StartCentralMode();
-//}
-
-
 //static void StopCentralMode();
 
 static void MyBLE_addDeviceInfo(uint8_t *pAddr, uint8_t addrType);
@@ -585,11 +573,6 @@ static void SimpleBLEPeripheral_init(void) {
 	// Create one-shot clocks for internal periodic events.
 	Util_constructClock(&periodicClock, SimpleBLEPeripheral_clockHandler,
 	SBP_PERIODIC_EVT_PERIOD, 0, false, SBP_PERIODIC_EVT);
-
-
-	//  Lior : clock not work
-//    Util_constructClock(&centralModeClock, SimpleBLEPeripheral_Central_Mode_clockHandler,
-//            5000, 100, true, NULL);
 
 #ifdef PLUS_OBSERVER
 	Board_initKeys(SimpleBLEPeripheral_keyChangeHandler);
@@ -971,7 +954,7 @@ static void SimpleBLEPeripheralObserver_processRoleEvent(
 		ICall_free(pEvent->discCmpl.pDevList);
 		ICall_free(pEvent);
 
-        StartCentralMode();
+		StartCentralMode();
 	}
 		break;
 
@@ -1154,6 +1137,7 @@ static void SimpleBLEPeripheral_freeAttRsp(uint8_t status) {
 static void SimpleBLEPeripheral_handleKeys(uint8_t shift, uint8_t keys) {
 	(void) shift;  // Intentionally unreferenced parameter
 	if (release) {
+//		StartCentralMode();
 		if (keys & KEY_RIGHT) {
 			handleButtonClick(TRUE);
 		}
@@ -2073,8 +2057,9 @@ static void handleButtonClick(bool button) {
 	if (isFirstTime) {
         isFirstTime = FALSE;
 
-		StartCentralMode(); // need to scan right away
+	    Display_print1(dispHandle, 4, 0, "%s DEBUG FIRST TIME CLICK - INIT() !", NAME());
 
+		StartCentralMode(); // need to scan right away
 
 		if (!IS_GATEWAY) {
 			clickerOnStart();
